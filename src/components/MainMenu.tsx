@@ -13,11 +13,13 @@ import {
   Crown,
   Trophy,
   Award,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { QUESTS_LIST } from '../data/quests';
 import { getFullSkillCodex } from '../data/skills';
+import { HUNTS, isHuntUnlocked } from '../data/hunts';
 import { tierFor } from '../data/league';
 import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
@@ -33,6 +35,7 @@ export type MenuDest =
   | 'world'
   | 'quests'
   | 'achievements'
+  | 'hunts'
   | 'league';
 
 const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
@@ -92,6 +95,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({
     (sk) => (sk.levelReq ?? 1) <= hero.level
   ).length;
 
+  const openHunts = HUNTS.filter((h) => isHuntUnlocked(save, h));
+
   const tiles: MenuTile[] = [
     {
       id: 'world',
@@ -145,6 +150,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       badge: claimable.achievements > 0 ? { text: `${claimable.achievements} ödül`, cls: 'bg-rose-500 text-white' } : undefined,
     },
     {
+      id: 'hunts',
+      label: 'Boss Avları',
+      sub: `${openHunts.length}/${HUNTS.length} av açık`,
+      Icon: Target,
+      border: 'border-cyan-500/35',
+      iconWrap: 'bg-cyan-500/15 text-cyan-300',
+      badge: openHunts.some((h) => !save.huntRecords[h.id].firstRewardClaimed)
+        ? { text: 'Yeni', cls: 'bg-rose-500 text-white' }
+        : undefined,
+    },
+    {
       id: 'league',
       label: 'Rekabet Ligi',
       sub: `${tierFor(save.league.points).name} Ligi · ${save.league.points.toLocaleString('tr-TR')} LP`,
@@ -152,7 +168,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       border: 'border-amber-400/45',
       iconWrap: 'bg-amber-400/15 text-amber-300',
       badge: save.league.pendingRewards.length > 0 ? { text: `${save.league.pendingRewards.length} ödül`, cls: 'bg-rose-500 text-white' } : undefined,
-      wide: true,
     },
   ];
 

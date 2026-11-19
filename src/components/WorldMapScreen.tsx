@@ -9,157 +9,128 @@ import {
   Swords,
   Coins,
   ShieldAlert,
-  Target,
 } from 'lucide-react';
 import { GEM_INFO, RARITY_META } from '../data/skills';
 import { WORLD_REGIONS } from '../data/world';
-import { HUNTS, isHuntUnlocked } from '../data/hunts';
-import { GameSaveState, RegionId, StageDef } from '../types/game';
+import { GameSaveState, StageDef } from '../types/game';
+import { focusRegionIndex, getRegionStatuses, isStageUnlocked } from '../utils/worldProgress';
+import { ExplorationMap } from './ExplorationMap';
+
+/** Harita/aşama ekranı arasında gidip gelirken (ve savaştan dönünce) korunan gezinti durumu. */
+export interface WorldNav {
+  regionIndex: number;
+  scrollTop: number | null;
+  stageId: string | null;
+}
+
+export type WorldView = 'map' | 'stages';
 
 interface WorldMapScreenProps {
   save: GameSaveState;
+  /** Ana menüye dön */
   onBack: () => void;
   onStartStage: (stage: StageDef) => void;
-  /** Boss Avları listesini açar */
-  onOpenHunts: () => void;
+  view: WorldView;
+  onViewChange: (view: WorldView) => void;
+  nav: React.MutableRefObject<WorldNav | null>;
 }
 
-export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, onStartStage, onOpenHunts }) => {
-  const allStages = useMemo(() => WORLD_REGIONS.flatMap((r) => r.stages), []);
+export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({
+  save,
+  onBack,
+  onStartStage,
+  view,
+  onViewChange,
+  nav,
+}) => {
+  const statuses = useMemo(() => getRegionStatuses(save), [save]);
+  const [regionIndex, setRegionIndexState] = useState(
+    () => nav.current?.regionIndex ?? focusRegionIndex(statuses)
+  );
 
-  // Determine furthest unlocked stage
-  const isStageUnlocked = (stageId: string): boolean => {
-    const idx = allStages.findIndex((s) => s.id === stageId);
-    if (idx <= 0) return true;
-    return save.completedStages.includes(allStages[idx - 1].id);
+  const patchNav = (patch: Partial<WorldNav>) => {
+    nav.current = { regionIndex, scrollTop: null, stageId: null, ...(nav.current ?? {}), ...patch };
+  };
+  const selectRegion = (i: number) => {
+    setRegionIndexState(i);
+    patchNav({ regionIndex: i, stageId: null });
   };
 
-  // Default to latest unlocked uncompleted stage
-  const defaultStage = useMemo(() => {
-    const next = allStages.find((s) => !save.completedStages.includes(s.id) && isStageUnlocked(s.id));
-    return next ?? allStages[allStages.length - 1];
-  }, [allStages, save.completedStages]);
+  const region = WORLD_REGIONS[regionIndex];
 
-  const [selectedRegion, setSelectedRegion] = useState<RegionId>(defaultStage.regionId);
-  const [selectedStage, setSelectedStage] = useState<StageDef>(defaultStage);
+  return (
+    <div className="flex h-full flex-col bg-[#070b17]">
+      <header className="flex shrink-0 items-center gap-3 border-b border-amber-500/40 bg-[#050810] px-4 py-3">
+        <button
+          type="button"
+          onClick={() => (view === 'stages' ? onViewChange('map') : onBack())}
+          aria-label={view === 'stages' ? 'Haritaya dön' : 'Geri'}
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-900 text-slate-100 hover:border-amber-400/50"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        {view === 'map' ? (
+          <h1 className="font-display text-[26px] font-bold text-amber-300">Dünya Haritası</h1>
+        ) : (
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-bold uppercase tracking-wider text-amber-300/80">Dünya Haritası</p>
+            <h1 className="truncate font-display text-[22px] font-bold leading-tight text-[#fff3d0]">{region.name}</h1>
+          </div>
+        )}
+      </header>
 
-  const activeRegion = WORLD_REGIONS.find((r) => r.id === selectedRegion) ?? WORLD_REGIONS[0];
-  const hero = save.heroes[save.activeHeroClass];
-  const unlocked = isStageUnlocked(selectedStage.id);
+      {view === 'map' ? (
+        <ExplorationMap
+          save={save}
+          selectedIndex={regionIndex}
+          onSelect={selectRegion}
+          initialScrollTop={nav.current?.scrollTop ?? null}
+          onScrollChange={(top) => patchNav({ scrollTop: top })}
+          onOpenStages={(i) => {
+            if (i !== regionIndex) selectRegion(i);
+            onViewChange('stages');
+          }}
+        />
+      ) : (
+        <StageScreen
+          key={region.id}
+          save={save}
+          regionIndex={regionIndex}
+          initialStageId={nav.current?.stageId ?? null}
+          onStageChange={(id) => patchNav({ stageId: id })}
+          onStartStage={onStartStage}
+        />
+      )}
+    </div>
+  );
+};
+
+/** Seçilen bölgenin aşama ekranı (mevcut aşama listesi + aşama detayı). */
+const StageScreen: React.FC<{
+  save: GameSaveState;
+  regionIndex: number;
+  initialStageId: string | null;
+  onStageChange: (stageId: string) => void;
+  onStartStage: (stage: StageDef) => void;
+}> = ({ save, regionIndex, initialStageId, onStageChange, onStartStage }) => {
+  const activeRegion = WORLD_REGIONS[regionIndex];
+  const [selectedStage, setSelectedStageState] = useState<StageDef>(
+    () =>
+      activeRegion.stages.find((s) => s.id === initialStageId) ??
+      activeRegion.stages.find((s) => !save.completedStages.includes(s.id)) ??
+      activeRegion.stages[activeRegion.stages.length - 1]
+  );
+  const setSelectedStage = (st: StageDef) => {
+    setSelectedStageState(st);
+    onStageChange(st.id);
+  };
+  const isUnlocked = (stageId: string) => isStageUnlocked(save, stageId);
+  const unlocked = isUnlocked(selectedStage.id);
   const completed = save.completedStages.includes(selectedStage.id);
 
   return (
-    <div className="flex h-full flex-col bg-[#080b14]">
-      <header className="flex items-center justify-between border-b border-amber-500/20 bg-slate-950/90 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-200 hover:border-amber-400/50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Geri
-          </button>
-          <div className="min-w-[190px]">
-            <h1 className="font-display text-lg font-bold text-amber-300">Dünya Haritası</h1>
-            <p className="text-[11px] text-slate-400">
-              {WORLD_REGIONS.length} Efsanevi Bölge • {allStages.length} Aşama
-            </p>
-            <div className="mt-1 h-1.5 w-40 overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300"
-                style={{
-                  width: `${(save.completedStages.length / Math.max(1, allStages.length)) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-amber-500/30 bg-slate-900 px-3 py-1.5 text-xs font-bold text-amber-200">
-          Kahraman Sv.{hero.level}
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto p-3 sm:p-5">
-        <div className="mx-auto max-w-6xl space-y-5">
-          {/* Boss Avları girişi */}
-          <button
-            type="button"
-            onClick={onOpenHunts}
-            className="flex min-h-[56px] w-full items-center gap-3 rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-950/40 to-slate-950/70 px-3 py-2 text-left transition hover:border-amber-300"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-300">
-              <Target className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-display text-sm font-bold text-amber-100">Boss Avları</span>
-              <span className="block truncate text-[11px] text-slate-400">
-                {HUNTS.filter((h) => isHuntUnlocked(save, h)).length}/{HUNTS.length} av açık · özel kurallı boss savaşları
-              </span>
-            </span>
-            <span className="shrink-0 text-xs font-bold text-amber-300">Aç →</span>
-          </button>
-
-          {/* Hızlı ilerleme çubuğu */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2">
-            <span className="text-xs text-slate-400">
-              {WORLD_REGIONS.length} Bölge sırayla açılır — tamamladığın aşamaları tekrar
-              oynayarak seviye ve ganimet kasabilirsin.
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRegion(defaultStage.regionId);
-                setSelectedStage(defaultStage);
-              }}
-              className="shrink-0 rounded-xl border border-amber-400/50 bg-amber-500/15 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/25"
-            >
-              Sıradaki Aşamaya Git →
-            </button>
-          </div>
-
-          {/* Region Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {WORLD_REGIONS.map((reg, idx) => {
-              const firstUnlocked = isStageUnlocked(reg.stages[0].id);
-              const clearedCount = reg.stages.filter((s) =>
-                save.completedStages.includes(s.id)
-              ).length;
-              const active = selectedRegion === reg.id;
-
-              return (
-                <button
-                  key={reg.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedRegion(reg.id);
-                    const target =
-                      reg.stages.find((s) => !save.completedStages.includes(s.id)) ??
-                      reg.stages[reg.stages.length - 1];
-                    setSelectedStage(target);
-                  }}
-                  className={`flex min-w-[165px] flex-col rounded-2xl border-2 p-3 text-left transition ${
-                    active
-                      ? 'border-amber-400 bg-slate-900 shadow-[0_0_20px_rgba(245,158,11,0.2)]'
-                      : 'border-slate-800 bg-slate-950/80 hover:border-slate-600'
-                  } ${!firstUnlocked ? 'opacity-65' : ''}`}
-                >
-                  <div className="flex items-center justify-between text-[10px] font-bold">
-                    <span className="text-amber-300">Bölge {idx + 1}</span>
-                    <span className="text-slate-400">{reg.levelRange}</span>
-                  </div>
-                  <div className="mt-1 font-display text-sm font-bold text-white">{reg.name}</div>
-                  <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>
-                      {clearedCount}/{reg.stages.length} Tamamlandı
-                    </span>
-                    {!firstUnlocked && <Lock className="h-3.5 w-3.5 text-slate-500" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
+    <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+      <div className="mx-auto max-w-6xl space-y-5">
           {/* Connected Map Path + Stage Details */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
             {/* Connected Progression Path */}
@@ -179,7 +150,7 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, on
               {/* Connected Nodes */}
               <div className="relative flex flex-col gap-3.5 py-2">
                 {activeRegion.stages.map((st, idx) => {
-                  const stUnlocked = isStageUnlocked(st.id);
+                  const stUnlocked = isUnlocked(st.id);
                   const stDone = save.completedStages.includes(st.id);
                   const isSel = selectedStage.id === st.id;
 
@@ -381,7 +352,6 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, on
               </button>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );

@@ -4,6 +4,23 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.5.0 — Keşif Rotası (Dünya Haritası)
+- **Dünya Haritası yeniden tasarlandı:** Mobilde dikey kaydırılan, kıvrımlı noktalı bir rota. 28 bölgenin
+  tamamı aşağıdan yukarıya dizilir; simgeler sağa/sola dağılır, bölge adı simgenin yanında durur ve rota
+  çizgisiyle çakışmaz (320–480 px genişliklerde testle doğrulandı).
+- Tamamlanan bölgede onay işareti, seçili bölgede renkli halka, kilitli bölgede kilit simgesi (kayda göre).
+  Tamamlanan bölgeden sonraki rota parçası altın renkte.
+- Harita açılınca ilerleyebileceğin ilk tamamlanmamış bölgeye odaklanır.
+- Alt panel (başparmakla erişilir): bölge adı, önerilen seviye aralığı, tamamlanan aşama sayısı ve
+  "Aşamaları Gör". Kilitli bölgede açılma koşulu yazar ve düğme devre dışıdır. Panel son durağın üzerine binmez.
+- "Aşamaları Gör" mevcut aşama ekranını açar. Aşama ekranından ya da savaştan haritaya dönünce seçili bölge,
+  seçili aşama ve kaydırma konumu korunur. Ana menüden yeniden girince harita odağa döner.
+- Bölge simgeleri: 24 şeffaf görsel (`src/art/regions/<bölge-kimliği>.webp`) + ilk dört bölge için aynı
+  geometrik stilde SVG (ağaç, buzlu dağlar, yanardağ, mor kapı).
+- **Boss Avları** artık Dünya Haritası'nda değil, ana menüde ayrı bir seçenek.
+- Dünya Haritası ekranı ayrı paket olarak yüklenir (ilk açılış küçük kalır).
+- Aşama ekranındaki bölge sekmeleri kaldırıldı (bölge seçimi artık haritadan).
+
 ## v1.4.0 — Boss Avları
 - **Boss Avları:** Dünya Haritası'nda tek girişle açılan yeni mod. İlk sürümde Buz Kraliçesi (Donmuş Taht)
   ve Cehennem Ejderhası (Kül Arenası). Her av, ilgili boss hikâyede yenilince açılır; eski kayıtlardaki

@@ -9,7 +9,7 @@ import { MainMenu } from './components/MainMenu';
 import { QuestsScreen } from './components/QuestsScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
-import { WorldMapScreen } from './components/WorldMapScreen';
+import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import type { HuntDef } from './data/hunts';
 import { generateEquipmentItem } from './data/items';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
@@ -59,6 +59,9 @@ type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' 
 const BattleView = lazy(() =>
   import('./components/BattleView').then((m) => ({ default: m.BattleView }))
 );
+const WorldMapScreen = lazy(() =>
+  import('./components/WorldMapScreen').then((m) => ({ default: m.WorldMapScreen }))
+);
 const HuntsScreen = lazy(() =>
   import('./components/HuntsScreen').then((m) => ({ default: m.HuntsScreen }))
 );
@@ -103,6 +106,14 @@ export function App() {
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
   const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
+  // Dünya Haritası gezinti durumu: harita/aşama görünümü + seçili bölge + kaydırma konumu.
+  // Aşama ekranından ve savaştan dönünce korunur; ana menüden girişte sıfırlanır.
+  const [worldView, setWorldView] = useState<WorldView>('map');
+  const worldNavRef = useRef<WorldNav | null>(null);
+  const resetWorldNav = () => {
+    worldNavRef.current = null;
+    setWorldView('map');
+  };
   const [activeLeagueOpponent, setActiveLeagueOpponent] = useState<LeagueOpponent | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -131,8 +142,9 @@ export function App() {
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route === 'hunts') {
       if (selectedHuntId) return setSelectedHuntId(null);
-      return setRoute('world');
+      return setRoute('menu');
     }
+    if (route === 'world' && worldView === 'stages') return setWorldView('map');
     if (route !== 'menu') return setRoute('menu');
     exitNativeApp();
   };
@@ -554,8 +566,13 @@ export function App() {
         <MainMenu
           save={save}
           isExistingSave={isExistingSave}
-          onPlayNextStage={handleStartStage}
+          onPlayNextStage={(stage) => {
+            resetWorldNav();
+            handleStartStage(stage);
+          }}
           onNavigate={(dest) => {
+            if (dest === 'world') resetWorldNav();
+            if (dest === 'hunts') setSelectedHuntId(null);
             if (dest === 'quests') { setQuestTab('main'); setQuestBack('menu'); }
             if (dest === 'achievements') { setQuestTab('achievement'); setQuestBack('menu'); }
             setRoute(dest);
@@ -598,12 +615,16 @@ export function App() {
       )}
 
       {route === 'world' && (
-        <WorldMapScreen
-          save={save}
-          onBack={() => setRoute('menu')}
-          onStartStage={handleStartStage}
-          onOpenHunts={() => { setSelectedHuntId(null); setRoute('hunts'); }}
-        />
+        <Suspense fallback={<RouteLoading />}>
+          <WorldMapScreen
+            save={save}
+            onBack={() => setRoute('menu')}
+            onStartStage={handleStartStage}
+            view={worldView}
+            onViewChange={setWorldView}
+            nav={worldNavRef}
+          />
+        </Suspense>
       )}
 
       {(route === 'quests' || route === 'achievements') && (
@@ -635,7 +656,7 @@ export function App() {
           save={save}
           selectedId={selectedHuntId}
           onSelect={setSelectedHuntId}
-          onBack={() => setRoute('world')}
+          onBack={() => setRoute('menu')}
           onStart={handleStartHunt}
         />
       )}
