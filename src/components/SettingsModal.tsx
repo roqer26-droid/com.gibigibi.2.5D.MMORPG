@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Save, RotateCcw, Sparkles, X, BookOpen } from 'lucide-react';
+import { Volume2, VolumeX, Save, RotateCcw, Sparkles, X, BookOpen, Copy, Upload } from 'lucide-react';
 import { GEM_INFO } from '../data/skills';
 import { GameSettings, GemType } from '../types/game';
 
@@ -8,6 +8,10 @@ interface SettingsModalProps {
   onUpdateSettings: (next: GameSettings) => void;
   onManualSave: () => void;
   onResetProgress: () => void;
+  /** Kaydı aktarılabilir metin olarak döndürür */
+  onExportSave: () => string;
+  /** Metinden kayıt yükler; başarılıysa true */
+  onImportSave: (text: string) => boolean;
   onClose: () => void;
 }
 
@@ -16,10 +20,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateSettings,
   onManualSave,
   onResetProgress,
+  onExportSave,
+  onImportSave,
   onClose,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
+  const [transferMsg, setTransferMsg] = useState<string | null>(null);
+  const [importText, setImportText] = useState('');
+  const [showImport, setShowImport] = useState(false);
+
+  const flash = (msg: string) => {
+    setTransferMsg(msg);
+    window.setTimeout(() => setTransferMsg(null), 2600);
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(onExportSave());
+      flash('Kayıt panoya kopyalandı ✓');
+    } catch {
+      setShowImport(true);
+      setImportText(onExportSave());
+      flash('Pano erişimi yok — metni elle kopyala.');
+    }
+  };
+
+  const handleImport = () => {
+    if (onImportSave(importText)) {
+      setImportText('');
+      setShowImport(false);
+      flash('Kayıt yüklendi ✓');
+    } else {
+      flash('Geçersiz kayıt metni!');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
@@ -155,6 +190,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {savedToast ? 'Kayıt Başarılı ✓' : 'Oyunu Şimdi Kaydet'}
           </button>
 
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-700"
+          >
+            <Copy className="h-4 w-4" />
+            Kaydı Kopyala
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowImport((v) => !v)}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-600 bg-slate-800/70 px-4 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-700"
+          >
+            <Upload className="h-4 w-4" />
+            Kayıt Yükle
+          </button>
+
           {!confirmReset ? (
             <button
               type="button"
@@ -190,6 +242,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           )}
         </div>
+
+        {showImport && (
+          <div className="mt-3 space-y-2 rounded-xl border border-slate-700 bg-slate-950/70 p-3">
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              placeholder="Kopyaladığın kayıt metnini buraya yapıştır"
+              className="h-24 w-full resize-none rounded-lg border border-slate-700 bg-slate-900 p-2 text-[11px] text-slate-200"
+            />
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={!importText.trim()}
+              className="gold-btn rounded-lg px-4 py-2 text-xs font-extrabold text-slate-950 disabled:opacity-50"
+            >
+              Yükle (mevcut kaydın üzerine yazar)
+            </button>
+          </div>
+        )}
+        {transferMsg && <div className="mt-2 text-xs font-bold text-amber-300">{transferMsg}</div>}
       </div>
     </div>
   );

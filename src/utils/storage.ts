@@ -9,6 +9,85 @@ import { createQuestPeriods, refreshProgressPeriods } from './questProgress';
 const DEFAULT_UNLOCKS: HeroClassId[] = ['warrior', 'mage', 'ranger', 'paladin'];
 
 const SAVE_STORAGE_KEY = 'legendary_gems_efsanevi_taslar_save_v1';
+/** Bozuk kayıt ya da sürüm yükseltmesi öncesi ham verinin saklandığı anahtarlar */
+const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
+const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
+
+/** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
+export const SAVE_VERSION = 4;
+
+type RawSave = Record<string, unknown>;
+
+/**
+ * Sürüm adımları: anahtar = kaynak sürüm, değer = bir sonraki sürüme dönüştürücü.
+ * Eksik alanlar zaten `createInitialSaveState` ile birleştirilerek tamamlanır;
+ * burası yalnızca alan yeniden adlandırma/dönüştürme gibi birleştirmeyle çözülemeyen işler içindir.
+ */
+const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
+  // v3 -> v4: kayıt artık yüklemede doğrulanıyor (sanitizeSave); veri biçimi aynı.
+  3: (raw) => raw,
+};
+
+function readVersion(raw: RawSave): number {
+  const v = Number(raw.version);
+  return Number.isFinite(v) && v >= 1 ? Math.floor(v) : 1;
+}
+
+function runMigrations(raw: RawSave): RawSave {
+  let current = raw;
+  for (let v = readVersion(raw); v < SAVE_VERSION; v++) {
+    const step = MIGRATIONS[v];
+    if (step) current = step(current);
+  }
+  return { ...current, version: SAVE_VERSION };
+}
+
+const finiteOr = (value: unknown, fallback: number, min = 0): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(min, n) : fallback;
+};
+
+const stringArray = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? Array.from(new Set(value.filter((x): x is string => typeof x === 'string')))
+    : [];
+
+/** Bozulmuş/elle düzenlenmiş değerleri (NaN, negatif, yanlış tip) güvenli değerlere çeker. */
+export function sanitizeSave(save: GameSaveState): GameSaveState {
+  const heroes = { ...save.heroes };
+  (Object.keys(heroes) as HeroClassId[]).forEach((id) => {
+    const h = heroes[id];
+    heroes[id] = {
+      ...h,
+      level: Math.max(1, Math.floor(finiteOr(h.level, 1, 1))),
+      xp: finiteOr(h.xp, 0),
+      skillPoints: Math.floor(finiteOr(h.skillPoints, 0)),
+      skillRanks: h.skillRanks && typeof h.skillRanks === 'object' ? h.skillRanks : {},
+      equipped: h.equipped && typeof h.equipped === 'object' ? h.equipped : {},
+    };
+  });
+  return {
+    ...save,
+    heroes,
+    gold: Math.floor(finiteOr(save.gold, 0)),
+    crystals: Math.floor(finiteOr(save.crystals, 0)),
+    inventory: Array.isArray(save.inventory)
+      ? save.inventory.filter((i) => i && typeof i.id === 'string')
+      : [],
+    completedStages: stringArray(save.completedStages),
+    claimedQuests: stringArray(save.claimedQuests),
+    bossVictories: stringArray(save.bossVictories) as GameSaveState['bossVictories'],
+  };
+}
+
+function safeSetItem(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function makeStarterHero(classId: HeroClassId): HeroProgress {
   return {
@@ -28,7 +107,7 @@ export function createInitialSaveState(): GameSaveState {
   });
 
   return {
-    version: 3,
+    version: SAVE_VERSION,
     activeHeroClass: 'warrior',
     heroes,
     heroUnlocks: [...DEFAULT_UNLOCKS],
@@ -68,83 +147,122 @@ export function createInitialSaveState(): GameSaveState {
   };
 }
 
-export function loadGameState(): { save: GameSaveState; isExistingSave: boolean } {
+/** Ham JSON metnini doğrular, sürüm yükseltir ve varsayılanlarla birleştirir. Geçersizse null. */
+export function parseSaveString(text: string): GameSaveState | null {
+  let parsedRaw: unknown;
   try {
-    const raw = localStorage.getItem(SAVE_STORAGE_KEY);
-    if (!raw) {
-      return { save: createInitialSaveState(), isExistingSave: false };
-    }
-    const parsed = JSON.parse(raw) as GameSaveState;
-    if (!parsed || !parsed.heroes || !parsed.activeHeroClass) {
-      return { save: createInitialSaveState(), isExistingSave: false };
-    }
-    // Ensure defaults for any newly added keys
-    const fresh = createInitialSaveState();
-
-    // Eski kayıtlarda olmayan yeni sınıfları otomatik oluştur (geriye dönük uyumluluk)
-    const heroes = { ...fresh.heroes, ...(parsed.heroes ?? {}) } as Record<
-      HeroClassId,
-      HeroProgress
-    >;
-    HERO_CLASS_LIST.forEach((c) => {
-      if (!heroes[c.id]) heroes[c.id] = makeStarterHero(c.id);
-    });
-
-    const heroUnlocks =
-      parsed.heroUnlocks && parsed.heroUnlocks.length > 0
-        ? parsed.heroUnlocks
-        : [...DEFAULT_UNLOCKS];
-
-    // Aktif kahraman kilitliyse ilk açık sınıfa dön
-    const activeHeroClass = heroUnlocks.includes(parsed.activeHeroClass)
-      ? parsed.activeHeroClass
-      : heroUnlocks[0];
-
-    const questPeriods = parsed.questPeriods ?? fresh.questPeriods;
-    // Old daily quests used lifetime counters. Preserve today's visible progress once on migration.
-    if (!parsed.questPeriods && parsed.lastSavedAt && dayKey(parsed.lastSavedAt) === dayKey()) {
-      questPeriods.daily = {
-        ...questPeriods.daily,
-        claimed: (parsed.claimedQuests ?? []).filter((id) => id.startsWith('daily_')),
-        counters: {
-          ...questPeriods.daily.counters,
-          gems: { ...questPeriods.daily.counters.gems, ...(parsed.stats?.totalGemsMatched ?? {}) },
-          matches: parsed.stats?.totalMatches ?? 0,
-          highestCombo: parsed.stats?.highestCombo ?? 0,
-          wins: parsed.stats?.enemiesDefeated ?? 0,
-          bossWins: parsed.stats?.bossesDefeated ?? 0,
-          skillsCast: parsed.stats?.skillsCast ?? 0,
-          itemsUpgraded: parsed.stats?.itemsUpgraded ?? 0,
-        },
-      };
-    }
-
-    const migrated: GameSaveState = {
-        ...fresh,
-        ...parsed,
-        version: 3,
-        heroes,
-        heroUnlocks,
-        activeHeroClass,
-        questPeriods,
-        league: { ...fresh.league, ...(parsed.league ?? {}) },
-        settings: { ...fresh.settings, ...(parsed.settings ?? {}) },
-        stats: {
-          ...fresh.stats,
-          ...(parsed.stats ?? {}),
-          totalGemsMatched: {
-            ...fresh.stats.totalGemsMatched,
-            ...(parsed.stats?.totalGemsMatched ?? {}),
-          },
-        },
-    };
-    return {
-      save: refreshProgressPeriods(migrated),
-      isExistingSave: true,
-    };
+    parsedRaw = JSON.parse(text);
   } catch {
-    return { save: createInitialSaveState(), isExistingSave: false };
+    return null;
   }
+  if (!parsedRaw || typeof parsedRaw !== 'object') return null;
+  const candidate = parsedRaw as RawSave;
+  if (!candidate.heroes || typeof candidate.heroes !== 'object' || !candidate.activeHeroClass) {
+    return null;
+  }
+  // Gelecekteki bir sürümden gelen kayıt eski kodla bozulmasın
+  if (readVersion(candidate) > SAVE_VERSION) return null;
+
+  const parsed = runMigrations(candidate) as unknown as GameSaveState;
+  const fresh = createInitialSaveState();
+
+  // Eski kayıtlarda olmayan yeni sınıfları otomatik oluştur (geriye dönük uyumluluk)
+  const heroes = { ...fresh.heroes, ...(parsed.heroes ?? {}) } as Record<HeroClassId, HeroProgress>;
+  HERO_CLASS_LIST.forEach((c) => {
+    if (!heroes[c.id]) heroes[c.id] = makeStarterHero(c.id);
+  });
+
+  const heroUnlocks =
+    Array.isArray(parsed.heroUnlocks) && parsed.heroUnlocks.length > 0
+      ? parsed.heroUnlocks.filter((id) => !!heroes[id])
+      : [...DEFAULT_UNLOCKS];
+  if (heroUnlocks.length === 0) heroUnlocks.push(...DEFAULT_UNLOCKS);
+
+  // Aktif kahraman kilitliyse ilk açık sınıfa dön
+  const activeHeroClass = heroUnlocks.includes(parsed.activeHeroClass)
+    ? parsed.activeHeroClass
+    : heroUnlocks[0];
+
+  const questPeriods = parsed.questPeriods ?? fresh.questPeriods;
+  // Eski günlük görevler ömür boyu sayaç kullanıyordu; bugünkü ilerleme bir kez korunur.
+  if (!parsed.questPeriods && parsed.lastSavedAt && dayKey(parsed.lastSavedAt) === dayKey()) {
+    questPeriods.daily = {
+      ...questPeriods.daily,
+      claimed: (parsed.claimedQuests ?? []).filter((id) => id.startsWith('daily_')),
+      counters: {
+        ...questPeriods.daily.counters,
+        gems: { ...questPeriods.daily.counters.gems, ...(parsed.stats?.totalGemsMatched ?? {}) },
+        matches: parsed.stats?.totalMatches ?? 0,
+        highestCombo: parsed.stats?.highestCombo ?? 0,
+        wins: parsed.stats?.enemiesDefeated ?? 0,
+        bossWins: parsed.stats?.bossesDefeated ?? 0,
+        skillsCast: parsed.stats?.skillsCast ?? 0,
+        itemsUpgraded: parsed.stats?.itemsUpgraded ?? 0,
+      },
+    };
+  }
+
+  const migrated: GameSaveState = sanitizeSave({
+    ...fresh,
+    ...parsed,
+    version: SAVE_VERSION,
+    heroes,
+    heroUnlocks,
+    activeHeroClass,
+    questPeriods,
+    league: { ...fresh.league, ...(parsed.league ?? {}) },
+    settings: { ...fresh.settings, ...(parsed.settings ?? {}) },
+    stats: {
+      ...fresh.stats,
+      ...(parsed.stats ?? {}),
+      totalGemsMatched: {
+        ...fresh.stats.totalGemsMatched,
+        ...(parsed.stats?.totalGemsMatched ?? {}),
+      },
+    },
+  });
+  return refreshProgressPeriods(migrated);
+}
+
+export function loadGameState(): { save: GameSaveState; isExistingSave: boolean } {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(SAVE_STORAGE_KEY);
+  } catch {
+    // localStorage erişilemiyor (gizli mod vb.)
+  }
+  if (!raw) return { save: createInitialSaveState(), isExistingSave: false };
+
+  try {
+    const save = parseSaveString(raw);
+    if (save) {
+      // Şema yükseldiyse eski ham kaydı bir kez yedekle
+      try {
+        const rawVersion = readVersion(JSON.parse(raw) as RawSave);
+        if (rawVersion < SAVE_VERSION) safeSetItem(PRE_MIGRATION_BACKUP_KEY, raw);
+      } catch {
+        // yedekleme başarısız olsa da yükleme devam eder
+      }
+      return { save, isExistingSave: true };
+    }
+  } catch {
+    // aşağıda ele alınır
+  }
+  // Bozuk kayıt: üzerine yazılmadan önce ham veriyi sakla
+  safeSetItem(CORRUPT_BACKUP_KEY, raw);
+  return { save: createInitialSaveState(), isExistingSave: false };
+}
+
+/** Kaydı panoya/dosyaya aktarılabilir tek satır metne çevirir. */
+export function exportSaveString(state: GameSaveState): string {
+  return JSON.stringify({ ...state, lastSavedAt: Date.now() });
+}
+
+/** Dışarıdan alınan metni doğrular; geçerliyse kaydı yazar ve döndürür. */
+export function importSaveString(text: string): GameSaveState | null {
+  const save = parseSaveString(text.trim());
+  if (!save) return null;
+  return saveGameState(save) ? save : null;
 }
 
 export function saveGameState(state: GameSaveState): boolean {

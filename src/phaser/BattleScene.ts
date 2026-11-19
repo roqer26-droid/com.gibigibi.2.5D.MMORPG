@@ -17,6 +17,7 @@ import { ComputedHeroBuild } from '../utils/rpgLogic';
 import { computeEnchantAura } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
+import { findMatches, findPossibleMoves, type MatchGrid, type MatchResult, type Move } from '../game/match3';
 
 const GRID_SIZE = 8;
 const BASE_GEMS: GemType[] = ['fire', 'frost', 'nature', 'lightning', 'arcane'];
@@ -921,98 +922,12 @@ export class BattleScene extends Phaser.Scene {
     await this.applyGravityAndRefill();
   }
 
-  private findMatches(): {
-    matchedSet: Set<string>;
-    spawns: Map<string, { type: GemType; special: SpecialGemKind }>;
-  } {
-    const horizRuns: { row: number; cols: number[]; type: GemType }[] = [];
-    const vertRuns: { col: number; rows: number[]; type: GemType }[] = [];
+  private tileGrid(): MatchGrid {
+    return this.grid.map((row) => row.map((tv) => (tv ? tv.tile : null)));
+  }
 
-    // Horizontal
-    for (let r = 0; r < GRID_SIZE; r++) {
-      let c = 0;
-      while (c < GRID_SIZE) {
-        const tv = this.grid[r][c];
-        if (!tv) {
-          c++;
-          continue;
-        }
-        const t = tv.tile.type;
-        let end = c + 1;
-        while (end < GRID_SIZE && this.grid[r][end]?.tile.type === t) {
-          end++;
-        }
-        if (end - c >= 3) {
-          const cols: number[] = [];
-          for (let k = c; k < end; k++) cols.push(k);
-          horizRuns.push({ row: r, cols, type: t });
-        }
-        c = end;
-      }
-    }
-
-    // Vertical
-    for (let c = 0; c < GRID_SIZE; c++) {
-      let r = 0;
-      while (r < GRID_SIZE) {
-        const tv = this.grid[r][c];
-        if (!tv) {
-          r++;
-          continue;
-        }
-        const t = tv.tile.type;
-        let end = r + 1;
-        while (end < GRID_SIZE && this.grid[end]?.[c]?.tile.type === t) {
-          end++;
-        }
-        if (end - r >= 3) {
-          const rows: number[] = [];
-          for (let k = r; k < end; k++) rows.push(k);
-          vertRuns.push({ col: c, rows, type: t });
-        }
-        r = end;
-      }
-    }
-
-    const matchedSet = new Set<string>();
-    const spawns = new Map<string, { type: GemType; special: SpecialGemKind }>();
-
-    const horizCells = new Set<string>();
-    horizRuns.forEach((hr) => hr.cols.forEach((c) => horizCells.add(`${hr.row},${c}`)));
-
-    const vertCells = new Set<string>();
-    vertRuns.forEach((vr) => vr.rows.forEach((r) => vertCells.add(`${r},${vr.col}`)));
-
-    // L-shaped and T-shaped intersections -> Nova Bomb!
-    horizRuns.forEach((hr) => {
-      hr.cols.forEach((c) => {
-        const k = `${hr.row},${c}`;
-        matchedSet.add(k);
-        if (vertCells.has(k)) {
-          spawns.set(k, { type: hr.type, special: 'nova' });
-        }
-      });
-      if (hr.cols.length >= 5) {
-        const mid = `${hr.row},${hr.cols[Math.floor(hr.cols.length / 2)]}`;
-        spawns.set(mid, { type: hr.type, special: 'prismatic' });
-      } else if (hr.cols.length === 4) {
-        const mid = `${hr.row},${hr.cols[1]}`;
-        if (!spawns.has(mid)) spawns.set(mid, { type: hr.type, special: 'line_v' });
-      }
-    });
-
-    vertRuns.forEach((vr) => {
-      vr.rows.forEach((r) => matchedSet.add(`${r},${vr.col}`));
-      if (vr.rows.length >= 5) {
-        const mid = `${vr.rows[Math.floor(vr.rows.length / 2)]},${vr.col}`;
-        spawns.set(mid, { type: vr.type, special: 'prismatic' });
-      } else if (vr.rows.length === 4) {
-        const mid = `${vr.rows[1]},${vr.col}`;
-        if (!spawns.has(mid)) spawns.set(mid, { type: vr.type, special: 'line_h' });
-      }
-    });
-
-    return { matchedSet, spawns };
+  private findMatches(): MatchResult {
+    return findMatches(this.tileGrid());
   }
 
   private async cascadeAndResolve(
@@ -2704,50 +2619,8 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
-  private findPossibleMoves(): { a: { row: number; col: number }; b: { row: number; col: number } }[] {
-    const moves: { a: { row: number; col: number }; b: { row: number; col: number } }[] = [];
-    const testSwap = (r1: number, c1: number, r2: number, c2: number): boolean => {
-      const tv1 = this.grid[r1][c1];
-      const tv2 = this.grid[r2][c2];
-      if (!tv1 || !tv2) return false;
-      if (tv1.tile.frozen > 0 || tv2.tile.frozen > 0) return false;
-      if (tv1.tile.special === 'prismatic' || tv2.tile.special === 'prismatic') return true;
-      if (tv1.tile.special !== 'none' && tv2.tile.special !== 'none') return true;
-
-      // Temporarily swap tile refs
-      this.grid[r1][c1] = tv2;
-      this.grid[r2][c2] = tv1;
-      const hasMatch = this.hasLocalMatchAt(r1, c1) || this.hasLocalMatchAt(r2, c2);
-      this.grid[r1][c1] = tv1;
-      this.grid[r2][c2] = tv2;
-      return hasMatch;
-    };
-
-    for (let r = 0; r < GRID_SIZE; r++) {
-      for (let c = 0; c < GRID_SIZE; c++) {
-        if (c + 1 < GRID_SIZE && testSwap(r, c, r, c + 1)) {
-          moves.push({ a: { row: r, col: c }, b: { row: r, col: c + 1 } });
-        }
-        if (r + 1 < GRID_SIZE && testSwap(r, c, r + 1, c)) {
-          moves.push({ a: { row: r, col: c }, b: { row: r + 1, col: c } });
-        }
-      }
-    }
-    return moves;
-  }
-
-  private hasLocalMatchAt(r: number, c: number): boolean {
-    const t = this.grid[r][c]?.tile.type;
-    if (!t) return false;
-    let hCount = 1;
-    for (let k = c - 1; k >= 0 && this.grid[r][k]?.tile.type === t; k--) hCount++;
-    for (let k = c + 1; k < GRID_SIZE && this.grid[r][k]?.tile.type === t; k++) hCount++;
-    if (hCount >= 3) return true;
-
-    let vCount = 1;
-    for (let k = r - 1; k >= 0 && this.grid[k][c]?.tile.type === t; k--) vCount++;
-    for (let k = r + 1; k < GRID_SIZE && this.grid[k][c]?.tile.type === t; k++) vCount++;
-    return vCount >= 3;
+  private findPossibleMoves(): Move[] {
+    return findPossibleMoves(this.tileGrid());
   }
 
   private async reshuffleBoard(announce: boolean) {

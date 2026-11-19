@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
-import { BattleView } from './components/BattleView';
 import { LevelUpModal, LootRevealModal } from './components/CelebrationModals';
 import { EquipmentInventoryScreen } from './components/EquipmentInventoryScreen';
 import { HeroesScreen } from './components/HeroesScreen';
 import { MainMenu } from './components/MainMenu';
-import { LeagueScreen } from './components/LeagueScreen';
 import { QuestsScreen } from './components/QuestsScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import { WorldMapScreen } from './components/WorldMapScreen';
-import { HERO_CLASSES } from './data/classes';
 import { generateEquipmentItem } from './data/items';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
 import { QUESTS_LIST } from './data/quests';
@@ -31,15 +28,52 @@ import {
 } from './types/game';
 import {
   applyXpToHero,
-  getDismantleYield,
-  getEnhanceCost,
-  getItemPowerScore,
   getQuestCurrentValue,
 } from './utils/rpgLogic';
 import { isQuestClaimed, markQuestClaimed, recordQuestActivity, refreshProgressPeriods } from './utils/questProgress';
-import { loadGameState, resetGameState, saveGameState } from './utils/storage';
+import {
+  autoEquipBest,
+  dismantleCommonItems,
+  dismantleItem,
+  enhanceItem,
+  equipItem,
+  resetSkills,
+  selectHero,
+  sellItem,
+  unequipSlot,
+  unlockHero,
+  upgradeSkillNode,
+  type ActionResult,
+  type SoundCue,
+} from './state/saveActions';
+import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
 type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'league';
+
+// Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
+const BattleView = lazy(() =>
+  import('./components/BattleView').then((m) => ({ default: m.BattleView }))
+);
+const LeagueScreen = lazy(() =>
+  import('./components/LeagueScreen').then((m) => ({ default: m.LeagueScreen }))
+);
+
+function RouteLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#090b15] text-sm font-bold text-amber-300">
+      Yükleniyor…
+    </div>
+  );
+}
+
+const SOUND_CUES: Record<SoundCue, () => void> = {
+  gemSelect: () => SoundEngine.playGemSelect(),
+  gemSwap: () => SoundEngine.playGemSwap(),
+  levelUp: () => SoundEngine.playLevelUp(),
+  lootReveal: () => SoundEngine.playLootReveal(false),
+  lootRevealBig: () => SoundEngine.playLootReveal(true),
+  matchArcane: () => SoundEngine.playGemMatch(2, 'arcane'),
+};
 
 export function App() {
   // Kayıt yalnızca ilk açılışta okunur (20 kahramanlı kayıt her karede ayrıştırılmasın)
@@ -113,304 +147,45 @@ export function App() {
     };
   }, []);
 
-  const handleSelectHero = (classId: HeroClassId) => {
-    setSave((prev) => {
-      if (!prev.heroUnlocks.includes(classId)) return prev;
-      return { ...prev, activeHeroClass: classId };
-    });
-    pushToast(`${HERO_CLASSES[classId].name} aktif kahraman seçildi!`);
-  };
-
-  /** Yeni kahramanları Altın + Kristal karşılığında aç */
-  const handleUnlockHero = (classId: HeroClassId) => {
-    const cls = HERO_CLASSES[classId];
-    if (!cls.unlockCost) return;
-    if (save.heroUnlocks.includes(classId)) return;
-    if (save.gold < cls.unlockCost.gold || save.crystals < cls.unlockCost.crystals) {
-      pushToast('Yetersiz Altın veya Kristal! Savaş kazanarak kaynak topla.');
-      return;
-    }
-    setSave((prev) => ({
-      ...prev,
-      gold: prev.gold - cls.unlockCost!.gold,
-      crystals: prev.crystals - cls.unlockCost!.crystals,
-      heroUnlocks: [...prev.heroUnlocks, classId],
-      activeHeroClass: classId,
-    }));
-    SoundEngine.playLootReveal(true);
-    pushToast(`${cls.name} — ${cls.title} kadroya katıldı!`);
-  };
-
-  const handleEquipItem = useCallback(
-    (item: EquipmentItem, explicitSlot?: EquipmentSlot) => {
-      setSave((prev) => {
-        const hero = prev.heroes[prev.activeHeroClass];
-        if (hero.level < item.levelReq) return prev;
-
-        let targetSlot = explicitSlot ?? item.slot;
-        if (!explicitSlot && (item.slot === 'ring1' || item.slot === 'ring2')) {
-          if (hero.equipped.ring1 && !hero.equipped.ring2) targetSlot = 'ring2';
-          else targetSlot = 'ring1';
-        }
-
-        const itemToEquip = { ...item, slot: targetSlot };
-        const previouslyEquipped = hero.equipped[targetSlot];
-        const nextInv = prev.inventory.filter((i) => i.id !== item.id);
-        if (previouslyEquipped) {
-          nextInv.push(previouslyEquipped);
-        }
-
-        return {
-          ...prev,
-          inventory: nextInv,
-          heroes: {
-            ...prev.heroes,
-            [prev.activeHeroClass]: {
-              ...hero,
-              equipped: {
-                ...hero.equipped,
-                [targetSlot]: itemToEquip,
-              },
-            },
-          },
-        };
-      });
-      SoundEngine.playGemSelect();
-      pushToast(`${item.name} kuşanıldı!`);
+  /** Saf kayıt işlemini uygular; toast ve ses isteğini UI katmanında yürütür. */
+  const runAction = useCallback(
+    (action: (current: GameSaveState) => ActionResult) => {
+      const result = action(saveRef.current);
+      setSave(result.save);
+      if (result.sound) SOUND_CUES[result.sound]();
+      if (result.toast) pushToast(result.toast);
+      return result;
     },
-    [pushToast]
+    [setSave, pushToast]
   );
 
-  const handleUnequipSlot = (slot: EquipmentSlot) => {
-    setSave((prev) => {
-      const hero = prev.heroes[prev.activeHeroClass];
-      const eq = hero.equipped[slot];
-      if (!eq) return prev;
-      const nextEquipped = { ...hero.equipped };
-      delete nextEquipped[slot];
-      return {
-        ...prev,
-        inventory: [...prev.inventory, eq],
-        heroes: {
-          ...prev.heroes,
-          [prev.activeHeroClass]: { ...hero, equipped: nextEquipped },
-        },
-      };
-    });
-  };
+  const handleSelectHero = (classId: HeroClassId) => runAction((s) => selectHero(s, classId));
+  const handleUnlockHero = (classId: HeroClassId) => runAction((s) => unlockHero(s, classId));
+  const handleEquipItem = useCallback(
+    (item: EquipmentItem, slot?: EquipmentSlot) => runAction((s) => equipItem(s, item, slot)),
+    [runAction]
+  );
+  const handleUnequipSlot = (slot: EquipmentSlot) => runAction((s) => unequipSlot(s, slot));
+  const handleDismantleItem = (itemId: string) => runAction((s) => dismantleItem(s, itemId));
+  const handleSellItem = (itemId: string) => runAction((s) => sellItem(s, itemId));
+  const handleAutoEquipBest = () => runAction(autoEquipBest);
+  const handleDismantleLowRarity = () => runAction(dismantleCommonItems);
+  const handleUpgradeSkillNode = (nodeId: string) => runAction((s) => upgradeSkillNode(s, nodeId));
+  const handleResetSkills = () => runAction(resetSkills);
 
   const handleEnhanceItem = (itemId: string, isEquipped: boolean, slot?: EquipmentSlot) => {
-    setSave((prev) => {
-      const hero = prev.heroes[prev.activeHeroClass];
-      const target = isEquipped && slot ? hero.equipped[slot] : prev.inventory.find((i) => i.id === itemId);
-      if (!target || target.upgradeLevel >= 10) return prev;
-
-      const cost = getEnhanceCost(target);
-      if (prev.gold < cost.gold || prev.crystals < cost.crystals) return prev;
-
-      const upgraded: EquipmentItem = { ...target, upgradeLevel: target.upgradeLevel + 1 };
-      SoundEngine.playLevelUp();
-      pushToast(`${upgraded.name} +${upgraded.upgradeLevel} seviyesine yükseltildi!`);
-
-      // Aura kademesi atladıysa kahramanın üzerindeki parlama güçlenir
-      const heroForAura = prev.heroes[prev.activeHeroClass];
-      const simulatedHero = isEquipped && slot
-        ? { ...heroForAura, equipped: { ...heroForAura.equipped, [slot]: upgraded } }
-        : heroForAura;
-      const beforeTier = computeEnchantAura(heroForAura).tier;
-      const afterTier = computeEnchantAura(simulatedHero).tier;
-      if (afterTier > beforeTier) {
-        const tierInfo = ENCHANT_TIERS[afterTier];
-        window.setTimeout(() => {
-          SoundEngine.playLootReveal(true);
-          pushToast(`✨ BÜYÜ AURASI YÜKSELDİ: ${tierInfo.name}! Kahramanın artık daha çok parlıyor.`);
-        }, 700);
-      }
-
-      if (isEquipped && slot) {
-        return recordQuestActivity({
-          ...prev,
-          gold: prev.gold - cost.gold,
-          crystals: prev.crystals - cost.crystals,
-          stats: { ...prev.stats, itemsUpgraded: prev.stats.itemsUpgraded + 1 },
-          heroes: {
-            ...prev.heroes,
-            [prev.activeHeroClass]: {
-              ...hero,
-              equipped: { ...hero.equipped, [slot]: upgraded },
-            },
-          },
-        }, { upgrade: true });
-      }
-      return recordQuestActivity({
-        ...prev,
-        gold: prev.gold - cost.gold,
-        crystals: prev.crystals - cost.crystals,
-        stats: { ...prev.stats, itemsUpgraded: prev.stats.itemsUpgraded + 1 },
-        inventory: prev.inventory.map((i) => (i.id === itemId ? upgraded : i)),
-      }, { upgrade: true });
-    });
-  };
-
-  const handleDismantleItem = (itemId: string) => {
-    setSave((prev) => {
-      const item = prev.inventory.find((i) => i.id === itemId);
-      if (!item) return prev;
-      const y = getDismantleYield(item);
-      SoundEngine.playGemSwap();
-      pushToast(`Parçalandı: +${y.crystals} Kristal, +${y.gold} Altın`);
-      return {
-        ...prev,
-        gold: prev.gold + y.gold,
-        crystals: prev.crystals + y.crystals,
-        inventory: prev.inventory.filter((i) => i.id !== itemId),
-      };
-    });
-  };
-
-  const handleSellItem = (itemId: string) => {
-    setSave((prev) => {
-      const item = prev.inventory.find((i) => i.id === itemId);
-      if (!item) return prev;
-      SoundEngine.playGemSelect();
-      pushToast(`Satıldı: +${item.sellValue} Altın`);
-      return {
-        ...prev,
-        gold: prev.gold + item.sellValue,
-        inventory: prev.inventory.filter((i) => i.id !== itemId),
-      };
-    });
-  };
-
-  const handleAutoEquipBest = () => {
-    setSave((prev) => {
-      const hero = prev.heroes[prev.activeHeroClass];
-      let pool = [...prev.inventory];
-      const nextEq = { ...hero.equipped };
-
-      const slots: EquipmentSlot[] = [
-        'weapon',
-        'offhand',
-        'helmet',
-        'chest',
-        'gloves',
-        'pants',
-        'boots',
-        'necklace',
-        'ring1',
-        'ring2',
-      ];
-
-      slots.forEach((slot) => {
-        const current = nextEq[slot];
-        const currentScore = current ? getItemPowerScore(current) : -1;
-
-        const candidates = pool.filter((item) => {
-          if (item.levelReq > hero.level) return false;
-          if (slot === 'ring1' || slot === 'ring2') {
-            return item.slot === 'ring1' || item.slot === 'ring2';
-          }
-          return item.slot === slot;
-        });
-
-        candidates.sort((a, b) => getItemPowerScore(b) - getItemPowerScore(a));
-        const best = candidates[0];
-        if (best && getItemPowerScore(best) > currentScore) {
-          pool = pool.filter((i) => i.id !== best.id);
-          if (current) pool.push(current);
-          nextEq[slot] = { ...best, slot };
-        }
-      });
-
-      SoundEngine.playLootReveal(false);
-      pushToast('En güçlü ekipmanlar otomatik kuşanıldı!');
-      return {
-        ...prev,
-        inventory: pool,
-        heroes: {
-          ...prev.heroes,
-          [prev.activeHeroClass]: { ...hero, equipped: nextEq },
-        },
-      };
-    });
-  };
-
-  const handleDismantleLowRarity = () => {
-    setSave((prev) => {
-      const toKeep: EquipmentItem[] = [];
-      let totalGold = 0;
-      let totalCrystals = 0;
-      let count = 0;
-
-      prev.inventory.forEach((item) => {
-        if (item.rarity === 'common') {
-          const y = getDismantleYield(item);
-          totalGold += y.gold;
-          totalCrystals += y.crystals;
-          count += 1;
-        } else {
-          toKeep.push(item);
-        }
-      });
-
-      if (count === 0) {
-        pushToast('Parçalanacak Sıradan eşya bulunamadı.');
-        return prev;
-      }
-      SoundEngine.playGemMatch(2, 'arcane');
-      pushToast(`${count} Sıradan eşya parçalandı: +${totalCrystals} Kristal!`);
-      return {
-        ...prev,
-        gold: prev.gold + totalGold,
-        crystals: prev.crystals + totalCrystals,
-        inventory: toKeep,
-      };
-    });
-  };
-
-  const handleUpgradeSkillNode = (nodeId: string) => {
-    setSave((prev) => {
-      const hero = prev.heroes[prev.activeHeroClass];
-      if (hero.skillPoints <= 0) return prev;
-      const cls = HERO_CLASSES[hero.classId];
-      const node = cls.skillTree.find((n) => n.id === nodeId);
-      if (!node) return prev;
-      const curRank = hero.skillRanks[nodeId] ?? 0;
-      if (curRank >= node.maxRank) return prev;
-      if (node.requires && (hero.skillRanks[node.requires] ?? 0) < 1) return prev;
-
-      SoundEngine.playLevelUp();
-      return {
-        ...prev,
-        heroes: {
-          ...prev.heroes,
-          [prev.activeHeroClass]: {
-            ...hero,
-            skillPoints: hero.skillPoints - 1,
-            skillRanks: { ...hero.skillRanks, [nodeId]: curRank + 1 },
-          },
-        },
-      };
-    });
-  };
-
-  const handleResetSkills = () => {
-    setSave((prev) => {
-      const hero = prev.heroes[prev.activeHeroClass];
-      const refunded = Object.values(hero.skillRanks).reduce((a, b) => a + b, 0);
-      return {
-        ...prev,
-        heroes: {
-          ...prev.heroes,
-          [prev.activeHeroClass]: {
-            ...hero,
-            skillPoints: hero.skillPoints + refunded,
-            skillRanks: {},
-          },
-        },
-      };
-    });
-    pushToast('Yetenek puanları sıfırlandı ve iade edildi!');
+    const before = saveRef.current;
+    const result = runAction((s) => enhanceItem(s, itemId, isEquipped, slot));
+    if (result.save === before) return;
+    // Aura kademesi atladıysa kahramanın üzerindeki parlama güçlenir
+    const beforeTier = computeEnchantAura(before.heroes[before.activeHeroClass]).tier;
+    const afterTier = computeEnchantAura(result.save.heroes[result.save.activeHeroClass]).tier;
+    if (afterTier > beforeTier) {
+      window.setTimeout(() => {
+        SoundEngine.playLootReveal(true);
+        pushToast(`✨ BÜYÜ AURASI YÜKSELDİ: ${ENCHANT_TIERS[afterTier].name}! Kahramanın artık daha çok parlıyor.`);
+      }, 700);
+    }
   };
 
   const handleMatchStats = useCallback(
@@ -704,6 +479,17 @@ export function App() {
     pushToast('Oyun başarıyla kaydedildi!');
   };
 
+  const handleImportSave = (text: string): boolean => {
+    const imported = importSaveString(text);
+    if (!imported) return false;
+    setSave(imported);
+    setActiveStage(null);
+    setActiveLeagueOpponent(null);
+    setRoute('menu');
+    pushToast('Kayıt yüklendi!');
+    return true;
+  };
+
   const handleResetProgress = () => {
     const fresh = resetGameState();
     setSave(fresh);
@@ -781,6 +567,7 @@ export function App() {
         />
       )}
 
+      <Suspense fallback={<RouteLoading />}>
       {route === 'league' && (
         <LeagueScreen
           save={save}
@@ -807,6 +594,7 @@ export function App() {
           onOpenSettings={() => setShowSettings(true)}
         />
       )}
+      </Suspense>
 
       {/* Modals */}
       {showSettings && (
@@ -815,6 +603,8 @@ export function App() {
           onUpdateSettings={handleUpdateSettings}
           onManualSave={handleManualSave}
           onResetProgress={handleResetProgress}
+          onExportSave={() => exportSaveString(saveRef.current)}
+          onImportSave={handleImportSave}
           onClose={() => setShowSettings(false)}
         />
       )}
