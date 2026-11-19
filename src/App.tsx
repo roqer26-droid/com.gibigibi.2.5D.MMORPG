@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
+import { exitNativeApp, onNativeBack } from './native';
 import { LevelUpModal, LootRevealModal } from './components/CelebrationModals';
 import { EquipmentInventoryScreen } from './components/EquipmentInventoryScreen';
 import { HeroesScreen } from './components/HeroesScreen';
@@ -109,6 +110,20 @@ export function App() {
       setToastMsg((cur) => (cur === msg ? null : cur));
     }, 2600);
   }, []);
+
+  // Android geri tuşu: savaşta duraklat, menü dışında menüye dön, menüde çık
+  const backRef = useRef<() => void>(() => {});
+  backRef.current = () => {
+    if (showSettings) return setShowSettings(false);
+    if (route === 'battle') {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      return;
+    }
+    if (route === 'quests') return setRoute(questBack);
+    if (route !== 'menu') return setRoute('menu');
+    exitNativeApp();
+  };
+  useEffect(() => onNativeBack(() => backRef.current()), []);
 
   // Auto-save whenever state updates
   useEffect(() => {

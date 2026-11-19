@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.2.0 — Android (APK) hazırlığı
+- Capacitor ile `android/` projesi eklendi (paket: `com.gibigibi.mmorpg`, dikey mod).
+- Yazı tipleri pakete gömüldü; oyun artık internetsiz de aynı görünür.
+- Android geri tuşu: savaşta duraklatır, ekranlarda menüye döner, menüde çıkar.
+- Durum çubuğu gizlenir ve oyun rengine uyarlanır.
+- `npm run android:sync` sürümü Android'e aktarır; GitHub Actions debug APK üretir.
+
 ## v1.1.0 — Mobil uyum
 - Arayüz ölçeği telefon genişliğine/yüksekliğine göre küçüldü (360–430 px ve yatay mod).
 - Kahraman kartları mobilde dikey düzene geçti; isimler artık kesilmiyor.
