@@ -18,7 +18,17 @@ import { computeEnchantAura } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
+import { resolveHuntFireRule, type HuntDef } from '../data/hunts';
 import { findMatches, findPossibleMoves, type MatchGrid, type MatchResult, type Move } from '../game/match3';
+
+/** Yukarıdaki `checkBossPhaseTransitions` içinde kendi faz mantığı olan bosslar */
+const BESPOKE_PHASE_BOSSES = new Set([
+  'forest_guardian',
+  'frost_queen',
+  'infernal_dragon',
+  'crystal_titan',
+  'abyssal_king',
+]);
 
 const GRID_SIZE = 8;
 const BASE_GEMS: GemType[] = ['fire', 'frost', 'nature', 'lightning', 'arcane'];
@@ -47,7 +57,11 @@ export interface BattleSceneInitData {
   settings: GameSettings;
   onCombatUpdate: (snapshot: BattleCombatSnapshot) => void;
   onMatchStats: (gemsMatched: Partial<Record<GemType, number>>, combo: number, skillUsed: boolean) => void;
-  onBattleEnd: (victory: boolean) => void;
+  /** `turns`: savaşın bittiği andaki tur numarası (av rekoru için) */
+  onBattleEnd: (victory: boolean, turns: number) => void;
+  /** Boss Avı modu: özel kural ve arena görseli */
+  hunt?: HuntDef;
+  arenaImage?: string;
 }
 
 export class BattleScene extends Phaser.Scene {
@@ -131,6 +145,9 @@ export class BattleScene extends Phaser.Scene {
   private turnPhase: BattleCombatSnapshot['turnPhase'] = 'player';
   private skillCooldowns: Record<string, number> = {};
   private turnNumber = 1;
+  /** Av kuralı bu oyuncu turunda tetiklendi mi (zincirde tekrar etmez) */
+  private huntRuleUsed = false;
+  private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
     super({ key: 'BattleScene' });
@@ -207,6 +224,12 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  public preload() {
+    if (this.initData?.arenaImage) {
+      this.load.image('hunt_arena', this.initData.arenaImage);
+    }
+  }
+
   public create() {
     createGemTextures(this);
     this.heroIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
@@ -214,6 +237,9 @@ export class BattleScene extends Phaser.Scene {
     const enemyKey = createEnemyPhaserTexture(this, this.enemy);
 
     this.bgGraphics = this.add.graphics();
+    if (this.initData.arenaImage && this.textures.exists('hunt_arena')) {
+      this.arenaSprite = this.add.image(0, 0, 'hunt_arena').setOrigin(0, 0);
+    }
     this.ambientGraphics = this.add.graphics();
     this.bossAuraGraphics = this.add.graphics();
     this.heroAuraGraphics = this.add.graphics();
@@ -475,6 +501,20 @@ export class BattleScene extends Phaser.Scene {
       this.stageArea.y + this.stageArea.h * (isPortrait ? 0.54 : 0.56)
     );
     this.enemyContainer.setScale(enemyScale);
+    this.layoutArena();
+  }
+
+  /** Arena görselini sahne alanını kaplayacak (cover) şekilde yerleştirir; savaşçıların arkasında kalır. */
+  private layoutArena() {
+    const img = this.arenaSprite;
+    if (!img) return;
+    const { x, y, w, h } = this.stageArea;
+    const scale = Math.max(w / img.width, h / img.height);
+    const visW = w / scale;
+    const visH = h / scale;
+    img.setScale(scale);
+    img.setPosition(x - ((img.width - visW) / 2) * scale, y - ((img.height - visH) / 2) * scale);
+    img.setCrop((img.width - visW) / 2, (img.height - visH) / 2, visW, visH);
   }
 
   private drawBackgroundAndFrame() {
@@ -923,6 +963,41 @@ export class BattleScene extends Phaser.Scene {
     await this.applyGravityAndRefill();
   }
 
+  private applyHuntFireRule(counts: Record<GemType, number>) {
+    const hunt = this.initData.hunt;
+    if (!hunt) return;
+    const frozenTiles: TileVisual[] = [];
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const tv = this.grid[r][c];
+        if (tv && tv.tile.frozen > 0) frozenTiles.push(tv);
+      }
+    }
+    const effect = resolveHuntFireRule(hunt, { usedThisTurn: this.huntRuleUsed }, counts, frozenTiles.length);
+    this.huntRuleUsed = effect.usedThisTurn;
+
+    if (effect.thaw > 0) {
+      Phaser.Utils.Array.Shuffle(frozenTiles);
+      for (const tv of frozenTiles.slice(0, effect.thaw)) {
+        tv.tile.frozen = 0;
+        this.syncTileOverlay(tv);
+        const pos = this.cellToWorld(tv.tile.row, tv.tile.col);
+        this.spawnGemBurst(pos.x, pos.y, 'frost');
+        this.spawnFloatingText(pos.x, pos.y - 18, 'BUZ ÇÖZÜLDÜ', '#7dd3fc', 14);
+      }
+    }
+    if (effect.ulti > 0) {
+      this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + effect.ulti);
+      this.spawnFloatingText(
+        this.heroContainer.x,
+        this.heroContainer.y - 88,
+        `+${effect.ulti} Ulti (Av)`,
+        '#fdba74',
+        15
+      );
+    }
+  }
+
   private tileGrid(): MatchGrid {
     return this.grid.map((row) => row.map((tv) => (tv ? tv.tile : null)));
   }
@@ -1132,6 +1207,9 @@ export class BattleScene extends Phaser.Scene {
         this.grid[r][c] = null;
       }
     }
+
+    // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
+    this.applyHuntFireRule(counts);
 
     // Play match audio based on dominant gem
     const dominant = (Object.keys(counts) as GemType[]).sort((a, b) => counts[b] - counts[a])[0];
@@ -1391,6 +1469,10 @@ export class BattleScene extends Phaser.Scene {
     );
 
     this.checkBossPhaseTransitions();
+    // Öfke fazına geçince sayaç güncel saldırı hızına iner (ekrandaki tur sayısı doğru kalır)
+    if (this.enemyEnraged) {
+      this.enemyTurnCounter = Math.min(this.enemyTurnCounter, this.effectiveAttackInterval());
+    }
 
     if (this.enemyHp <= 0) {
       this.handleVictory();
@@ -1476,8 +1558,10 @@ export class BattleScene extends Phaser.Scene {
         this.spawnBannerText('FAZ 3: KIYAMET ÖFKESİ! ZAYIFLIK: ATEŞ!', '#f43f5e');
         SoundEngine.playBossRoar();
       }
-    } else {
-      // Yeni nesil Lord & Bölge Bossları: çok fazlı, zayıflığı değişen mekanik
+    } else if (!BESPOKE_PHASE_BOSSES.has(this.enemy.bossId ?? '')) {
+      // Yeni nesil Lord & Bölge Bossları: çok fazlı, zayıflığı değişen mekanik.
+      // Kendi faz kuralı olan bosslar (yukarıdakiler) buraya düşmez; aksi halde eşiklerine
+      // ulaşmadan genel faz tetiklenip zayıflıkları değişir ve kendi fazları hiç çalışmazdı.
       const maxPhase = this.enemy.bossId === 'chaos_emperor' ? 4 : 3;
       const weaknessCycle: GemType[] = ['fire', 'frost', 'nature', 'lightning', 'arcane'];
       for (let ph = 1; ph < maxPhase; ph++) {
@@ -1696,9 +1780,7 @@ export class BattleScene extends Phaser.Scene {
       this.enemyTurnCounter -= 1;
       if (this.enemyTurnCounter <= 0) {
         await this.executeEnemyAttack();
-        this.enemyTurnCounter = this.enemyEnraged
-          ? Math.max(1, this.enemy.attackInterval - 1)
-          : this.enemy.attackInterval;
+        this.enemyTurnCounter = this.effectiveAttackInterval();
       }
     }
 
@@ -1710,6 +1792,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.turnNumber += 1;
     this.comboCount = 0;
+    this.huntRuleUsed = false;
     SoundEngine.setIntensity(1);
     this.turnPhase = 'player';
     this.inputLocked = false;
@@ -2599,7 +2682,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.emitSnapshot();
     this.time.delayedCall(750, () => {
-      this.initData.onBattleEnd(true);
+      this.initData.onBattleEnd(true, this.turnNumber);
     });
   }
 
@@ -2616,7 +2699,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.emitSnapshot();
     this.time.delayedCall(700, () => {
-      this.initData.onBattleEnd(false);
+      this.initData.onBattleEnd(false, this.turnNumber);
     });
   }
 
@@ -2883,6 +2966,13 @@ export class BattleScene extends Phaser.Scene {
     return new Promise((resolve) => this.time.delayedCall(ms, resolve));
   }
 
+  /** Öfkeli düşman bir tur daha hızlı saldırır; sayaç bu değeri gösterir. */
+  private effectiveAttackInterval(): number {
+    return this.enemyEnraged
+      ? Math.max(1, this.enemy.attackInterval - 1)
+      : this.enemy.attackInterval;
+  }
+
   private getEnemyWarningText(): string {
     const weakName = GEM_INFO[this.enemyWeakness].name.split(' ')[0];
     const dots: string[] = [];
@@ -2919,7 +3009,7 @@ export class BattleScene extends Phaser.Scene {
       enemyMaxHp: this.enemyMaxHp,
       enemyShield: this.enemyShield,
       enemyTurnCounter: this.enemyTurnCounter,
-      enemyMaxTurnInterval: this.enemy.attackInterval,
+      enemyMaxTurnInterval: this.effectiveAttackInterval(),
       enemyFrozenTurns: this.enemyFrozenTurns,
       enemyBurnTurns: this.enemyBurnTurns,
       enemyPoisonTurns: this.enemyPoisonTurns,

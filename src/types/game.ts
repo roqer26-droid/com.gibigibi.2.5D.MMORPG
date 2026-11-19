@@ -512,6 +512,15 @@ export interface HeroProgress {
   equipped: Partial<Record<EquipmentSlot, EquipmentItem>>;
 }
 
+export type HuntId = 'frozen_throne' | 'ash_arena';
+
+/** Boss Avı kaydı: boss başına en iyi tur sayısı, galibiyet sayısı ve ilk zafer ödülü bilgisi */
+export interface HuntRecord {
+  bestTurns: number | null;
+  wins: number;
+  firstRewardClaimed: boolean;
+}
+
 export interface GameSaveState {
   version: number;
   activeHeroClass: HeroClassId;
@@ -527,6 +536,7 @@ export interface GameSaveState {
   claimedQuests: string[];
   questPeriods: { daily: QuestPeriod; weekly: QuestPeriod };
   league: LeagueSave;
+  huntRecords: Record<HuntId, HuntRecord>;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;

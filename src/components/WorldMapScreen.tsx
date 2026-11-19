@@ -9,18 +9,22 @@ import {
   Swords,
   Coins,
   ShieldAlert,
+  Target,
 } from 'lucide-react';
 import { GEM_INFO, RARITY_META } from '../data/skills';
 import { WORLD_REGIONS } from '../data/world';
+import { HUNTS, isHuntUnlocked } from '../data/hunts';
 import { GameSaveState, RegionId, StageDef } from '../types/game';
 
 interface WorldMapScreenProps {
   save: GameSaveState;
   onBack: () => void;
   onStartStage: (stage: StageDef) => void;
+  /** Boss Avları listesini açar */
+  onOpenHunts: () => void;
 }
 
-export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, onStartStage }) => {
+export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, onStartStage, onOpenHunts }) => {
   const allStages = useMemo(() => WORLD_REGIONS.flatMap((r) => r.stages), []);
 
   // Determine furthest unlocked stage
@@ -78,6 +82,24 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({ save, onBack, on
 
       <div className="flex-1 overflow-y-auto p-3 sm:p-5">
         <div className="mx-auto max-w-6xl space-y-5">
+          {/* Boss Avları girişi */}
+          <button
+            type="button"
+            onClick={onOpenHunts}
+            className="flex min-h-[56px] w-full items-center gap-3 rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-950/40 to-slate-950/70 px-3 py-2 text-left transition hover:border-amber-300"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-300">
+              <Target className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-display text-sm font-bold text-amber-100">Boss Avları</span>
+              <span className="block truncate text-[11px] text-slate-400">
+                {HUNTS.filter((h) => isHuntUnlocked(save, h)).length}/{HUNTS.length} av açık · özel kurallı boss savaşları
+              </span>
+            </span>
+            <span className="shrink-0 text-xs font-bold text-amber-300">Aç →</span>
+          </button>
+
           {/* Hızlı ilerleme çubuğu */}
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2">
             <span className="text-xs text-slate-400">

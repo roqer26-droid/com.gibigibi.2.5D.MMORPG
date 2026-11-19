@@ -1,7 +1,8 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
+import { createHuntRecords, HUNT_IDS } from '../data/hunts';
 import { createLeagueSave } from '../data/league';
-import { GameSaveState, HeroClassId, HeroProgress } from '../types/game';
+import { GameSaveState, HeroClassId, HeroProgress, HuntId, HuntRecord } from '../types/game';
 import { dayKey } from './calendar';
 import { createQuestPeriods, refreshProgressPeriods } from './questProgress';
 
@@ -14,7 +15,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 type RawSave = Record<string, unknown>;
 
@@ -26,6 +27,9 @@ type RawSave = Record<string, unknown>;
 const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   // v3 -> v4: kayıt artık yüklemede doğrulanıyor (sanitizeSave); veri biçimi aynı.
   3: (raw) => raw,
+  // v4 -> v5: av kayıtları (huntRecords) eklendi; eksik alan varsayılanlarla birleştirilir.
+  // Av açılışı bossVictories/completedStages'tan türetildiği için eski boss zaferleri geçerlidir.
+  4: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -52,6 +56,24 @@ const stringArray = (value: unknown): string[] =>
     ? Array.from(new Set(value.filter((x): x is string => typeof x === 'string')))
     : [];
 
+/** Av kayıtlarını doğrular: eksik av için boş kayıt, bozuk değerler için güvenli varsayılan. */
+export function sanitizeHuntRecords(value: unknown): Record<HuntId, HuntRecord> {
+  const out = createHuntRecords();
+  if (!value || typeof value !== 'object') return out;
+  for (const id of HUNT_IDS) {
+    const r = (value as Record<string, unknown>)[id];
+    if (!r || typeof r !== 'object') continue;
+    const rec = r as Partial<HuntRecord>;
+    const best = Number(rec.bestTurns);
+    out[id] = {
+      bestTurns: rec.bestTurns != null && Number.isFinite(best) && best >= 1 ? Math.floor(best) : null,
+      wins: Math.floor(finiteOr(rec.wins, 0)),
+      firstRewardClaimed: rec.firstRewardClaimed === true,
+    };
+  }
+  return out;
+}
+
 /** Bozulmuş/elle düzenlenmiş değerleri (NaN, negatif, yanlış tip) güvenli değerlere çeker. */
 export function sanitizeSave(save: GameSaveState): GameSaveState {
   const heroes = { ...save.heroes };
@@ -77,6 +99,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     completedStages: stringArray(save.completedStages),
     claimedQuests: stringArray(save.claimedQuests),
     bossVictories: stringArray(save.bossVictories) as GameSaveState['bossVictories'],
+    huntRecords: sanitizeHuntRecords(save.huntRecords),
   };
 }
 
@@ -120,6 +143,7 @@ export function createInitialSaveState(): GameSaveState {
     claimedQuests: [],
     questPeriods: createQuestPeriods(),
     league: createLeagueSave(),
+    huntRecords: createHuntRecords(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

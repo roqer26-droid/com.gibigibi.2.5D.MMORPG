@@ -1,9 +1,11 @@
 import { HERO_CLASSES } from '../data/classes';
+import { getHunt, isHuntUnlocked } from '../data/hunts';
 import type {
   EquipmentItem,
   EquipmentSlot,
   GameSaveState,
   HeroClassId,
+  HuntId,
 } from '../types/game';
 import { recordQuestActivity } from '../utils/questProgress';
 import { getDismantleYield, getEnhanceCost, getItemPowerScore } from '../utils/rpgLogic';
@@ -291,5 +293,60 @@ export function resetSkills(save: GameSaveState): ActionResult {
       },
     },
     toast: 'Yetenek puanları sıfırlandı ve iade edildi!',
+  };
+}
+
+export interface HuntOutcome {
+  save: GameSaveState;
+  /** Av açık değilse veya tur sayısı geçersizse false; kayıt değişmez. */
+  recorded: boolean;
+  /** Bu zaferle verilen ilk zafer ödülü (daha önce verildiyse null) */
+  firstReward: { gold: number; crystals: number } | null;
+  newRecord: boolean;
+  previousBest: number | null;
+  bestTurns: number | null;
+  wins: number;
+}
+
+/**
+ * Av zaferini kayda işler: galibiyet sayısı, en az tur rekoru ve ilk zafer ödülü
+ * (ödül + "verildi" bilgisi) tek güncellemede yazılır. Ödül yalnızca bir kez verilir.
+ */
+export function recordHuntVictory(save: GameSaveState, huntId: HuntId, turns: number): HuntOutcome {
+  const hunt = getHunt(huntId);
+  const rec = save.huntRecords[huntId];
+  const t = Math.floor(turns);
+  if (!isHuntUnlocked(save, hunt) || !Number.isFinite(t) || t < 1) {
+    return {
+      save,
+      recorded: false,
+      firstReward: null,
+      newRecord: false,
+      previousBest: rec.bestTurns,
+      bestTurns: rec.bestTurns,
+      wins: rec.wins,
+    };
+  }
+
+  const newRecord = rec.bestTurns === null || t < rec.bestTurns;
+  const grantReward = !rec.firstRewardClaimed;
+  const nextRec = {
+    bestTurns: newRecord ? t : rec.bestTurns,
+    wins: rec.wins + 1,
+    firstRewardClaimed: true,
+  };
+  return {
+    save: {
+      ...save,
+      gold: save.gold + (grantReward ? hunt.firstReward.gold : 0),
+      crystals: save.crystals + (grantReward ? hunt.firstReward.crystals : 0),
+      huntRecords: { ...save.huntRecords, [huntId]: nextRec },
+    },
+    recorded: true,
+    firstReward: grantReward ? { ...hunt.firstReward } : null,
+    newRecord,
+    previousBest: rec.bestTurns,
+    bestTurns: nextRec.bestTurns,
+    wins: nextRec.wins,
   };
 }

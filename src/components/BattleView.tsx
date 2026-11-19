@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
+import { ARENA_IMAGES } from '../data/huntArt';
+import type { HuntDef } from '../data/hunts';
+import type { HuntOutcome } from '../state/saveActions';
 import { GEM_INFO, RARITY_META, getFullSkillCodex, getSkillLoadout } from '../data/skills';
 import { BattleScene, BattleSceneInitData } from '../phaser/BattleScene';
 import {
@@ -44,6 +47,9 @@ interface BattleViewProps {
   isLeague?: boolean;
   onLeagueDefeat?: () => BattleRewardSummary;
   onLeagueForfeit?: () => void;
+  /** Boss Avı modu: av tanımı ve zafer kaydı */
+  hunt?: HuntDef;
+  onHuntVictory?: (hunt: HuntDef, turns: number) => HuntOutcome;
   onExitToMap: () => void;
   onNextStage: (stage: StageDef) => void;
   onEquipItem: (item: EquipmentItem) => void;
@@ -58,6 +64,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   isLeague = false,
   onLeagueDefeat,
   onLeagueForfeit,
+  hunt,
+  onHuntVictory,
   onExitToMap,
   onNextStage,
   onEquipItem,
@@ -127,11 +135,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
     equippedDrop?: boolean;
     leaguePointsChange?: number;
     leaguePoints?: number;
+    turns?: number;
+    hunt?: HuntOutcome;
   } | null>(null);
+  const isHunt = !!hunt;
+  const exitLabel = isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
 
   // Latest callbacks in refs so Phaser never holds stale closures
-  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat });
-  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat };
+  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory });
+  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory };
 
   // Switch music mode
   useEffect(() => {
@@ -157,9 +169,20 @@ export const BattleView: React.FC<BattleViewProps> = ({
       onCombatUpdate: (snap) => setSnapshot(snap),
       onMatchStats: (gems, combo, skillUsed) =>
         callbacksRef.current.onMatchStats(gems, combo, skillUsed),
-      onBattleEnd: (victory) => {
+      hunt,
+      arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
+      onBattleEnd: (victory, turns) => {
         if (resolved) return;
         resolved = true;
+        if (hunt) {
+          if (victory) {
+            const huntResult = callbacksRef.current.onHuntVictory?.(hunt, turns);
+            setOutcome({ victory: true, turns, hunt: huntResult });
+          } else {
+            setOutcome({ victory: false, turns });
+          }
+          return;
+        }
         if (victory) {
           const res = callbacksRef.current.onCompleteVictory(stage);
           setOutcome({
@@ -180,6 +203,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
     const battleScene = new BattleScene(initData);
     sceneRef.current = battleScene;
+    if (import.meta.env.VITE_E2E) (window as unknown as { __battleScene?: BattleScene }).__battleScene = battleScene;
 
     const game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -201,7 +225,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       game.destroy(true);
       gameRef.current = null;
     };
-  }, [stage.id, battleKey]);
+  }, [stage.id, hunt?.id, battleKey]);
 
   // Sync updated audio/shake settings into running scene
   useEffect(() => {
@@ -727,7 +751,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                   onClick={() => isLeague ? setConfirmForfeit(true) : onExitToMap()}
                   className="rounded-xl border border-rose-500/40 bg-rose-950/40 py-2.5 text-xs font-bold text-rose-300 hover:bg-rose-900/50"
                 >
-                  {isLeague ? 'Pes Et ve Lige Dön' : 'Haritaya Dön'}
+                  {isLeague ? 'Pes Et ve Lige Dön' : exitLabel}
                 </button>
               )}
             </div>
@@ -745,7 +769,56 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 : 'border-rose-500/60'
             }`}
           >
-            {outcome.victory ? (
+            {outcome.victory && hunt ? (
+              <>
+                <div className="text-xs font-extrabold uppercase tracking-widest" style={{ color: hunt.accent }}>
+                  BOSS AVI TAMAMLANDI!
+                </div>
+                <h2 className="mt-1 font-display text-3xl font-black text-white">ZAFER!</h2>
+                <p className="mt-1 text-xs text-slate-300">
+                  {hunt.arenaName} · {hunt.bossName}
+                </p>
+                <div className="mt-4 space-y-2 text-left">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 text-sm">
+                    <span className="text-slate-400">Bu av</span>
+                    <strong className="text-white">{outcome.turns} tur</strong>
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 text-sm">
+                    <span className="text-slate-400">En iyi rekor</span>
+                    <strong className={outcome.hunt?.newRecord ? 'text-amber-300' : 'text-white'}>
+                      {outcome.hunt?.bestTurns ?? outcome.turns} tur{outcome.hunt?.newRecord ? ' · Yeni rekor!' : ''}
+                    </strong>
+                  </div>
+                  {outcome.hunt?.firstReward && (
+                    <div className="rounded-xl border border-amber-400/40 bg-amber-950/25 px-3 py-2.5 text-sm">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-300/80">İlk zafer ödülü</div>
+                      <div className="mt-1 flex items-center gap-4 font-bold">
+                        <span className="inline-flex items-center gap-1 text-amber-300"><Coins className="h-4 w-4" /> +{outcome.hunt.firstReward.gold.toLocaleString('tr-TR')}</span>
+                        <span className="inline-flex items-center gap-1 text-sky-300"><Gem className="h-4 w-4" /> +{outcome.hunt.firstReward.crystals}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-5 flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setBattleKey((k) => k + 1)}
+                    className="gold-btn flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl text-sm font-extrabold text-slate-950"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Tekrar Dene
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onExitToMap}
+                    className="flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold text-slate-200"
+                  >
+                    <Map className="h-4 w-4" />
+                    {exitLabel}
+                  </button>
+                </div>
+              </>
+            ) : outcome.victory ? (
               <>
                 <div className="text-xs font-extrabold uppercase tracking-widest text-amber-300">
                   {isLeague ? 'LİG DÜELLOSU KAZANILDI!' : stage.enemy.isBoss ? 'BOSS MAĞLUP EDİLDİ!' : 'AŞAMA TEMİZLENDİ!'}
@@ -851,7 +924,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                       className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800"
                     >
                       <Map className="h-4 w-4" />
-                      {isLeague ? 'Lige Dön' : 'Haritaya Dön'}
+                      {exitLabel}
                     </button>
                   </div>
                 </div>
@@ -885,7 +958,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-3 text-xs font-bold text-slate-200"
                   >
                     <Map className="h-4 w-4" />
-                    {isLeague ? 'Lige Dön' : 'Haritaya Dön'}
+                    {exitLabel}
                   </button>
                 </div>
               </>

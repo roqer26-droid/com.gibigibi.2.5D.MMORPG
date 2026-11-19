@@ -4,6 +4,24 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.4.0 — Boss Avları
+- **Boss Avları:** Dünya Haritası'nda tek girişle açılan yeni mod. İlk sürümde Buz Kraliçesi (Donmuş Taht)
+  ve Cehennem Ejderhası (Kül Arenası). Her av, ilgili boss hikâyede yenilince açılır; eski kayıtlardaki
+  boss zaferleri (veya tamamlanmış boss aşaması) geçerlidir.
+- Av listesi iki dikey kart gösterir; kilitli kartta açılma şartı yazar. Açık kart detay ekranına gider
+  (boss çizimi, özel kural, ilk zafer ödülü, "Ava Başla").
+- **Donmuş Taht:** Her turun ilk ateş eşleşmesi sahadaki bir donmuş taşı çözer. Zincirde tekrar etmez.
+  İlk zafer: 800 altın + 10 kristal.
+- **Kül Arenası:** Her turun ilk ateş eşleşmesi +5 ulti enerjisi verir. İlk zafer: 1.200 altın + 15 kristal.
+- Av kaydı: boss başına en az turda kazanma rekoru, galibiyet sayısı ve ilk zafer ödülünün verildiği
+  bilgisi (ödül ve bilgi tek güncellemede yazılır; ödül yalnızca bir kez verilir).
+- Savaş sonucunda "Tekrar Dene" ve "Avlara Dön". Arena görselleri karakterlerin arkasında.
+- Kayıt sürümü 5 (eski kayıtlar sorunsuz yüklenir).
+- **Hata düzeltmesi:** Kendi faz kuralı olan bosslar (Orman Muhafızı, Buz Kraliçesi, Cehennem Ejderhası,
+  Kristal Titan) eşiklerine gelmeden "genel faz"a düşüp zayıflığını değiştiriyordu; Buz Kraliçesi'nin
+  %55'teki Buz Bariyeri hiç tetiklenmiyordu. Artık her boss yalnızca kendi fazını izler.
+- Öfke fazına geçen düşmanın saldırı sayacı hemen güncel hıza iner (ekrandaki tur sayısı doğru).
+
 ## v1.3.0 — Zorluk dengesi ve menü düzeni
 - **Zorluk:** Erken aşamalar artık 2-3 hamlede bitmiyor. Düşman canına, kahramanın seviyesine göre
   hedeflenen hamle sayısından hesaplanan bir taban eklendi (`src/data/difficulty.ts`):

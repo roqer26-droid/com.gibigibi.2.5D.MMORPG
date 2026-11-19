@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
 import { exitNativeApp, onNativeBack } from './native';
+import { findStageById } from './data/world';
 import { LevelUpModal, LootRevealModal } from './components/CelebrationModals';
 import { EquipmentInventoryScreen } from './components/EquipmentInventoryScreen';
 import { HeroesScreen } from './components/HeroesScreen';
@@ -9,6 +10,7 @@ import { QuestsScreen } from './components/QuestsScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import { WorldMapScreen } from './components/WorldMapScreen';
+import type { HuntDef } from './data/hunts';
 import { generateEquipmentItem } from './data/items';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
 import { QUESTS_LIST } from './data/quests';
@@ -26,6 +28,7 @@ import {
   QuestCategory,
   Rarity,
   StageDef,
+  HuntId,
 } from './types/game';
 import {
   applyXpToHero,
@@ -44,16 +47,20 @@ import {
   unequipSlot,
   unlockHero,
   upgradeSkillNode,
+  recordHuntVictory,
   type ActionResult,
   type SoundCue,
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
   import('./components/BattleView').then((m) => ({ default: m.BattleView }))
+);
+const HuntsScreen = lazy(() =>
+  import('./components/HuntsScreen').then((m) => ({ default: m.HuntsScreen }))
 );
 const LeagueScreen = lazy(() =>
   import('./components/LeagueScreen').then((m) => ({ default: m.LeagueScreen }))
@@ -94,6 +101,8 @@ export function App() {
   const [questTab, setQuestTab] = useState<QuestCategory>('main');
   const [questBack, setQuestBack] = useState<'menu' | 'league'>('menu');
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
+  const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
+  const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
   const [activeLeagueOpponent, setActiveLeagueOpponent] = useState<LeagueOpponent | null>(null);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -120,6 +129,10 @@ export function App() {
       return;
     }
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
+    if (route === 'hunts') {
+      if (selectedHuntId) return setSelectedHuntId(null);
+      return setRoute('world');
+    }
     if (route !== 'menu') return setRoute('menu');
     exitNativeApp();
   };
@@ -443,14 +456,33 @@ export function App() {
   const handleStartStage = (stage: StageDef) => {
     SoundEngine.unlock();
     setActiveLeagueOpponent(null);
+    setActiveHunt(null);
     setActiveStage(stage);
     setRoute('battle');
+  };
+
+  const handleStartHunt = (hunt: HuntDef) => {
+    const found = findStageById(hunt.storyStageId);
+    if (!found) return;
+    SoundEngine.unlock();
+    setActiveLeagueOpponent(null);
+    setActiveHunt(hunt);
+    setActiveStage(found.stage);
+    setRoute('battle');
+  };
+
+  /** Av zaferini kayda işler (rekor + ilk zafer ödülü tek güncellemede). */
+  const handleHuntVictory = (hunt: HuntDef, turns: number) => {
+    const outcome = recordHuntVictory(saveRef.current, hunt.id, turns);
+    if (outcome.recorded) setSave(outcome.save);
+    return outcome;
   };
 
   const handleStartLeague = (opponent: LeagueOpponent) => {
     const current = refreshProgressPeriods(saveRef.current);
     setSave(current);
     SoundEngine.unlock();
+    setActiveHunt(null);
     setActiveLeagueOpponent(opponent);
     setActiveStage(createLeagueStage(opponent, current.heroes[current.activeHeroClass].level));
     setRoute('battle');
@@ -570,6 +602,7 @@ export function App() {
           save={save}
           onBack={() => setRoute('menu')}
           onStartStage={handleStartStage}
+          onOpenHunts={() => { setSelectedHuntId(null); setRoute('hunts'); }}
         />
       )}
 
@@ -597,8 +630,20 @@ export function App() {
         />
       )}
 
+      {route === 'hunts' && (
+        <HuntsScreen
+          save={save}
+          selectedId={selectedHuntId}
+          onSelect={setSelectedHuntId}
+          onBack={() => setRoute('world')}
+          onStart={handleStartHunt}
+        />
+      )}
+
       {route === 'battle' && activeStage && (
         <BattleView
+          hunt={activeHunt ?? undefined}
+          onHuntVictory={handleHuntVictory}
           save={save}
           stage={activeStage}
           onMatchStats={handleMatchStats}
@@ -606,7 +651,10 @@ export function App() {
           isLeague={!!activeLeagueOpponent}
           onLeagueDefeat={activeLeagueOpponent ? () => handleLeagueResult(false) : undefined}
           onLeagueForfeit={activeLeagueOpponent ? () => { handleLeagueResult(false, true); } : undefined}
-          onExitToMap={() => setRoute(activeLeagueOpponent ? 'league' : 'world')}
+          onExitToMap={() => {
+            if (activeHunt) { setSelectedHuntId(null); setRoute('hunts'); return; }
+            setRoute(activeLeagueOpponent ? 'league' : 'world');
+          }}
           onNextStage={handleStartStage}
           onEquipItem={(itm) => handleEquipItem(itm)}
           onOpenSettings={() => setShowSettings(true)}
