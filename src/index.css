@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: "Cinzel", Georgia, serif;
+    --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    background-color: #080b14;
+    color: #f1f5f9;
+    overscroll-behavior: none;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.game-no-scroll {
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Custom sleek dark-gold scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #b48a3e, #6e521e);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #eab308, #a16207);
+}
+
+/* Fantasy Panel Styling */
+.fantasy-panel {
+  background: linear-gradient(165deg, rgba(22, 28, 52, 0.94) 0%, rgba(11, 14, 28, 0.97) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 230, 150, 0.14);
+}
+
+.fantasy-card {
+  background: linear-gradient(180deg, rgba(28, 35, 64, 0.85) 0%, rgba(15, 19, 36, 0.92) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.gold-btn {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 48%, #92400e 100%);
+  border: 1px solid #fde68a;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+.gold-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 24px rgba(251, 191, 36, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+.gold-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes shimmerSweep {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(220%) skewX(-20deg); }
+}
+
+@keyframes bossAlertPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.45); }
+  50% { box-shadow: 0 0 26px rgba(239, 68, 68, 0.9); }
+}
+
+@keyframes popScale {
+  0% { transform: scale(0.75); opacity: 0; }
+  65% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-float-slow {
+  animation: floatSlow 3.6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.animate-boss-alert {
+  animation: bossAlertPulse 1.2s ease-in-out infinite;
+}
+
+.animate-pop-scale {
+  animation: popScale 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Rarity glows */
+.rarity-common { border-color: rgba(148, 163, 184, 0.45); }
+.rarity-uncommon { border-color: rgba(34, 197, 94, 0.65); box-shadow: 0 0 12px rgba(34, 197, 94, 0.16); }
+.rarity-rare { border-color: rgba(59, 130, 246, 0.75); box-shadow: 0 0 14px rgba(59, 130, 246, 0.24); }
+.rarity-epic { border-color: rgba(168, 85, 247, 0.85); box-shadow: 0 0 18px rgba(168, 85, 247, 0.3); }
+.rarity-legendary { border-color: rgba(245, 158, 11, 0.92); box-shadow: 0 0 22px rgba(245, 158, 11, 0.38); }
+.rarity-mythic {
+  border-color: rgba(244, 63, 94, 0.95);
+  box-shadow: 0 0 26px rgba(244, 63, 94, 0.48), inset 0 0 12px rgba(251, 113, 133, 0.2);
+}
+
+.league-hero {
+  background-position: center;
+  background-size: cover;
+  animation: league-enter 550ms ease-out both;
+}
+.league-emblem {
+  background: radial-gradient(circle at 40% 30%, rgba(255, 210, 110, 0.17), rgba(8, 11, 23, 0.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 24px rgba(217, 157, 64, 0.13);
+  animation: league-shine 4s ease-in-out infinite;
+}
+.section-kicker {
+  color: #c39c5d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+}
+.league-opponent, .league-reward, .league-side, .league-link, .quest-row {
+  background: linear-gradient(150deg, rgba(26, 31, 49, 0.9), rgba(13, 17, 31, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+.league-pending {
+  background: linear-gradient(110deg, rgba(92, 55, 15, 0.25), rgba(16, 20, 35, 0.98));
+}
+@keyframes league-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes league-shine {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 18px rgba(217,157,64,0.1); }
+  50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 30px rgba(217,157,64,0.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .league-hero, .league-emblem { animation: none; }
+}

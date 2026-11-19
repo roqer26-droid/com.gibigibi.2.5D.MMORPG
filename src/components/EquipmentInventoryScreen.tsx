@@ -1,0 +1,447 @@
+import React, { useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  Sparkles,
+  Wand2,
+  SlidersHorizontal,
+  Trash2,
+  Coins,
+  Gem,
+} from 'lucide-react';
+import { HERO_CLASSES } from '../data/classes';
+import { RARITY_META, SLOT_LABELS } from '../data/skills';
+import { EquipmentItem, EquipmentSlot, GameSaveState } from '../types/game';
+import { computeEnchantAura, ENCHANT_TIERS } from '../phaser/HeroRenderer';
+import { computeHeroBuild, getItemPowerScore } from '../utils/rpgLogic';
+import { HeroPaperdoll } from './HeroPaperdoll';
+import { ItemArtSvg, ItemCard } from './ItemCard';
+import { ItemTooltipPanel } from './ItemTooltipModal';
+
+interface EquipmentInventoryScreenProps {
+  save: GameSaveState;
+  onBack: () => void;
+  onEquipItem: (item: EquipmentItem, targetSlot?: EquipmentSlot) => void;
+  onUnequipSlot: (slot: EquipmentSlot) => void;
+  onEnhanceItem: (itemId: string, isEquipped: boolean, slot?: EquipmentSlot) => void;
+  onDismantleItem: (itemId: string) => void;
+  onSellItem: (itemId: string) => void;
+  onAutoEquipBest: () => void;
+  onDismantleLowRarity: () => void;
+}
+
+const LEFT_SLOTS: EquipmentSlot[] = ['helmet', 'chest', 'gloves', 'pants', 'boots'];
+const RIGHT_SLOTS: EquipmentSlot[] = ['weapon', 'offhand', 'necklace', 'ring1', 'ring2'];
+
+export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> = ({
+  save,
+  onBack,
+  onEquipItem,
+  onUnequipSlot,
+  onEnhanceItem,
+  onDismantleItem,
+  onSellItem,
+  onAutoEquipBest,
+  onDismantleLowRarity,
+}) => {
+  const hero = save.heroes[save.activeHeroClass];
+  const cls = HERO_CLASSES[hero.classId];
+  const build = useMemo(() => computeHeroBuild(hero), [hero]);
+  const aura = useMemo(() => computeEnchantAura(hero), [hero]);
+
+  const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories'>('all');
+  const [sortBy, setSortBy] = useState<'rarity' | 'level' | 'power'>('rarity');
+  const [selectedRef, setSelectedRef] = useState<{
+    id: string;
+    isEquipped: boolean;
+    slot?: EquipmentSlot;
+  } | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<EquipmentSlot | null>(null);
+
+  const filteredInventory = useMemo(() => {
+    const items = save.inventory.filter((it) => {
+      if (filterCat === 'weapons') return it.slot === 'weapon' || it.slot === 'offhand';
+      if (filterCat === 'armor')
+        return ['helmet', 'chest', 'gloves', 'pants', 'boots'].includes(it.slot);
+      if (filterCat === 'accessories')
+        return ['necklace', 'ring1', 'ring2'].includes(it.slot);
+      return true;
+    });
+
+    items.sort((a, b) => {
+      if (sortBy === 'rarity') {
+        const diff = RARITY_META[b.rarity].rank - RARITY_META[a.rarity].rank;
+        return diff !== 0 ? diff : getItemPowerScore(b) - getItemPowerScore(a);
+      }
+      if (sortBy === 'level') {
+        return b.levelReq - a.levelReq || getItemPowerScore(b) - getItemPowerScore(a);
+      }
+      return getItemPowerScore(b) - getItemPowerScore(a);
+    });
+    return items;
+  }, [save.inventory, filterCat, sortBy]);
+
+  const selectedItem: { item: EquipmentItem; isEquipped: boolean; slot?: EquipmentSlot } | null =
+    useMemo(() => {
+      if (!selectedRef) return null;
+      if (selectedRef.isEquipped && selectedRef.slot) {
+        const eq = hero.equipped[selectedRef.slot];
+        return eq ? { item: eq, isEquipped: true, slot: selectedRef.slot } : null;
+      }
+      const inv = save.inventory.find((i) => i.id === selectedRef.id);
+      return inv ? { item: inv, isEquipped: false } : null;
+    }, [selectedRef, hero.equipped, save.inventory]);
+
+  const handleDropOnSlot = (e: React.DragEvent, slot: EquipmentSlot) => {
+    e.preventDefault();
+    setDragOverSlot(null);
+    const itemId = e.dataTransfer.getData('text/plain');
+    if (!itemId) return;
+    const invItem = save.inventory.find((i) => i.id === itemId);
+    if (!invItem) return;
+    const isRing =
+      (invItem.slot === 'ring1' || invItem.slot === 'ring2') &&
+      (slot === 'ring1' || slot === 'ring2');
+    if (invItem.slot === slot || isRing) {
+      onEquipItem(invItem, slot);
+    }
+  };
+
+  const renderSlotBox = (slot: EquipmentSlot) => {
+    const eq = hero.equipped[slot];
+    const meta = eq ? RARITY_META[eq.rarity] : null;
+    const isSelected = selectedItem?.isEquipped && selectedItem.slot === slot;
+    const isDropTarget = dragOverSlot === slot;
+
+    return (
+      <button
+        key={slot}
+        type="button"
+        onClick={() => {
+          if (eq) setSelectedRef({ id: eq.id, isEquipped: true, slot });
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOverSlot(slot);
+        }}
+        onDragLeave={() => setDragOverSlot(null)}
+        onDrop={(e) => handleDropOnSlot(e, slot)}
+        className={`relative flex h-16 w-16 sm:h-[72px] sm:w-[72px] flex-col items-center justify-center rounded-xl border-2 transition-all ${
+          eq && meta
+            ? `${meta.borderClass} ${meta.bgClass}`
+            : 'border-dashed border-slate-700 bg-slate-900/60 hover:border-amber-500/40'
+        } ${isSelected ? 'ring-2 ring-amber-300 scale-105' : ''} ${
+          isDropTarget ? 'ring-2 ring-emerald-400 scale-105 bg-emerald-950/50' : ''
+        }`}
+        title={SLOT_LABELS[slot]}
+      >
+        {eq ? (
+          <>
+            <ItemArtSvg item={eq} size={38} />
+            {eq.upgradeLevel > 0 && (
+              <span className="absolute -right-1 -top-1 rounded bg-amber-500 px-1 text-[9px] font-extrabold text-slate-950">
+                +{eq.upgradeLevel}
+              </span>
+            )}
+            <span className="mt-0.5 max-w-full truncate px-1 text-[9px] font-medium text-slate-200">
+              {SLOT_LABELS[slot]}
+            </span>
+          </>
+        ) : (
+          <span className="px-1 text-center text-[10px] font-semibold text-slate-500">
+            {SLOT_LABELS[slot]}
+          </span>
+        )}
+      </button>
+    );
+  };
+
+  return (
+    <div className="flex h-full flex-col bg-[#080b14]">
+      {/* Top Bar */}
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/20 bg-slate-950/90 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-200 hover:border-amber-400/50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Geri
+          </button>
+          <div>
+            <h1 className="font-display text-lg font-bold text-amber-300">
+              Ekipman ve Envanter
+            </h1>
+            <p className="text-[11px] text-slate-400">
+              Sürükle-bırak veya dokunarak kuşan • Görünüm anında değişir
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs font-bold">
+          <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-950/35 px-2.5 py-1 text-amber-300">
+            <Coins className="h-3.5 w-3.5" />
+            {save.gold.toLocaleString('tr-TR')} Altın
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-950/35 px-2.5 py-1 text-sky-300">
+            <Gem className="h-3.5 w-3.5" />
+            {save.crystals.toLocaleString('tr-TR')} Kristal
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-5">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 lg:grid-cols-12">
+          {/* Left: Character Paperdoll + 10 Slots + Live Stats */}
+          <div className="fantasy-panel flex flex-col rounded-2xl p-4 lg:col-span-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-base font-bold text-white">
+                  {cls.title} <span className="text-amber-400">Sv.{hero.level}</span>
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Savaş Gücü:{' '}
+                  <strong className="text-amber-300">
+                    {build.powerRating.toLocaleString('tr-TR')}
+                  </strong>
+                </p>
+                {/* Büyü Aurası — ekipman + seviyesi arttıkça karakter parlar */}
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span
+                    className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-extrabold"
+                    style={{
+                      color: aura.color,
+                      borderColor: `${aura.color}77`,
+                      background: `${aura.color}18`,
+                      boxShadow: aura.tier >= 3 ? `0 0 10px ${aura.color}55` : 'none',
+                    }}
+                  >
+                    ✦ {aura.tierName}
+                  </span>
+                  <div className="h-1.5 w-28 overflow-hidden rounded-full bg-slate-800">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.max(3, aura.intensity * 100)}%`,
+                        background: `linear-gradient(90deg, #7dd3fc, ${aura.color})`,
+                      }}
+                    />
+                  </div>
+                  <span className="shrink-0 text-[10px] text-slate-400">
+                    +{aura.total} geliştirme
+                    {aura.tier < ENCHANT_TIERS.length - 1 ? (
+                      <>
+                        {' '}
+                        • sonraki kademe:{' '}
+                        <span className="font-bold text-slate-300">
+                          +{ENCHANT_TIERS[aura.tier + 1].min}
+                        </span>
+                      </>
+                    ) : (
+                      <> • MAKSİMUM</>
+                    )}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onAutoEquipBest}
+                className="flex items-center gap-1.5 rounded-xl border border-amber-400/50 bg-amber-500/15 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/25"
+              >
+                <Wand2 className="h-3.5 w-3.5" />
+                En İyilerini Kuşan
+              </button>
+            </div>
+
+            {/* Paperdoll Stage */}
+            <div className="my-3 flex items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.12),rgba(9,11,22,0.95))] px-2 py-4 sm:px-4">
+              <div className="flex flex-col gap-2">{LEFT_SLOTS.map(renderSlotBox)}</div>
+
+              <div className="flex flex-col items-center justify-center">
+                <HeroPaperdoll hero={hero} size={185} />
+                <span className="mt-1 rounded-full border border-amber-500/30 bg-slate-900/80 px-3 py-0.5 text-[10px] font-semibold text-amber-200">
+                  {cls.name}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2">{RIGHT_SLOTS.map(renderSlotBox)}</div>
+            </div>
+
+            {/* Live Attributes Grid */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-xs sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <span className="text-[10px] text-slate-400">Can</span>
+                <p className="font-bold text-emerald-400">{build.stats.health}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Saldırı</span>
+                <p className="font-bold text-rose-400">{build.stats.attack}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Savunma</span>
+                <p className="font-bold text-amber-300">{build.stats.defense}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Mana</span>
+                <p className="font-bold text-sky-400">{build.stats.mana}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Kritik Şans</span>
+                <p className="font-bold text-yellow-300">%{build.stats.critChance}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Kritik Hasar</span>
+                <p className="font-bold text-orange-300">%{build.stats.critDamage}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Sıyrılma</span>
+                <p className="font-bold text-cyan-300">%{build.stats.dodge}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Elemental</span>
+                <p className="font-bold text-purple-300">+%{build.stats.elementalDamage}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Inventory & Selected Item Inspector */}
+          <div className="flex flex-col gap-4 lg:col-span-7">
+            {/* Filters & Sorting Bar */}
+            <div className="fantasy-panel flex flex-wrap items-center justify-between gap-2 rounded-2xl p-3">
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: 'all', label: 'Tümü' },
+                  { id: 'weapons', label: 'Silahlar' },
+                  { id: 'armor', label: 'Zırhlar' },
+                  { id: 'accessories', label: 'Aksesuarlar' },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFilterCat(f.id as typeof filterCat)}
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
+                      filterCat === f.id
+                        ? 'bg-amber-500 text-slate-950'
+                        : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-200 focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="rarity">Nadirliğe Göre</option>
+                  <option value="power">Güce Göre</option>
+                  <option value="level">Seviyeye Göre</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={onDismantleLowRarity}
+                  className="flex items-center gap-1 rounded-lg border border-purple-500/40 bg-purple-950/50 px-2.5 py-1 text-[11px] font-bold text-purple-200 hover:bg-purple-900/60"
+                  title="Tüm Sıradan eşyaları Kristale parçala"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Sıradanları Parçala
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+              {/* Inventory Grid */}
+              <div className="fantasy-panel rounded-2xl p-3 xl:col-span-7">
+                <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+                  <span>Çanta ({filteredInventory.length} Eşya)</span>
+                  <span className="text-[11px] text-amber-300/80">
+                    Bilgisayar: Sürükle & Bırak • Mobil: Dokun & Kuşan
+                  </span>
+                </div>
+
+                {filteredInventory.length === 0 ? (
+                  <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 text-center text-xs text-slate-500">
+                    <Sparkles className="mb-2 h-6 w-6 text-slate-600" />
+                    Bu kategoride eşya yok. Savaşlar kazanarak yeni ganimetler topla!
+                  </div>
+                ) : (
+                  <div className="grid max-h-[420px] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+                    {filteredInventory.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        selected={selectedItem?.item.id === item.id && !selectedItem.isEquipped}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', item.id)}
+                        onClick={() => setSelectedRef({ id: item.id, isEquipped: false })}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tooltip & Action Inspector */}
+              <div className="xl:col-span-5">
+                {selectedItem ? (
+                  <ItemTooltipPanel
+                    item={selectedItem.item}
+                    equippedInSlot={hero.equipped[selectedItem.item.slot]}
+                    isEquipped={selectedItem.isEquipped}
+                    heroLevel={hero.level}
+                    gold={save.gold}
+                    crystals={save.crystals}
+                    onEquip={() => {
+                      onEquipItem(selectedItem.item);
+                    }}
+                    onUnequip={
+                      selectedItem.slot
+                        ? () => {
+                            onUnequipSlot(selectedItem.slot!);
+                            setSelectedRef(null);
+                          }
+                        : undefined
+                    }
+                    onEnhance={() =>
+                      onEnhanceItem(selectedItem.item.id, selectedItem.isEquipped, selectedItem.slot)
+                    }
+                    onDismantle={
+                      !selectedItem.isEquipped
+                        ? () => {
+                            onDismantleItem(selectedItem.item.id);
+                            setSelectedRef(null);
+                          }
+                        : undefined
+                    }
+                    onSell={
+                      !selectedItem.isEquipped
+                        ? () => {
+                            onSellItem(selectedItem.item.id);
+                            setSelectedRef(null);
+                          }
+                        : undefined
+                    }
+                    onClose={() => setSelectedRef(null)}
+                  />
+                ) : (
+                  <div className="fantasy-panel flex h-full min-h-[260px] flex-col items-center justify-center rounded-2xl p-6 text-center text-xs text-slate-400">
+                    <Sparkles className="mb-2 h-8 w-8 text-amber-400/60" />
+                    <p className="font-semibold text-slate-200">Eşya İnceleme ve Karşılaştırma</p>
+                    <p className="mt-1">
+                      Özelliklerini görmek, kuşanılı eşyayla karşılaştırmak, geliştirmek (+1) veya
+                      parçalamak için soldaki bir slota ya da çantadaki bir eşyaya tıkla.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

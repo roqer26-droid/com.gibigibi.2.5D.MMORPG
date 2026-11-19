@@ -1,0 +1,943 @@
+import {
+  ActiveSkillDef,
+  CreatureClassId,
+  ElementType,
+  GemType,
+  HeroClassDef,
+  ItemCategory,
+  SkillFx,
+  SkillTreeNode,
+  StatBlock,
+} from '../types/game';
+
+type PassiveType = NonNullable<SkillTreeNode['passiveEffect']>['type'];
+type Pick = [PassiveType, number];
+
+/* ------------------------------------------------------------------ */
+/*  Yetenek ağacı üreticisi — açıklamalar etkilerden otomatik yazılır   */
+/* ------------------------------------------------------------------ */
+
+const PASSIVE_TEXT: Record<PassiveType, (v: number) => string> = {
+  fire_dmg: (v) => `Alev taşı hasarını +%${v} artırır`,
+  frost_mana: (v) => `Buz taşlarından Mana kazanımını +%${v} artırır`,
+  nature_heal: (v) => `Doğa taşı iyileştirme ve kalkanını +%${v} artırır`,
+  lightning_crit: (v) => `Yıldırım taşı hasarını +%${v} artırır`,
+  arcane_ulti: (v) => `Ulti şarj hızını +%${v} artırır`,
+  shield_start: (v) => `Savaşa +${v} Kalkanla başlar`,
+  combo_boost: (v) => `Kombo hasarını +%${v} artırır`,
+  lifesteal: (v) => `Verilen hasarın %${v}’ini Can olarak çalar`,
+  boss_dmg: (v) => `Bosslara karşı hasarı +%${v} artırır`,
+  skill_power: (v) => `Aktif yetenek hasarını +%${v} artırır`,
+  golden_luck: (v) => `Altın Taş çıkma şansını +%${v} artırır`,
+  start_mana: (v) => `Savaşa ek %${v} Mana ile başlar`,
+  start_ulti: (v) => `Savaşa %${v} dolu Ulti ile başlar`,
+  thorns: (v) => `Alınan saldırının %${v}’ini düşmana yansıtır`,
+  weakness_exploit: (v) => `Zayıflık hasar bonusunu +%${v} artırır`,
+  summon_power: (v) => `Çağrılan ordunun hasarını +%${v} artırır`,
+  bleed_power: (v) => `Kanama hasarını +%${v} artırır`,
+  dodge_counter: (v) => `Sıyrıldığında düşman saldırısının %${v}’i kadar karşı hasar verir`,
+  storm_overload: (v) => `Kombo 3+ iken hasarı +%${v} artırır`,
+  dragon_scale: (v) => `Dönüşüm formunun hasar bonusunu +%${v} artırır`,
+};
+
+const STAT_TEXT: Record<keyof StatBlock, (v: number) => string> = {
+  health: (v) => `Can +${v}`,
+  attack: (v) => `Saldırı +${v}`,
+  defense: (v) => `Savunma +${v}`,
+  critChance: (v) => `Kritik Şans +%${v}`,
+  critDamage: (v) => `Kritik Hasar +%${v}`,
+  mana: (v) => `Mana +${v}`,
+  dodge: (v) => `Sıyrılma +%${v}`,
+  elementalDamage: (v) => `Elemental Hasar +%${v}`,
+};
+
+function node(
+  id: string,
+  name: string,
+  branch: SkillTreeNode['branch'],
+  tier: SkillTreeNode['tier'],
+  maxRank: number,
+  requires: string | undefined,
+  stat?: Partial<StatBlock>,
+  passive?: Pick
+): SkillTreeNode {
+  const parts: string[] = [];
+  if (stat) {
+    (Object.keys(stat) as (keyof StatBlock)[]).forEach((k) => parts.push(STAT_TEXT[k](stat[k] ?? 0)));
+  }
+  if (passive) parts.push(PASSIVE_TEXT[passive[0]](passive[1]));
+  return {
+    id,
+    name,
+    description: `${parts.join(', ')} (kademe başına).`,
+    branch,
+    tier,
+    maxRank,
+    requires,
+    statPerRank: stat,
+    passiveEffect: passive ? { type: passive[0], valuePerRank: passive[1] } : undefined,
+  };
+}
+
+/** names: off1-4, mag1-4, def1-4 • picks: off2, mag1, mag4, def2 */
+function buildTree(p: string, n: string[], picks: Pick[]): SkillTreeNode[] {
+  return [
+    node(`${p}_off_1`, n[0], 'offense', 1, 3, undefined, { attack: 9, critChance: 2 }),
+    node(`${p}_off_2`, n[1], 'offense', 2, 3, `${p}_off_1`, undefined, picks[0]),
+    node(`${p}_off_3`, n[2], 'offense', 3, 3, `${p}_off_2`, { critDamage: 26 }, ['boss_dmg', 14]),
+    node(`${p}_off_4`, n[3], 'offense', 4, 2, `${p}_off_3`, {
+      attack: 22,
+      critDamage: 38,
+      elementalDamage: 12,
+    }),
+    node(`${p}_mag_1`, n[4], 'magic', 1, 3, undefined, undefined, picks[1]),
+    node(`${p}_mag_2`, n[5], 'magic', 2, 3, `${p}_mag_1`, { mana: 18 }, ['skill_power', 14]),
+    node(`${p}_mag_3`, n[6], 'magic', 3, 2, `${p}_mag_2`, { elementalDamage: 8 }, ['arcane_ulti', 15]),
+    node(`${p}_mag_4`, n[7], 'magic', 4, 2, `${p}_mag_3`, undefined, picks[2]),
+    node(`${p}_def_1`, n[8], 'defense', 1, 3, undefined, { health: 80, defense: 6 }),
+    node(`${p}_def_2`, n[9], 'defense', 2, 3, `${p}_def_1`, undefined, picks[3]),
+    node(`${p}_def_3`, n[10], 'defense', 3, 2, `${p}_def_2`, { health: 150, dodge: 3 }),
+    node(`${p}_def_4`, n[11], 'defense', 4, 2, `${p}_def_3`, { health: 230, defense: 15 }, [
+      'shield_start',
+      120,
+    ]),
+  ];
+}
+
+const fx = (
+  element: GemType,
+  hex: string,
+  visual: SkillFx['visual'],
+  sound: SkillFx['sound'],
+  rest: Partial<SkillFx> = {}
+): SkillFx => ({ element, hex, color: parseInt(hex.slice(1), 16), visual, sound, ...rest });
+
+interface SkillCfg {
+  id: string;
+  name: string;
+  desc: string;
+  mana: number;
+  cd: number;
+  mult: number;
+  el: ElementType;
+  icon: string;
+  extraTurn?: boolean;
+  fx: SkillFx;
+}
+
+interface Cfg {
+  id: CreatureClassId;
+  name: string;
+  title: string;
+  role: string;
+  pName: string;
+  pDesc: string;
+  weapons: ItemCategory[];
+  armor: ItemCategory;
+  offhand: ItemCategory;
+  theme: string;
+  cost: [number, number];
+  /** can, saldırı, savunma, kritik, kritik hasar, mana, sıyrılma, elemental */
+  base: number[];
+  /** can, saldırı, savunma, mana, kritik, elemental (seviye başına) */
+  lvl: number[];
+  gem?: Partial<Record<GemType, number>>;
+  innate?: Record<string, number>;
+  ult: { name: string; desc: string; mult: number; el: ElementType; icon: string; fx: SkillFx };
+  skills: [SkillCfg, SkillCfg];
+  names: string[];
+  picks: Pick[];
+  gear: [string, string, string, string];
+  gearEl: ElementType;
+}
+
+const CONFIGS: Cfg[] = [
+  {
+    id: 'vampire',
+    name: 'Vampir',
+    title: 'Kan Kontu Vladis',
+    role: 'Gecenin soylu avcısı. Vurduğu her darbeyle kendi canını yeniler ve düşmanı kanatır.',
+    pName: 'Kan Susuzluğu',
+    pDesc:
+      'Verdiği tüm hasarın %8’ini Can olarak çalar; Mor Arkan taşlarından %30 daha fazla Ulti enerjisi kazanır.',
+    weapons: ['sword', 'dagger'],
+    armor: 'light_armor',
+    offhand: 'cloak',
+    theme: '#e11d48',
+    cost: [32000, 1000],
+    base: [560, 66, 18, 18, 185, 110, 14, 18],
+    lvl: [52, 10.2, 3.6, 6, 0.9, 2],
+    gem: { arcane: 30 },
+    innate: { lifestealPct: 8 },
+    ult: {
+      name: 'Kızıl Ay Şöleni',
+      desc: '%530 hasar verir, verilen hasarın %60’ını Can olarak çalar, 3 tur kanatır ve 2 tur garanti kritik sağlar.',
+      mult: 5.3,
+      el: 'arcane',
+      icon: 'sparkles',
+      fx: fx('arcane', '#fb7185', 'shockwave', 'arcane_explosion', { drainPct: 0.6, bleed: 3, critBuff: 2 }),
+    },
+    skills: [
+      {
+        id: 'vamp_bite',
+        name: 'Kan Isırığı',
+        desc: '%190 hasar verir, verilen hasarın %70’ini Can olarak çalar ve 2 tur kanatır.',
+        mana: 30,
+        cd: 3,
+        mult: 1.9,
+        el: 'arcane',
+        icon: 'sparkles',
+        fx: fx('arcane', '#fb7185', 'beam', 'arcane_explosion', { drainPct: 0.7, bleed: 2 }),
+      },
+      {
+        id: 'vamp_bats',
+        name: 'Yarasa Sürüsü',
+        desc: '6 yarasa saldırısıyla toplam %210 hasar verir ve 2 tur +%45 Sıyrılma kazandırır.',
+        mana: 48,
+        cd: 5,
+        mult: 2.1,
+        el: 'arcane',
+        icon: 'sparkles',
+        fx: fx('arcane', '#9f1239', 'projectile', 'arcane_explosion', { hits: 6, dodgeBuff: 2 }),
+      },
+    ],
+    names: ['Keskin Dişler', 'Açık Damar', 'Avcı İçgüdüsü', 'Gece Hükümdarı', 'Karanlık Ziyafet', 'Kan Büyüsü', 'Kızıl Ay', 'Ölümsüz Susuzluk', 'Soğuk Ten', 'Sis Formu', 'Tabut Uykusu', 'Ebedi Lord'],
+    picks: [['bleed_power', 20], ['lifesteal', 4], ['lifesteal', 7], ['dodge_counter', 18]],
+    gear: ['Kont’un İnce Kılıcı', 'Yarasa Kanadı Pelerini', 'Gece Kadifesi Yelek', 'Kızıl Yakalı Başlık'],
+    gearEl: 'arcane',
+  },
+  {
+    id: 'werewolf',
+    name: 'Kurt Adam',
+    title: 'Ay Pençesi Fenris',
+    role: 'Vahşi pençeler, kanatan darbeler ve dolunayda gelen ezici dönüşüm.',
+    pName: 'Vahşi Kan',
+    pDesc:
+      'Kombo hasarı +%20 ve kanama hasarı +%15 artar; Kırmızı Alev taşları %20 daha fazla hasar verir.',
+    weapons: ['axe', 'dagger'],
+    armor: 'light_armor',
+    offhand: 'cloak',
+    theme: '#a8a29e',
+    cost: [38000, 1150],
+    base: [620, 68, 22, 20, 190, 90, 14, 12],
+    lvl: [60, 10.6, 4.4, 4, 1.0, 1.6],
+    gem: { fire: 20 },
+    innate: { comboBoostPct: 20, bleedPowerPct: 15 },
+    ult: {
+      name: 'Kanlı Ay Avı',
+      desc: '%540 hasar verir, 3 tur kanatır, 3 tur dönüşüm formu (+%60 hasar) ve +4 Öfke kazandırır.',
+      mult: 5.4,
+      el: 'physical',
+      icon: 'swords',
+      fx: fx('fire', '#fde047', 'shockwave', 'fireball', { bleed: 3, form: 3, rage: 4 }),
+    },
+    skills: [
+      {
+        id: 'wolf_claw',
+        name: 'Vahşi Pençe',
+        desc: '2 pençe darbesiyle toplam %200 hasar verir, 3 tur kanatır ve +2 Öfke biriktirir.',
+        mana: 26,
+        cd: 2,
+        mult: 2.0,
+        el: 'physical',
+        icon: 'swords',
+        fx: fx('fire', '#f87171', 'shockwave', 'fireball', { hits: 2, bleed: 3, rage: 2 }),
+      },
+      {
+        id: 'wolf_form',
+        name: 'Dolunay Dönüşümü',
+        desc: '%150 hasar verir; 3 tur boyunca tüm hasar +%60 artar, canın %15’ini yeniler ve +3 Öfke kazandırır.',
+        mana: 60,
+        cd: 6,
+        mult: 1.5,
+        el: 'physical',
+        icon: 'sparkles',
+        fx: fx('fire', '#fde047', 'shockwave', 'arcane_explosion', { form: 3, healPct: 0.15, rage: 3, flash: true }),
+      },
+    ],
+    names: ['Yırtıcı Pençe', 'Açık Yara', 'Av Kokusu', 'Alfa Kurt', 'Sürü Ruhu', 'Ay Uluması', 'Gece Avcısı', 'Dolunay Kanı', 'Kalın Post', 'Kan Yalayan', 'Vahşi Refleks', 'Yenilmez Alfa'],
+    picks: [['bleed_power', 20], ['combo_boost', 16], ['dragon_scale', 20], ['lifesteal', 4]],
+    gear: ['Kemik Saplı Balta', 'Kurt Postu Pelerin', 'Yırtık Deri Yelek', 'Diş Kolyeli Başlık'],
+    gearEl: 'physical',
+  },
+  {
+    id: 'fairy',
+    name: 'Peri',
+    title: 'Çiçek Kraliçesi Lunaria',
+    role: 'Minik ama büyülü. Şifa, kalkan ve tahtaya Altın Taş yağdıran peri tozu.',
+    pName: 'Peri Tozu',
+    pDesc:
+      'Doğa taşları %35 daha fazla iyileştirir/kalkan verir ve tahtada Altın Taş çıkma şansı %40 artar.',
+    weapons: ['staff', 'bow'],
+    armor: 'magic_armor',
+    offhand: 'tome',
+    theme: '#f472b6',
+    cost: [45000, 1300],
+    base: [450, 62, 14, 16, 175, 150, 18, 26],
+    lvl: [42, 9.8, 2.8, 10, 0.9, 2.9],
+    gem: { nature: 35 },
+    innate: { goldenLuckPct: 40 },
+    ult: {
+      name: 'Bin Çiçek Baharı',
+      desc: '%480 hasar verir, canın %35’ini yeniler, %25 Can kadar kalkan verir ve 5 taşı Altın/Doğa taşına çevirir.',
+      mult: 4.8,
+      el: 'nature',
+      icon: 'leaf',
+      fx: fx('nature', '#f9a8d4', 'shockwave', 'natures_blessing', {
+        healPct: 0.35,
+        shieldPct: 0.25,
+        convert: { count: 5, types: ['golden', 'nature'] },
+      }),
+    },
+    skills: [
+      {
+        id: 'fairy_dust',
+        name: 'Peri Tozu',
+        desc: '%150 hasar verir, canın %15’ini yeniler ve 3 taşı Altın/Doğa taşına çevirir.',
+        mana: 26,
+        cd: 3,
+        mult: 1.5,
+        el: 'nature',
+        icon: 'leaf',
+        fx: fx('nature', '#f9a8d4', 'projectile', 'natures_blessing', {
+          healPct: 0.15,
+          convert: { count: 3, types: ['golden', 'nature', 'nature'] },
+        }),
+      },
+      {
+        id: 'fairy_ring',
+        name: 'Büyülü Halka',
+        desc: '%170 hasar verir, düşmanı 2 tur büyüler (saldıramaz) ve mananın %30’unu geri doldurur.',
+        mana: 50,
+        cd: 5,
+        mult: 1.7,
+        el: 'arcane',
+        icon: 'sparkles',
+        fx: fx('arcane', '#f0abfc', 'shockwave', 'arcane_explosion', { freeze: 2, manaPct: 0.3 }),
+      },
+    ],
+    names: ['Diken İğnesi', 'Şans Tozu', 'Arı Sokması', 'Çiçek Fırtınası', 'Bahar Esintisi', 'Rüya Tozu', 'Ay Çiçeği', 'Altın Polen', 'Yaprak Zırh', 'Minik Hedef', 'Çevik Kanat', 'Orman Kraliçesi'],
+    picks: [['golden_luck', 30], ['nature_heal', 18], ['golden_luck', 50], ['dodge_counter', 16]],
+    gear: ['Çiçek Dalı Asası', 'Yaprak Ciltli Kitap', 'Taç Yaprağı Elbise', 'Çiy Damlası Tacı'],
+    gearEl: 'nature',
+  },
+  {
+    id: 'kitsune',
+    name: 'Ruh Tilkisi',
+    title: 'Dokuz Kuyruklu Yuki',
+    role: 'Kurnaz ve yakalanamaz. Altın Taş şansı, yanılsamalar ve ölümcül kritikler.',
+    pName: 'Tilki Hilesi',
+    pDesc:
+      'Altın Taş çıkma şansı %50 artar, Altın taşlar %30 daha fazla hasar verir ve sıyrıldığında düşman saldırısının %20’si kadar karşı hasar verir.',
+    weapons: ['dagger', 'staff'],
+    armor: 'light_armor',
+    offhand: 'cloak',
+    theme: '#fb923c',
+    cost: [53000, 1500],
+    base: [480, 66, 15, 24, 205, 115, 24, 20],
+    lvl: [45, 10.4, 3, 6.5, 1.3, 2.3],
+    gem: { golden: 30 },
+    innate: { goldenLuckPct: 50, dodgeCounterPct: 20 },
+    ult: {
+      name: 'Dokuz Kuyruk Fırtınası',
+      desc: '%520 hasar verir, 4 taşı Altın Taşa çevirir, 2 tur +%45 Sıyrılma ve 2 tur garanti kritik sağlar.',
+      mult: 5.2,
+      el: 'arcane',
+      icon: 'sparkles',
+      fx: fx('arcane', '#fdba74', 'shockwave', 'arcane_explosion', {
+        convert: { count: 4, types: ['golden'] },
+        dodgeBuff: 2,
+        critBuff: 2,
+      }),
+    },
+    skills: [
+      {
+        id: 'fox_fire',
+        name: 'Tilki Ateşi',
+        desc: '3 ruh alevi fırlatarak toplam %190 hasar verir ve 2 taşı Altın Taşa çevirir.',
+        mana: 28,
+        cd: 2,
+        mult: 1.9,
+        el: 'arcane',
+        icon: 'flame',
+        fx: fx('arcane', '#93c5fd', 'projectile', 'fireball', { hits: 3, convert: { count: 2, types: ['golden'] } }),
+      },
+      {
+        id: 'fox_illusion',
+        name: 'Yanılsama Dansı',
+        desc: '%120 hasar verir, 2 tur +%45 Sıyrılma ve 2 tur garanti kritik kazandırır. TUR HARCANMAZ.',
+        mana: 38,
+        cd: 4,
+        mult: 1.2,
+        el: 'arcane',
+        icon: 'sparkles',
+        extraTurn: true,
+        fx: fx('arcane', '#fdba74', 'shockwave', 'arcane_explosion', { dodgeBuff: 2, critBuff: 2, flash: true }),
+      },
+    ],
+    names: ['Sivri Pençe', 'Şans Tılsımı', 'Kurnaz Av', 'Ruh Alevi Ustası', 'Oyunbaz Ruh', 'Mühür Büyüsü', 'Tapınak Bekçisi', 'Dokuzuncu Kuyruk', 'Yumuşak Kürk', 'Hayalet Adım', 'Tilki Çevikliği', 'İlahi Tilki'],
+    picks: [['golden_luck', 30], ['combo_boost', 16], ['weakness_exploit', 14], ['dodge_counter', 18]],
+    gear: ['Tapınak Hançeri', 'Kızıl İpek Pelerin', 'Rahibe Kimonosu', 'Tilki Maskesi'],
+    gearEl: 'holy',
+  },
+  {
+    id: 'naga',
+    name: 'Naga',
+    title: 'Yılan Kraliçe Sesshra',
+    role: 'Zehir, kanama ve boğucu sarmallar. Düşmanı yavaş yavaş eritir.',
+    pName: 'Zehirli Kan',
+    pDesc:
+      'Kanama hasarı +%20 artar, hasarın %3’ünü Can olarak çalar; Doğa taşları %20 daha fazla iyileştirir ve Yıldırım taşları %20 daha fazla hasar verir.',
+    weapons: ['dagger', 'spear'],
+    armor: 'light_armor',
+    offhand: 'skull',
+    theme: '#84cc16',
+    cost: [62000, 1700],
+    base: [540, 66, 18, 20, 195, 110, 18, 20],
+    lvl: [51, 10.3, 3.6, 6, 1.1, 2.2],
+    gem: { nature: 20, lightning: 20 },
+    innate: { bleedPowerPct: 20, lifestealPct: 3 },
+    ult: {
+      name: 'Bin Yılanın Öpücüğü',
+      desc: '%530 hasar verir, 4 tur zehirler, 3 tur kanatır ve düşmanı 1 tur felç eder.',
+      mult: 5.3,
+      el: 'nature',
+      icon: 'leaf',
+      fx: fx('nature', '#a3e635', 'shockwave', 'natures_blessing', { poison: 4, bleed: 3, freeze: 1 }),
+    },
+    skills: [
+      {
+        id: 'naga_venom',
+        name: 'Zehirli Isırık',
+        desc: '%170 hasar verir, 4 tur zehirler ve 2 tur kanatır.',
+        mana: 28,
+        cd: 3,
+        mult: 1.7,
+        el: 'nature',
+        icon: 'leaf',
+        fx: fx('nature', '#a3e635', 'beam', 'natures_blessing', { poison: 4, bleed: 2 }),
+      },
+      {
+        id: 'naga_coil',
+        name: 'Boğucu Sarmal',
+        desc: '%200 hasar verir, 1 tur sersemletir, 3 tur zehirler ve hasarın %30’unu Can olarak çalar.',
+        mana: 50,
+        cd: 5,
+        mult: 2.0,
+        el: 'nature',
+        icon: 'shield',
+        fx: fx('nature', '#65a30d', 'shockwave', 'natures_blessing', { stagger: 1, poison: 3, drainPct: 0.3 }),
+      },
+    ],
+    names: ['Zehir Dişi', 'Derin Yara', 'Pusu Avcısı', 'Kobra Kraliçe', 'Yıldırım Dil', 'Yılan Bilgeliği', 'Kadim Zehir', 'Felç Bakışı', 'Pullu Zırh', 'Sarmal Refleks', 'Kaygan Beden', 'Yılan İmparatoriçe'],
+    picks: [['bleed_power', 20], ['lightning_crit', 16], ['skill_power', 20], ['dodge_counter', 16]],
+    gear: ['Diş Biçimli Hançer', 'Yılan Kafatası Tılsımı', 'Pul Örgü Korse', 'Kobra Tacı'],
+    gearEl: 'nature',
+  },
+  {
+    id: 'siren',
+    name: 'Siren',
+    title: 'Derinlerin Sesi Nerissa',
+    role: 'Büyüleyici şarkılar ve gelgit dalgaları. Bitmeyen mana ile düşmanı kilitler.',
+    pName: 'Gelgit Şarkısı',
+    pDesc: 'Buz taşlarından %40 daha fazla Mana kazanır ve her savaşa ek %20 Mana ile başlar.',
+    weapons: ['spear', 'staff'],
+    armor: 'magic_armor',
+    offhand: 'tome',
+    theme: '#22d3ee',
+    cost: [72000, 1950],
+    base: [480, 63, 15, 14, 175, 160, 13, 27],
+    lvl: [45, 10, 3, 11, 0.7, 3.0],
+    gem: { frost: 40 },
+    innate: { startManaPct: 20 },
+    ult: {
+      name: 'Okyanusun Gazabı',
+      desc: '%540 hasar verir, düşmanı 2 tur dondurur, mananın %50’sini doldurur ve 5 taşı Buz taşına çevirir.',
+      mult: 5.4,
+      el: 'frost',
+      icon: 'snowflake',
+      fx: fx('frost', '#67e8f9', 'shockwave', 'ice_storm', {
+        freeze: 2,
+        manaPct: 0.5,
+        convert: { count: 5, types: ['frost'] },
+      }),
+    },
+    skills: [
+      {
+        id: 'siren_song',
+        name: 'Büyüleyici Şarkı',
+        desc: '%160 hasar verir ve düşmanı 2 tur büyüleyerek saldırmasını engeller.',
+        mana: 30,
+        cd: 3,
+        mult: 1.6,
+        el: 'frost',
+        icon: 'sparkles',
+        fx: fx('frost', '#5eead4', 'shockwave', 'ice_storm', { freeze: 2 }),
+      },
+      {
+        id: 'siren_tide',
+        name: 'Gelgit Dalgası',
+        desc: '%240 hasar verir, mananın %25’ini geri doldurur ve tahtada 5 taşı patlatır.',
+        mana: 52,
+        cd: 5,
+        mult: 2.4,
+        el: 'frost',
+        icon: 'snowflake',
+        fx: fx('frost', '#22d3ee', 'beam', 'ice_storm', { manaPct: 0.25, destroy: 5, flash: true }),
+      },
+    ],
+    names: ['Mercan Mızrağı', 'Akıntı Gücü', 'Köpekbalığı İçgüdüsü', 'Girdap Hükmü', 'Derin Nefes', 'İnci Bilgeliği', 'Ay Çekimi', 'Tsunami Sesi', 'Pullu Ten', 'Şifalı Sular', 'Kaygan Kuyruk', 'Deniz İmparatoriçesi'],
+    picks: [['frost_mana', 18], ['start_mana', 10], ['skill_power', 22], ['nature_heal', 16]],
+    gear: ['Mercan Üç Dişli Mızrak', 'Deniz Kabuğu Kitabı', 'İnci İşlemeli Korse', 'Deniz Yıldızı Tacı'],
+    gearEl: 'frost',
+  },
+  {
+    id: 'minotaur',
+    name: 'Minotor',
+    title: 'Labirent Devi Tauros',
+    role: 'Durdurulamaz hücum. Öfke biriktirir, sersemletir ve tahtayı parçalar.',
+    pName: 'Boğa Hücumu',
+    pDesc:
+      'Kombo hasarı +%15 artar, alınan saldırının %8’ini yansıtır; Alev taşları %20 ve Yıldırım taşları %15 daha fazla hasar verir.',
+    weapons: ['axe', 'sword'],
+    armor: 'heavy_armor',
+    offhand: 'shield',
+    theme: '#d97706',
+    cost: [84000, 2200],
+    base: [780, 62, 30, 13, 185, 85, 5, 12],
+    lvl: [82, 10, 6.4, 3.5, 0.6, 1.6],
+    gem: { fire: 20, lightning: 15 },
+    innate: { comboBoostPct: 15, thornsPct: 8 },
+    ult: {
+      name: 'Labirentin Gazabı',
+      desc: '%530 hasar verir, 2 tur sersemletir, +5 Öfke kazandırır ve tahtada 6 taşı parçalar.',
+      mult: 5.3,
+      el: 'physical',
+      icon: 'swords',
+      fx: fx('fire', '#f87171', 'shockwave', 'fireball', { stagger: 2, rage: 5, destroy: 6 }),
+    },
+    skills: [
+      {
+        id: 'mino_charge',
+        name: 'Boğa Hücumu',
+        desc: '%220 hasar verir, düşmanı 1 tur sersemletir ve +2 Öfke biriktirir.',
+        mana: 26,
+        cd: 3,
+        mult: 2.2,
+        el: 'physical',
+        icon: 'shield',
+        fx: fx('fire', '#fbbf24', 'projectile', 'fireball', { stagger: 1, rage: 2 }),
+      },
+      {
+        id: 'mino_roar',
+        name: 'Labirent Kükremesi',
+        desc: '%130 hasar verir, +4 Öfke ve %20 Can kadar kalkan kazandırır, tahtada 6 taşı parçalar.',
+        mana: 45,
+        cd: 5,
+        mult: 1.3,
+        el: 'physical',
+        icon: 'flame',
+        fx: fx('fire', '#ef4444', 'shockwave', 'fireball', { rage: 4, shieldPct: 0.2, destroy: 6, flash: true }),
+      },
+    ],
+    names: ['Dev Balta', 'Kızgın Boynuz', 'Av Hücumu', 'Savaş Boğası', 'Yer Sarsan', 'Labirent Aklı', 'Kadim Öfke', 'Durdurulamaz', 'Kalın Deri', 'Boynuz Darbesi', 'Sağlam Toynak', 'Labirent Kralı'],
+    picks: [['fire_dmg', 16], ['combo_boost', 15], ['combo_boost', 22], ['thorns', 10]],
+    gear: ['Labirent Baltası', 'Tunç Kapı Kalkanı', 'Zincirli Göğüslük', 'Boynuz Halkalı Miğfer'],
+    gearEl: 'fire',
+  },
+  {
+    id: 'golem',
+    name: 'Kristal Golem',
+    title: 'Kadim Taş Kalbi Grumm',
+    role: 'Yürüyen kale. Devasa kalkanlar, hasar yansıtma ve yeri sarsan yumruklar.',
+    pName: 'Kristal Beden',
+    pDesc:
+      'Alınan saldırının %15’ini düşmana yansıtır, her savaşa +120 Kalkanla başlar ve Doğa taşlarından %25 daha fazla kalkan/iyileşme alır.',
+    weapons: ['axe', 'sword'],
+    armor: 'heavy_armor',
+    offhand: 'shield',
+    theme: '#22d3ee',
+    cost: [97000, 2500],
+    base: [820, 54, 36, 9, 165, 90, 4, 16],
+    lvl: [86, 8.6, 7.2, 4, 0.4, 2],
+    gem: { nature: 25 },
+    innate: { thornsPct: 15, startShield: 120 },
+    ult: {
+      name: 'Dünyayı Sarsan',
+      desc: '%460 hasar verir, 2 tur sersemletir, %35 Can kadar kalkan verir ve tahtada 6 taşı parçalar.',
+      mult: 4.6,
+      el: 'nature',
+      icon: 'shield',
+      fx: fx('nature', '#67e8f9', 'shockwave', 'natures_blessing', { stagger: 2, shieldPct: 0.35, destroy: 6 }),
+    },
+    skills: [
+      {
+        id: 'golem_slam',
+        name: 'Deprem Yumruğu',
+        desc: '%180 hasar verir ve düşmanı 1 tur sersemletir.',
+        mana: 28,
+        cd: 3,
+        mult: 1.8,
+        el: 'nature',
+        icon: 'shield',
+        fx: fx('nature', '#94a3b8', 'shockwave', 'fireball', { stagger: 1 }),
+      },
+      {
+        id: 'golem_wall',
+        name: 'Kristal Kale',
+        desc: '%40 Can kadar kalkan oluşturur, canın %10’unu yeniler ve 4 taşı Doğa taşına çevirir.',
+        mana: 55,
+        cd: 6,
+        mult: 0,
+        el: 'nature',
+        icon: 'shield',
+        fx: fx('nature', '#67e8f9', 'self', 'natures_blessing', {
+          shieldPct: 0.4,
+          healPct: 0.1,
+          convert: { count: 4, types: ['nature'] },
+        }),
+      },
+    ],
+    names: ['Taş Yumruk', 'Çatlak Arayan', 'Ezici Kütle', 'Dağ Devi', 'Sivri Kristaller', 'Rün Çekirdeği', 'Kadim Uğultu', 'Elmas Dikenler', 'Granit Deri', 'Yosunlu Kalp', 'Sarsılmaz Duruş', 'Yaşayan Kale'],
+    picks: [['weakness_exploit', 10], ['thorns', 8], ['thorns', 14], ['nature_heal', 18]],
+    gear: ['Kaya Kıran Balta', 'Kristal Levha Kalkan', 'Rünlü Taş Göğüslük', 'Kuvars Başlık'],
+    gearEl: 'frost',
+  },
+  {
+    id: 'phoenix',
+    name: 'Anka',
+    title: 'Küllerin Kanadı Ignara',
+    role: 'Alev kanatlı ölümsüz kuş. Yakar, kendini yeniler ve tahtayı ateşe boğar.',
+    pName: 'Yeniden Doğuş Alevi',
+    pDesc:
+      'Alev taşları %30 daha fazla hasar verir, Doğa taşları %20 daha fazla iyileştirir ve her savaşa %15 dolu Ulti ile başlar.',
+    weapons: ['staff', 'spear'],
+    armor: 'magic_armor',
+    offhand: 'tome',
+    theme: '#f97316',
+    cost: [112000, 2850],
+    base: [500, 65, 16, 15, 178, 140, 12, 28],
+    lvl: [47, 10.3, 3, 9, 0.8, 3.0],
+    gem: { fire: 30, nature: 20 },
+    innate: { startUltiPct: 15 },
+    ult: {
+      name: 'Güneş Patlaması',
+      desc: '%550 hasar verir, 3 tur yakar, canın %25’ini yeniler ve 4 taşı Alev taşına çevirir.',
+      mult: 5.5,
+      el: 'fire',
+      icon: 'flame',
+      fx: fx('fire', '#fde047', 'shockwave', 'fireball', {
+        burn: 3,
+        healPct: 0.25,
+        convert: { count: 4, types: ['fire'] },
+      }),
+    },
+    skills: [
+      {
+        id: 'phx_feather',
+        name: 'Kor Tüyleri',
+        desc: '4 alev tüyü fırlatarak toplam %200 hasar verir ve 3 tur yakar.',
+        mana: 30,
+        cd: 3,
+        mult: 2.0,
+        el: 'fire',
+        icon: 'flame',
+        fx: fx('fire', '#fb923c', 'projectile', 'fireball', { hits: 4, burn: 3 }),
+      },
+      {
+        id: 'phx_rebirth',
+        name: 'Küllerden Doğuş',
+        desc: 'Canın %40’ını yeniler, %20 Can kadar kalkan verir, +20 Ulti enerjisi kazandırır ve 3 taşı Alev taşına çevirir.',
+        mana: 58,
+        cd: 6,
+        mult: 0,
+        el: 'fire',
+        icon: 'leaf',
+        fx: fx('fire', '#fde047', 'self', 'natures_blessing', {
+          healPct: 0.4,
+          shieldPct: 0.2,
+          ultiGain: 20,
+          convert: { count: 3, types: ['fire'] },
+          flash: true,
+        }),
+      },
+    ],
+    names: ['Kızgın Gaga', 'Kor Kanatlar', 'Güneş Öfkesi', 'Yıldız Ateşi', 'Kül Kıvılcımı', 'Alev Bilgeliği', 'Ebedi Kor', 'Süpernova', 'Ilık Tüyler', 'Şifalı Küller', 'Hafif Kanat', 'Ölümsüz Anka'],
+    picks: [['fire_dmg', 18], ['start_ulti', 8], ['fire_dmg', 22], ['nature_heal', 18]],
+    gear: ['Kor Tüylü Asa', 'Kül Sayfalı Kitap', 'Alev Tüyü Cübbe', 'Güneş İbiği'],
+    gearEl: 'fire',
+  },
+  {
+    id: 'djinn',
+    name: 'Cin',
+    title: 'Lamba Efendisi Zafir',
+    role: 'Dilekleri gerçeğe çeviren büyü ustası. Ulti ve mana motoru, taş dönüştürücü.',
+    pName: 'Üç Dilek',
+    pDesc:
+      'Mor Arkan taşlarından %40 daha fazla Ulti enerjisi kazanır, yetenek hasarı +%15 artar ve savaşa ek %15 Mana ile başlar.',
+    weapons: ['staff', 'scythe'],
+    armor: 'magic_armor',
+    offhand: 'tome',
+    theme: '#818cf8',
+    cost: [128000, 3200],
+    base: [510, 66, 16, 15, 180, 150, 12, 30],
+    lvl: [48, 10.5, 3.1, 10, 0.8, 3.1],
+    gem: { arcane: 40 },
+    innate: { skillPowerPct: 15, startManaPct: 15 },
+    ult: {
+      name: 'Sınırsız Dilek',
+      desc: '%550 hasar verir, manayı tamamen doldurur, 6 taşı Altın/Arkan taşına çevirir ve 2 tur garanti kritik sağlar.',
+      mult: 5.5,
+      el: 'arcane',
+      icon: 'sparkles',
+      fx: fx('arcane', '#a78bfa', 'shockwave', 'arcane_explosion', {
+        manaPct: 1,
+        convert: { count: 6, types: ['golden', 'arcane'] },
+        critBuff: 2,
+      }),
+    },
+    skills: [
+      {
+        id: 'djinn_wish',
+        name: 'Dilek',
+        desc: '%140 hasar verir, +25 Ulti enerjisi ve %20 Mana kazandırır, 3 taşı Arkan taşına çevirir.',
+        mana: 24,
+        cd: 4,
+        mult: 1.4,
+        el: 'arcane',
+        icon: 'sparkles',
+        fx: fx('arcane', '#a78bfa', 'shockwave', 'arcane_explosion', {
+          ultiGain: 25,
+          manaPct: 0.2,
+          convert: { count: 3, types: ['arcane'] },
+        }),
+      },
+      {
+        id: 'djinn_storm',
+        name: 'Kum Girdabı',
+        desc: '5 darbeyle toplam %250 hasar verir, 1 tur sersemletir ve tahtada 4 taşı patlatır.',
+        mana: 54,
+        cd: 5,
+        mult: 2.5,
+        el: 'lightning',
+        icon: 'zap',
+        fx: fx('lightning', '#fbbf24', 'bolts', 'lightning_strike', { hits: 5, stagger: 1, destroy: 4 }),
+      },
+    ],
+    names: ['Kum Kılıcı', 'Büyü Kasırgası', 'Kadim Lanet', 'Çöl Fırtınası', 'Lamba Işığı', 'Yıldız Haritası', 'Serap Ustası', 'Dördüncü Dilek', 'Duman Beden', 'Dolu Lamba', 'Serap Adımı', 'Lambanın Efendisi'],
+    picks: [['skill_power', 14], ['arcane_ulti', 14], ['start_ulti', 10], ['start_mana', 10]],
+    gear: ['Hilal Uçlu Asa', 'Dilek Parşömeni', 'Yıldız İşlemeli Yelek', 'Mücevherli Sarık'],
+    gearEl: 'arcane',
+  },
+  {
+    id: 'demon',
+    name: 'İblis',
+    title: 'Cehennem Varisi Azgor',
+    role: 'Güç için can feda eder. Yakıcı damgalar, iblis sürüsü ve ezici boss hasarı.',
+    pName: 'Cehennem Anlaşması',
+    pDesc:
+      'Alev taşları %25 daha fazla hasar verir, Bosslara karşı hasar +%15 artar ve hasarın %4’ünü Can olarak çalar.',
+    weapons: ['scythe', 'axe'],
+    armor: 'heavy_armor',
+    offhand: 'skull',
+    theme: '#ef4444',
+    cost: [146000, 3600],
+    base: [680, 67, 26, 15, 190, 105, 7, 22],
+    lvl: [68, 10.5, 5.2, 5.5, 0.7, 2.5],
+    gem: { fire: 25 },
+    innate: { bossDmgPct: 15, lifestealPct: 4 },
+    ult: {
+      name: 'Cehennem Kapısı',
+      desc: '%560 hasar verir, 3 tur yakar, hasarın %30’unu Can olarak çalar ve 3 tur savaşan bir İblis Sürüsü çağırır.',
+      mult: 5.6,
+      el: 'fire',
+      icon: 'flame',
+      fx: fx('fire', '#f97316', 'shockwave', 'fireball', {
+        burn: 3,
+        drainPct: 0.3,
+        summon: 3,
+        summonName: 'İBLİS SÜRÜSÜ',
+      }),
+    },
+    skills: [
+      {
+        id: 'demon_brand',
+        name: 'Cehennem Damgası',
+        desc: '%230 hasar verir ve 3 tur yakar; bedeli olarak canının %5’ini kaybedersin.',
+        mana: 32,
+        cd: 3,
+        mult: 2.3,
+        el: 'fire',
+        icon: 'flame',
+        fx: fx('fire', '#f97316', 'beam', 'fireball', { burn: 3, selfDmgPct: 0.05 }),
+      },
+      {
+        id: 'demon_pact',
+        name: 'Kan Anlaşması',
+        desc: 'Canının %10’unu feda ederek %120 hasar verir; +5 Öfke, 2 tur garanti kritik ve +20 Ulti enerjisi kazanırsın.',
+        mana: 40,
+        cd: 5,
+        mult: 1.2,
+        el: 'fire',
+        icon: 'sparkles',
+        fx: fx('fire', '#dc2626', 'shockwave', 'arcane_explosion', {
+          selfDmgPct: 0.1,
+          rage: 5,
+          critBuff: 2,
+          ultiGain: 20,
+          flash: true,
+        }),
+      },
+    ],
+    names: ['Kızgın Pençe', 'Cehennem Ateşi', 'Günah Avcısı', 'Yıkım Lordu', 'Küçük İblisler', 'Karanlık Mühür', 'Lanetli Güç', 'Kıyamet Sözü', 'Kömür Deri', 'Yanık Dokunuş', 'Sinsi Kuyruk', 'Cehennem Prensi']
+      ,
+    picks: [['fire_dmg', 18], ['summon_power', 20], ['skill_power', 20], ['thorns', 10]],
+    gear: ['Lanetli Tırpan', 'Günahkâr Kafatası', 'Obsidyen Göğüslük', 'Boynuz Halkası'],
+    gearEl: 'fire',
+  },
+  {
+    id: 'seraph',
+    name: 'Serafim',
+    title: 'Şafak Meleği Auriel',
+    role: 'Göksel muhafız. Dev kalkanlar, şifa ve zayıflığı cezalandıran kutsal ışık.',
+    pName: 'İlahi Işık',
+    pDesc:
+      'Her savaşa +150 Kalkanla başlar, zayıflık hasar bonusu +%15 artar ve Doğa taşları %20 daha fazla iyileştirir.',
+    weapons: ['sword', 'spear'],
+    armor: 'heavy_armor',
+    offhand: 'shield',
+    theme: '#fbbf24',
+    cost: [165000, 4000],
+    base: [720, 58, 30, 12, 170, 125, 8, 22],
+    lvl: [74, 9, 6, 7, 0.6, 2.4],
+    gem: { nature: 20 },
+    innate: { startShield: 150, weaknessBonusPct: 15 },
+    ult: {
+      name: 'Göksel Hüküm',
+      desc: '%500 hasar verir, canın %30’unu yeniler, %30 Can kadar kalkan verir ve düşmanı 1 tur sersemletir.',
+      mult: 5.0,
+      el: 'holy',
+      icon: 'shield',
+      fx: fx('golden', '#fde68a', 'shockwave', 'natures_blessing', { healPct: 0.3, shieldPct: 0.3, stagger: 1 }),
+    },
+    skills: [
+      {
+        id: 'seraph_lance',
+        name: 'Işık Mızrağı',
+        desc: 'Zırh delen %210 kutsal hasar verir ve canın %8’ini yeniler.',
+        mana: 30,
+        cd: 3,
+        mult: 2.1,
+        el: 'holy',
+        icon: 'sparkles',
+        fx: fx('golden', '#fde68a', 'beam', 'arcane_explosion', { pierce: true, healPct: 0.08 }),
+      },
+      {
+        id: 'seraph_wings',
+        name: 'Koruyucu Kanatlar',
+        desc: '%35 Can kadar kalkan verir, canın %20’sini yeniler ve 2 tur garanti kritik sağlar.',
+        mana: 55,
+        cd: 6,
+        mult: 0,
+        el: 'holy',
+        icon: 'shield',
+        fx: fx('golden', '#fef3c7', 'self', 'natures_blessing', {
+          shieldPct: 0.35,
+          healPct: 0.2,
+          critBuff: 2,
+          flash: true,
+        }),
+      },
+    ],
+    names: ['Adalet Kılıcı', 'Günah Gören Göz', 'Kutsal Öfke', 'Baş Melek', 'Şifa Duası', 'Işık Bilgeliği', 'Şafak İlahisi', 'İlahi Hüküm', 'Kutsal Zırh', 'Yansıyan Işık', 'Kanat Çırpışı', 'Cennet Muhafızı'],
+    picks: [['weakness_exploit', 10], ['nature_heal', 18], ['skill_power', 20], ['thorns', 9]],
+    gear: ['Şafak Kılıcı', 'Güneş Diski Kalkan', 'Göksel Plaka Zırh', 'Işık Halkalı Miğfer'],
+    gearEl: 'holy',
+  },
+];
+
+function toSkill(c: Cfg, s: SkillCfg, levelReq: number): ActiveSkillDef {
+  return {
+    id: s.id,
+    name: s.name,
+    description: s.desc,
+    manaCost: s.mana,
+    cooldown: s.cd,
+    element: s.el,
+    iconKey: s.icon,
+    powerMultiplier: s.mult,
+    effectType: 'creature',
+    levelReq,
+    classes: [c.id],
+    grantsExtraTurn: s.extraTurn,
+    kind: 'class',
+    fx: s.fx,
+  };
+}
+
+function toClass(c: Cfg): HeroClassDef {
+  return {
+    id: c.id,
+    name: c.name,
+    title: c.title,
+    roleDesc: c.role,
+    passiveName: c.pName,
+    passiveDesc: c.pDesc,
+    preferredWeapons: c.weapons,
+    preferredArmor: c.armor,
+    offhandCategory: c.offhand,
+    themeColor: c.theme,
+    accentColor: c.theme,
+    isCreature: true,
+    unlockCost: { gold: c.cost[0], crystals: c.cost[1] },
+    gemAffinity: c.gem,
+    innatePassives: c.innate,
+    starterGear: {
+      weapon: c.gear[0],
+      offhand: c.gear[1],
+      chest: c.gear[2],
+      helmet: c.gear[3],
+      element: c.gearEl,
+    },
+    baseStats: {
+      health: c.base[0],
+      attack: c.base[1],
+      defense: c.base[2],
+      critChance: c.base[3],
+      critDamage: c.base[4],
+      mana: c.base[5],
+      dodge: c.base[6],
+      elementalDamage: c.base[7],
+    },
+    perLevelStats: {
+      health: c.lvl[0],
+      attack: c.lvl[1],
+      defense: c.lvl[2],
+      mana: c.lvl[3],
+      critChance: c.lvl[4],
+      elementalDamage: c.lvl[5],
+    },
+    ultimateSkill: {
+      id: `ult_${c.id}`,
+      name: c.ult.name,
+      description: c.ult.desc,
+      manaCost: 0,
+      ultiCost: 100,
+      cooldown: 0,
+      element: c.ult.el,
+      iconKey: c.ult.icon,
+      powerMultiplier: c.ult.mult,
+      effectType: 'ultimate',
+      fx: c.ult.fx,
+    },
+    skillTree: buildTree(c.id.slice(0, 4), c.names, c.picks),
+  };
+}
+
+export const CREATURE_CLASSES = {} as Record<CreatureClassId, HeroClassDef>;
+export const CREATURE_SKILLS = {} as Record<CreatureClassId, ActiveSkillDef[]>;
+
+CONFIGS.forEach((c) => {
+  CREATURE_CLASSES[c.id] = toClass(c);
+  CREATURE_SKILLS[c.id] = [toSkill(c, c.skills[0], 10), toSkill(c, c.skills[1], 20)];
+});
