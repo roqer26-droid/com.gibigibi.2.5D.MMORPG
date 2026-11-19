@@ -6,30 +6,53 @@ import {
   GitBranch,
   Map,
   ScrollText,
-  Backpack,
   Settings,
   Coins,
   Gem,
   Sparkles,
   Crown,
   Trophy,
+  Award,
+  type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { QUESTS_LIST } from '../data/quests';
 import { getFullSkillCodex } from '../data/skills';
 import { tierFor } from '../data/league';
-import { TOTAL_REGIONS, TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
+import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
 import { computeEnchantAura } from '../phaser/HeroRenderer';
 import { computeHeroBuild, getQuestCurrentValue, xpRequiredForLevel } from '../utils/rpgLogic';
 import { isQuestClaimed } from '../utils/questProgress';
 import { HeroPaperdoll } from './HeroPaperdoll';
 
+export type MenuDest =
+  | 'heroes'
+  | 'equipment'
+  | 'skills'
+  | 'world'
+  | 'quests'
+  | 'achievements'
+  | 'league';
+
+const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
+
+interface MenuTile {
+  id: MenuDest;
+  label: string;
+  sub: string;
+  Icon: LucideIcon;
+  border: string;
+  iconWrap: string;
+  badge?: { text: string; cls: string };
+  wide?: boolean;
+}
+
 interface MainMenuProps {
   save: GameSaveState;
   isExistingSave: boolean;
   onPlayNextStage: (stage: StageDef) => void;
-  onNavigate: (dest: 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'league') => void;
+  onNavigate: (dest: MenuDest) => void;
   onOpenSettings: () => void;
 }
 
@@ -54,13 +77,84 @@ export const MainMenu: React.FC<MainMenuProps> = ({
     );
   }, [allStages, save.completedStages]);
 
-  const claimableQuestsCount = useMemo(
-    () =>
-      QUESTS_LIST.filter(
-        (q) => !isQuestClaimed(q, save) && getQuestCurrentValue(q, save) >= q.targetCount
-      ).length,
-    [save]
-  );
+  const claimable = useMemo(() => {
+    let quests = 0;
+    let achievements = 0;
+    for (const q of QUESTS_LIST) {
+      if (isQuestClaimed(q, save) || getQuestCurrentValue(q, save) < q.targetCount) continue;
+      if (QUEST_CATEGORIES.includes(q.category)) quests += 1;
+      else achievements += 1;
+    }
+    return { quests, achievements };
+  }, [save]);
+
+  const unlockedSpells = getFullSkillCodex(save.activeHeroClass).filter(
+    (sk) => (sk.levelReq ?? 1) <= hero.level
+  ).length;
+
+  const tiles: MenuTile[] = [
+    {
+      id: 'world',
+      label: 'Dünya Haritası',
+      sub: `${save.completedStages.length}/${TOTAL_STAGES} aşama`,
+      Icon: Map,
+      border: 'border-emerald-500/35',
+      iconWrap: 'bg-emerald-500/15 text-emerald-300',
+    },
+    {
+      id: 'heroes',
+      label: 'Kahramanlar',
+      sub: `${save.heroUnlocks.length}/${HERO_CLASS_LIST.length} sınıf açık`,
+      Icon: Users,
+      border: 'border-rose-500/35',
+      iconWrap: 'bg-rose-500/15 text-rose-300',
+    },
+    {
+      id: 'equipment',
+      label: 'Ekipman',
+      sub: `${save.inventory.length} eşya çantada`,
+      Icon: Shield,
+      border: 'border-amber-500/35',
+      iconWrap: 'bg-amber-500/15 text-amber-300',
+    },
+    {
+      id: 'skills',
+      label: 'Yetenekler',
+      sub: `${unlockedSpells} büyü açık`,
+      Icon: GitBranch,
+      border: 'border-purple-500/35',
+      iconWrap: 'bg-purple-500/15 text-purple-300',
+      badge: hero.skillPoints > 0 ? { text: `${hero.skillPoints} puan`, cls: 'bg-amber-400 text-slate-950' } : undefined,
+    },
+    {
+      id: 'quests',
+      label: 'Görevler',
+      sub: 'Ana, yan, günlük, haftalık',
+      Icon: ScrollText,
+      border: 'border-yellow-500/35',
+      iconWrap: 'bg-yellow-500/15 text-yellow-300',
+      badge: claimable.quests > 0 ? { text: `${claimable.quests} ödül`, cls: 'bg-rose-500 text-white' } : undefined,
+    },
+    {
+      id: 'achievements',
+      label: 'Başarımlar',
+      sub: 'Başarımlar ve lig görevleri',
+      Icon: Award,
+      border: 'border-orange-500/35',
+      iconWrap: 'bg-orange-500/15 text-orange-300',
+      badge: claimable.achievements > 0 ? { text: `${claimable.achievements} ödül`, cls: 'bg-rose-500 text-white' } : undefined,
+    },
+    {
+      id: 'league',
+      label: 'Rekabet Ligi',
+      sub: `${tierFor(save.league.points).name} Ligi · ${save.league.points.toLocaleString('tr-TR')} LP`,
+      Icon: Trophy,
+      border: 'border-amber-400/45',
+      iconWrap: 'bg-amber-400/15 text-amber-300',
+      badge: save.league.pendingRewards.length > 0 ? { text: `${save.league.pendingRewards.length} ödül`, cls: 'bg-rose-500 text-white' } : undefined,
+      wide: true,
+    },
+  ];
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-y-auto bg-[radial-gradient(ellipse_at_top,#1e1b4b_0%,#0b0e1c_55%,#05070e_100%)]">
@@ -108,17 +202,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-6 p-4 sm:p-6">
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
           {/* Left: Hero Showcase + Title */}
-          <div className="fantasy-panel flex flex-col items-center rounded-3xl p-5 text-center lg:col-span-5">
+          <div className="fantasy-panel flex flex-col items-center rounded-3xl p-4 text-center sm:p-5 lg:col-span-5">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-300">
               <Crown className="h-3.5 w-3.5" />
               {cls.name} • Seviye {hero.level}
             </div>
 
             <div className="my-2">
-              <HeroPaperdoll hero={hero} size={typeof window !== "undefined" && window.innerHeight < 720 ? 150 : 190} />
+              <HeroPaperdoll hero={hero} size={typeof window !== "undefined" && window.innerHeight < 900 ? 120 : 190} />
             </div>
 
-            <h1 className="font-display text-2xl font-black text-white">{cls.title}</h1>
+            <h1 className="font-display text-xl font-black text-white sm:text-2xl">{cls.title}</h1>
             <p className="mt-0.5 text-xs font-bold text-amber-300">
               Savaş Gücü: {build.powerRating.toLocaleString('tr-TR')}
             </p>
@@ -160,7 +254,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             <button
               type="button"
               onClick={() => onPlayNextStage(nextStage)}
-              className="gold-btn mt-5 flex w-full items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-base font-black text-slate-950 transition hover:scale-[1.01]"
+              className="gold-btn mt-3 flex w-full sm:mt-5 items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-base font-black text-slate-950 transition hover:scale-[1.01]"
             >
               <Play className="h-5 w-5 fill-slate-950" />
               {isExistingSave && save.completedStages.length > 0 ? 'OYUNA DEVAM ET' : 'OYNA'}
@@ -172,159 +266,42 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
           {/* Right: Menu Grid */}
           <div className="flex flex-col gap-4 lg:col-span-7">
-            <div className="text-center lg:text-left">
-              <h2 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-white">
+            <div className="hidden text-center sm:block lg:text-left">
+              <h2 className="font-display text-xl font-black tracking-tight text-white sm:text-3xl">
                 Efsanevi Taşları Eşleştir,{' '}
                 <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">
                   Diyarı Kurtar!
                 </span>
               </h2>
-              <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-300">
+              <p className="mt-1.5 hidden text-xs leading-relaxed text-slate-300 sm:block sm:text-sm">
                 Element taşlarını birleştirerek yıkıcı saldırılar yap, ekipman topla, yetenek
                 ağacında ustalaş ve destansı Boss’ları alt et.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <button
-                type="button"
-                onClick={() => onNavigate('world')}
-                className="fantasy-card group flex flex-col items-start justify-between rounded-2xl border border-emerald-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                <div className="rounded-xl bg-emerald-500/15 p-2.5 text-emerald-300 group-hover:scale-110 transition">
-                  <Map className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Dünya Haritası</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">
-                    {save.completedStages.length}/{TOTAL_STAGES} Aşama • {TOTAL_REGIONS} Bölge
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('heroes')}
-                className="fantasy-card group flex flex-col items-start justify-between rounded-2xl border border-rose-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                <div className="rounded-xl bg-rose-500/15 p-2.5 text-rose-300 group-hover:scale-110 transition">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Kahramanlar</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">
-                    {save.heroUnlocks.length}/{HERO_CLASS_LIST.length} Sınıf Açık
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('equipment')}
-                className="fantasy-card group flex flex-col items-start justify-between rounded-2xl border border-amber-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                <div className="rounded-xl bg-amber-500/15 p-2.5 text-amber-300 group-hover:scale-110 transition">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Ekipman</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">10 Yuva & Görünüm</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('skills')}
-                className="fantasy-card group relative flex flex-col items-start justify-between rounded-2xl border border-purple-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                {hero.skillPoints > 0 && (
-                  <span className="absolute right-3 top-3 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950 animate-bounce">
-                    {hero.skillPoints} Puan!
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {tiles.map(({ id, label, sub, Icon, border, iconWrap, badge, wide }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => onNavigate(id)}
+                  className={`fantasy-card group relative flex min-h-16 items-center gap-3 rounded-2xl border p-3 text-left transition hover:border-amber-400 ${border} ${wide ? 'col-span-2 sm:col-span-3' : ''}`}
+                >
+                  <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 ${iconWrap}`}>
+                    <Icon className="h-6 w-6" />
                   </span>
-                )}
-                <div className="rounded-xl bg-purple-500/15 p-2.5 text-purple-300 group-hover:scale-110 transition">
-                  <GitBranch className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Yetenekler</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">
-                    12 Düğüm •{' '}
-                    {getFullSkillCodex(save.activeHeroClass).filter(
-                      (s) => (s.levelReq ?? 1) <= hero.level
-                    ).length}{' '}
-                    Büyü Açık
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('equipment')}
-                className="fantasy-card group flex flex-col items-start justify-between rounded-2xl border border-sky-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                <div className="rounded-xl bg-sky-500/15 p-2.5 text-sky-300 group-hover:scale-110 transition">
-                  <Backpack className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Envanter</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">
-                    {save.inventory.length} Eşya Çantada
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('quests')}
-                className="fantasy-card group relative flex flex-col items-start justify-between rounded-2xl border border-yellow-500/35 p-4 text-left transition hover:border-amber-400"
-              >
-                {claimableQuestsCount > 0 && (
-                  <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-black text-white animate-pulse">
-                    {claimableQuestsCount} Ödül!
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-display text-sm font-bold text-white">{label}</span>
+                    <span className="mt-0.5 block truncate text-[11px] text-slate-400">{sub}</span>
                   </span>
-                )}
-                <div className="rounded-xl bg-yellow-500/15 p-2.5 text-yellow-300 group-hover:scale-110 transition">
-                  <ScrollText className="h-6 w-6" />
-                </div>
-                <div className="mt-3">
-                  <div className="font-display text-sm font-bold text-white">Görevler</div>
-                  <div className="mt-0.5 text-[11px] text-slate-400">Günlük, Haftalık & Lig</div>
-                </div>
-              </button>
+                  {badge && (
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${badge.cls}`}>
+                      {badge.text}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('league')}
-              className="fantasy-card group flex min-h-20 items-center justify-between gap-3 rounded-2xl border border-amber-400/40 px-4 py-3 text-left transition hover:border-amber-300"
-            >
-              <span className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300"><Trophy className="h-6 w-6" /></span>
-                <span>
-                  <span className="block font-display text-sm font-bold text-amber-100">Rekabet Ligi</span>
-                  <span className="mt-1 block text-[11px] text-slate-400">{tierFor(save.league.points).name} Ligi · {save.league.points.toLocaleString('tr-TR')} LP · Yapay zekâ rakipleri</span>
-                </span>
-              </span>
-              <span className="shrink-0 text-xs font-bold text-amber-300">{save.league.pendingRewards.length ? `${save.league.pendingRewards.length} ödül` : 'Arenaya Git'} →</span>
-            </button>
-
-            {/* Settings wide card */}
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className="fantasy-card flex items-center justify-between rounded-2xl border border-slate-700/70 px-4 py-3 text-left transition hover:border-amber-400/60"
-            >
-              <div className="flex items-center gap-3">
-                <Settings className="h-5 w-5 text-slate-300" />
-                <div>
-                  <div className="text-sm font-bold text-white">Ayarlar, Kayıt ve Taş Rehberi</div>
-                  <div className="text-[11px] text-slate-400">
-                    Müzik/Efekt sesleri, otomatik kayıt ve oyun kuralları
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs font-bold text-amber-300">Aç →</span>
-            </button>
 
             <p className="pb-2 text-center text-[10px] font-semibold tracking-wide text-slate-500">
               Sürüm v{__APP_VERSION__}

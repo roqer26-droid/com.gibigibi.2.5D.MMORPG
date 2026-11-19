@@ -28,7 +28,9 @@ describe('progression, league, quests and legacy save migration', () => {
     const legacyStageIds = legacyRegionIds.flatMap((id) => Array.from({ length: 8 }, (_, i) => `${id}_${i + 1}`));
     assert.deepEqual(allStages.slice(0, 120).map((s) => s.id), legacyStageIds, 'existing 120 stages must stay untouched');
     assert.deepEqual(allStages.slice(0, 120).map((s) => s.recommendedLevel), [1, 2, 3, 4, 5, 6, 7, 8, 6, 7, 8, 9, 10, 11, 12, 13, 11, 12, 13, 15, 16, 17, 18, 19, 17, 18, 19, 20, 22, 23, 24, 25, 23, 25, 26, 28, 30, 31, 32, 33, 33, 33, 34, 34, 34, 35, 35, 35, 35, 35, 36, 36, 36, 37, 37, 37, 37, 37, 38, 38, 38, 39, 39, 39, 39, 39, 40, 40, 40, 41, 41, 41, 41, 41, 42, 42, 42, 43, 43, 43, 43, 43, 44, 44, 44, 45, 45, 45, 45, 45, 46, 46, 46, 47, 47, 47, 47, 47, 48, 48, 48, 49, 49, 49, 49, 49, 50, 50, 50, 51, 51, 51, 51, 51, 52, 52, 52, 53, 53, 53], 'legacy level curve untouched');
-    assert.deepEqual(allStages.slice(0, 12).map((s) => s.enemy.maxHp), [380, 560, 740, 1050, 1850, 2097, 2169, 4880, 1450, 1850, 2150, 2700], 'legacy enemy stats untouched');
+    // Zorluk ayarı (difficulty.ts) sonrası: ilk aşama anında bitmemeli, erken aşamalar kesintisiz zorlaşmalı.
+    assert.ok(allStages[0].enemy.maxHp >= 800, 'first stage must not die in a couple of hits');
+    assert.ok(allStages.slice(0, 5).every((s, i, a) => i === 0 || a[i - 1].enemy.maxHp <= s.enemy.maxHp), 'forest 1-5 hp must rise');
     // Eklenen 130 aşama kendi içinde kesintisiz zorlaşmalı.
     const endgameStages = allStages.slice(120);
     assert.equal(endgameStages.length, 130);

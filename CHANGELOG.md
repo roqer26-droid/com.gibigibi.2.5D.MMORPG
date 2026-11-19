@@ -4,6 +4,21 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.3.0 — Zorluk dengesi ve menü düzeni
+- **Zorluk:** Erken aşamalar artık 2-3 hamlede bitmiyor. Düşman canına, kahramanın seviyesine göre
+  hedeflenen hamle sayısından hesaplanan bir taban eklendi (`src/data/difficulty.ts`):
+  1. aşama ~7 hamle, bosslar ~16-30 hamle (beceri kullanmayan orta oyuncu için).
+- Erken düşmanların saldırısı güçlendirildi; kahraman artık savaşta gerçekten can kaybediyor.
+  Etki seviye yükseldikçe sönüyor, ileri aşamalar değişmedi.
+- Taşlardan (doğa/altın) gelen kalkana üst sınır kondu (max canın %30'u). Önceden kalkan sınırsız
+  birikiyor ve hiçbir düşman can götüremiyordu.
+- Lig ve geç oyun aşamaları değişmedi.
+- `npm run sim -- <sınıf> <aşama sayısı> <oyun sayısı>` ile denge ölçümü yapılabilir.
+- **Arayüz:** Ana menü sadeleşti: 7 kompakt kutu (Dünya, Kahramanlar, Ekipman, Yetenekler,
+  Görevler, Başarımlar, Rekabet Ligi). Aynı yere giden "Envanter" kutusu Ekipman'a katıldı.
+- Görevler (ana/yan/günlük/haftalık) ve Başarımlar (başarımlar + lig görevleri) ayrı ekranlara bölündü.
+- Mobilde menü kartı küçüldü, tanıtım metinleri gizlendi.
+
 ## v1.2.0 — Android (APK) hazırlığı
 - Capacitor ile `android/` projesi eklendi (paket: `com.gibigibi.mmorpg`, dikey mod).
 - Yazı tipleri pakete gömüldü; oyun artık internetsiz de aynı görünür.

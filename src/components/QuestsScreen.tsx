@@ -13,7 +13,21 @@ interface QuestsScreenProps {
   onClaimQuest: (quest: QuestDef) => void;
   onOpenLeague: () => void;
   initialTab?: QuestCategory;
+  /** 'quests': ana/yan/günlük/haftalık — 'achievements': başarımlar ve lig görevleri */
+  mode?: ScreenMode;
 }
+
+export type ScreenMode = 'quests' | 'achievements';
+
+const MODE_TABS: Record<ScreenMode, QuestCategory[]> = {
+  quests: ['main', 'side', 'daily', 'weekly'],
+  achievements: ['achievement', 'league'],
+};
+
+const MODE_COPY: Record<ScreenMode, { heading: string; eyebrow: string; headline: string; blurb: string; noun: string }> = {
+  quests: { heading: 'Görev Günlüğü', eyebrow: 'Maceranın İzleri', headline: 'Her zafer bir hikâye yazar.', blurb: 'Görevleri tamamla, ödüllerini topla ve efsaneni güçlendir.', noun: 'Görevler' },
+  achievements: { heading: 'Başarımlar', eyebrow: 'Efsanenin Şerefi', headline: 'Her dönüm noktası bir iz bırakır.', blurb: 'Uzun vadeli hedefleri ve lig başarılarını buradan takip et.', noun: 'Başarımlar' },
+};
 
 const TABS: { id: QuestCategory; label: string; icon: typeof ScrollText }[] = [
   { id: 'main', label: 'Ana Görevler', icon: ScrollText },
@@ -33,8 +47,10 @@ const CATEGORY_COPY: Record<QuestCategory, { title: string; description: string 
   achievement: { title: 'Başarımlar', description: 'Her dönüm noktası, efsanene yeni bir iz bırakır.' },
 };
 
-export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initialTab = 'main' }: QuestsScreenProps) {
-  const [tab, setTab] = useState<QuestCategory>(initialTab);
+export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initialTab = 'main', mode = 'quests' }: QuestsScreenProps) {
+  const visibleTabs = MODE_TABS[mode].map((id) => TABS.find((t) => t.id === id)!);
+  const copy = MODE_COPY[mode];
+  const [tab, setTab] = useState<QuestCategory>(MODE_TABS[mode].includes(initialTab) ? initialTab : MODE_TABS[mode][0]);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -70,29 +86,31 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
           </button>
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300/70">Efsanevi Taşlar</p>
-            <h1 className="font-display text-lg font-bold text-amber-100">Görev Günlüğü</h1>
+            <h1 className="font-display text-lg font-bold text-amber-100">{copy.heading}</h1>
           </div>
         </div>
-        <button type="button" onClick={onOpenLeague} className="flex min-h-10 items-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 text-xs font-bold text-amber-200 transition hover:bg-amber-500/20">
-          <Trophy className="h-4 w-4" /> Rekabet Ligi <ArrowRight className="h-3.5 w-3.5" />
-        </button>
+        {tab === 'league' && (
+          <button type="button" onClick={onOpenLeague} className="flex min-h-10 items-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 text-xs font-bold text-amber-200 transition hover:bg-amber-500/20">
+            <Trophy className="h-4 w-4" /> Rekabet Ligi <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6">
-          <div className="quest-intro relative overflow-hidden border-b border-amber-400/20 pb-6 sm:pb-7">
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6">
+          <div className="quest-intro relative hidden overflow-hidden border-b border-amber-400/20 pb-6 sm:block sm:pb-7">
             <div className="relative z-10 max-w-xl">
               <div className="mb-3 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-400/90">
-                <span className="h-px w-8 bg-amber-400/70" /> Maceranın İzleri
+                <span className="h-px w-8 bg-amber-400/70" /> {copy.eyebrow}
               </div>
-              <h2 className="font-display text-2xl font-bold leading-tight text-[#fff3d0] sm:text-3xl">Her zafer bir hikâye yazar.</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">Görevleri tamamla, ödüllerini topla ve efsaneni güçlendir.</p>
+              <h2 className="font-display text-2xl font-bold leading-tight text-[#fff3d0] sm:text-3xl">{copy.headline}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{copy.blurb}</p>
             </div>
             <ScrollText aria-hidden="true" className="pointer-events-none absolute right-4 top-0 hidden h-28 w-28 -rotate-12 text-amber-400/[0.07] sm:block" strokeWidth={1} />
           </div>
 
-          <nav aria-label="Görev kategorileri" className="-mx-4 mt-5 flex gap-1 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-            {TABS.map(({ id, label, icon: Icon }) => (
+          <nav aria-label="Kategoriler" className="-mx-4 mt-4 flex gap-1 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+            {visibleTabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
@@ -108,7 +126,7 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
 
           <div className="mb-4 mt-6 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400/70">Görevler · {claimedCount}/{quests.length} ödül alındı</p>
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400/70">{copy.noun} · {claimedCount}/{quests.length} ödül alındı</p>
               <h3 className="font-display text-xl font-bold text-slate-100">{CATEGORY_COPY[tab].title}</h3>
               <p className="mt-1 text-xs text-slate-400">{CATEGORY_COPY[tab].description}</p>
             </div>

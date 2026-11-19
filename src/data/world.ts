@@ -8,6 +8,7 @@ import {
   StageDef,
   StageType,
 } from '../types/game';
+import { tuneStage } from './difficulty';
 import { GEM_INFO } from './skills';
 
 const CORE_REGIONS: RegionDef[] = [
@@ -2139,11 +2140,17 @@ const ENDGAME_TEMPLATES: EndgameTemplate[] = [
   },
 ];
 
-export const WORLD_REGIONS: RegionDef[] = [
+const RAW_REGIONS: RegionDef[] = [
   ...CORE_REGIONS,
   ...NEW_REGION_TEMPLATES.map(buildRegion),
   ...ENDGAME_TEMPLATES.map(buildEndgameRegion),
 ];
+
+/** Zorluk ayarı (difficulty.ts) uygulanmış nihai bölgeler. */
+export const WORLD_REGIONS: RegionDef[] = RAW_REGIONS.map((region) => ({
+  ...region,
+  stages: region.stages.map(tuneStage),
+}));
 
 export const TOTAL_STAGES = WORLD_REGIONS.reduce((sum, r) => sum + r.stages.length, 0);
 export const TOTAL_REGIONS = WORLD_REGIONS.length;

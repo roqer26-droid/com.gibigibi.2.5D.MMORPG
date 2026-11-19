@@ -49,7 +49,7 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'league';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
@@ -119,7 +119,7 @@ export function App() {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return;
     }
-    if (route === 'quests') return setRoute(questBack);
+    if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route !== 'menu') return setRoute('menu');
     exitNativeApp();
   };
@@ -525,6 +525,7 @@ export function App() {
           onPlayNextStage={handleStartStage}
           onNavigate={(dest) => {
             if (dest === 'quests') { setQuestTab('main'); setQuestBack('menu'); }
+            if (dest === 'achievements') { setQuestTab('achievement'); setQuestBack('menu'); }
             setRoute(dest);
           }}
           onOpenSettings={() => setShowSettings(true)}
@@ -572,8 +573,10 @@ export function App() {
         />
       )}
 
-      {route === 'quests' && (
+      {(route === 'quests' || route === 'achievements') && (
         <QuestsScreen
+          key={route}
+          mode={route}
           save={save}
           onBack={() => setRoute(questBack)}
           onClaimQuest={handleClaimQuest}
@@ -587,7 +590,7 @@ export function App() {
         <LeagueScreen
           save={save}
           onBack={() => setRoute('menu')}
-          onOpenQuests={() => { setQuestTab('league'); setQuestBack('league'); setRoute('quests'); }}
+          onOpenQuests={() => { setQuestTab('league'); setQuestBack('league'); setRoute('achievements'); }}
           onStartOpponent={handleStartLeague}
           onClaimTier={handleClaimTier}
           onClaimPending={handleClaimSeasonReward}

@@ -17,6 +17,7 @@ import { ComputedHeroBuild } from '../utils/rpgLogic';
 import { computeEnchantAura } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
+import { capGemShield } from '../data/difficulty';
 import { findMatches, findPossibleMoves, type MatchGrid, type MatchResult, type Move } from '../game/match3';
 
 const GRID_SIZE = 8;
@@ -1235,7 +1236,7 @@ export class BattleScene extends Phaser.Scene {
       const shieldAmt = Math.round((16 + build.stats.defense * 0.9) * counts.nature * 0.55 * bonus);
       this.launchOrbs(centers.nature, this.heroContainer.x, this.heroContainer.y, 0x22c55e, () => {
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
-        this.heroShield += shieldAmt;
+        this.heroShield = Math.max(this.heroShield, capGemShield(this.heroShield + shieldAmt, this.heroMaxHp));
         this.spawnFloatingText(
           this.heroContainer.x - 16,
           this.heroContainer.y - 38,
@@ -1294,7 +1295,7 @@ export class BattleScene extends Phaser.Scene {
         this.heroMana = Math.min(this.heroMaxMana, this.heroMana + manaGain);
         this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + ultiGain);
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
-        this.heroShield += 35 * counts.golden;
+        this.heroShield = Math.max(this.heroShield, capGemShield(this.heroShield + 35 * counts.golden, this.heroMaxHp));
         this.dealHeroAttackToEnemy(dmg, 'golden', true, true);
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 78, 'ALTIN BEREKET!', '#fde047');
       });
