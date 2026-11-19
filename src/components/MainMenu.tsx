@@ -115,7 +115,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             </div>
 
             <div className="my-2">
-              <HeroPaperdoll hero={hero} size={220} />
+              <HeroPaperdoll hero={hero} size={typeof window !== "undefined" && window.innerHeight < 720 ? 150 : 190} />
             </div>
 
             <h1 className="font-display text-2xl font-black text-white">{cls.title}</h1>
@@ -325,6 +325,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               </div>
               <span className="text-xs font-bold text-amber-300">Aç →</span>
             </button>
+
+            <p className="pb-2 text-center text-[10px] font-semibold tracking-wide text-slate-500">
+              Sürüm v{__APP_VERSION__}
+            </p>
           </div>
         </div>
       </main>

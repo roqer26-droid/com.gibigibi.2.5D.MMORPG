@@ -370,7 +370,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                 >
                   <span className="absolute inset-x-0 top-0 h-1" style={{ background: c.themeColor }} />
 
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left">
                     <div className="relative shrink-0">
                       <HeroPaperdoll hero={prog} size={64} staticRender={!selected && !open} />
                       {locked && (
@@ -379,8 +379,8 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                         </span>
                       )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
+                    <div className="w-full min-w-0 sm:flex-1">
+                      <div className="flex items-center justify-center gap-1.5 sm:justify-start">
                         <span className="truncate font-display text-sm font-bold text-white">
                           {c.name}
                         </span>
@@ -392,7 +392,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                       </div>
                       <p className="truncate text-[10px] text-slate-400">{c.title}</p>
                       {locked && c.unlockCost ? (
-                        <p className="mt-0.5 flex items-center gap-1.5 text-[10px] font-bold text-amber-300">
+                        <p className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] font-bold text-amber-300 sm:justify-start">
                           <Coins className="h-3 w-3" />
                           {c.unlockCost.gold.toLocaleString('tr-TR')}
                           <Gem className="ml-1 h-3 w-3 text-sky-300" />
@@ -406,13 +406,13 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                           )}
                         </p>
                       )}
-                      <div className="mt-1 flex items-center gap-1.5">
+                      <div className="mt-1 flex items-center justify-center gap-1.5 sm:justify-start">
                         {active && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">
                             <CheckCircle2 className="h-2.5 w-2.5" /> Aktif
                           </span>
                         )}
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">
+                        <span className="hidden items-center gap-1 rounded-full bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-400 sm:inline-flex">
                           <Maximize2 className="h-2.5 w-2.5" />
                           Detay için dokun
                         </span>

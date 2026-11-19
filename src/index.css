@@ -6,6 +6,13 @@
     --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   }
 
+  /* Arayüz rem tabanlı: telefonlarda ölçek genişlik ve yüksekliğe göre küçülür,
+     tablet/masaüstünde 16px'te kalır. */
+  html {
+    font-size: clamp(12px, min(3.55vw, 3.6vh), 16px);
+    -webkit-text-size-adjust: 100%;
+  }
+
   html,
   body,
   #root {
