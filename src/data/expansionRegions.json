@@ -1,0 +1,2008 @@
+{
+  "afterRegionId": "eternity",
+  "stageCount": 250,
+  "arcs": [
+    {
+      "order": 1,
+      "name": "Sonsuzluğun Ötesi",
+      "suggestedEncounterFocus": "Kalkan ve ağır saldırı"
+    },
+    {
+      "order": 2,
+      "name": "Kara Gelgit",
+      "suggestedEncounterFocus": "Can çalma ve uzun savaşlar"
+    },
+    {
+      "order": 3,
+      "name": "Demir Yörünge",
+      "suggestedEncounterFocus": "Ağır saldırı öncesi niyet göstergesi"
+    },
+    {
+      "order": 4,
+      "name": "Sönük Işık",
+      "suggestedEncounterFocus": "Donmuş taşlar ve faz geçişleri"
+    },
+    {
+      "order": 5,
+      "name": "Son Şafak",
+      "suggestedEncounterFocus": "Faz geçişleri ve birden fazla mevcut boss davranışı"
+    }
+  ],
+  "regions": [
+    {
+      "id": "glass_forest",
+      "name": "Cam Ormanı",
+      "accentColor": "#63e7c4",
+      "icon": "icons/glass_forest.png",
+      "arc": 1,
+      "orderAfterEternity": 1,
+      "stages": [
+        {
+          "id": "glass_forest_1",
+          "order": 1,
+          "name": "Kırık Dal Geçidi",
+          "type": "normal"
+        },
+        {
+          "id": "glass_forest_2",
+          "order": 2,
+          "name": "Yansıyan Çalılık",
+          "type": "normal"
+        },
+        {
+          "id": "glass_forest_3",
+          "order": 3,
+          "name": "Cam Kozası",
+          "type": "treasure"
+        },
+        {
+          "id": "glass_forest_4",
+          "order": 4,
+          "name": "Saydam Kökler",
+          "type": "normal"
+        },
+        {
+          "id": "glass_forest_5",
+          "order": 5,
+          "name": "Keskin Dal Bekçisi",
+          "type": "elite"
+        },
+        {
+          "id": "glass_forest_6",
+          "order": 6,
+          "name": "Yeşil Prizma Yolu",
+          "type": "normal"
+        },
+        {
+          "id": "glass_forest_7",
+          "order": 7,
+          "name": "Kristal Boynuz",
+          "type": "elite"
+        },
+        {
+          "id": "glass_forest_8",
+          "order": 8,
+          "name": "Yansıma Çemberi",
+          "type": "normal"
+        },
+        {
+          "id": "glass_forest_9",
+          "order": 9,
+          "name": "Cam Kabuklu Dev",
+          "type": "elite"
+        },
+        {
+          "id": "glass_forest_10",
+          "order": 10,
+          "name": "Camorman Bekçisi",
+          "type": "boss",
+          "enemyName": "Camorman Bekçisi",
+          "bossId": "glass_forest_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "treant",
+        "elite": "void_stalker",
+        "boss": "stone_sentinel"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "silent_shore",
+      "name": "Sessiz Kıyı",
+      "accentColor": "#75a7eb",
+      "icon": "icons/silent_shore.png",
+      "arc": 1,
+      "orderAfterEternity": 2,
+      "stages": [
+        {
+          "id": "silent_shore_1",
+          "order": 1,
+          "name": "Kumda İzler",
+          "type": "normal"
+        },
+        {
+          "id": "silent_shore_2",
+          "order": 2,
+          "name": "Boş İskele",
+          "type": "normal"
+        },
+        {
+          "id": "silent_shore_3",
+          "order": 3,
+          "name": "Fener Sandığı",
+          "type": "treasure"
+        },
+        {
+          "id": "silent_shore_4",
+          "order": 4,
+          "name": "Sığ Su Geçidi",
+          "type": "normal"
+        },
+        {
+          "id": "silent_shore_5",
+          "order": 5,
+          "name": "Sahil Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "silent_shore_6",
+          "order": 6,
+          "name": "Sürüklenen Enkaz",
+          "type": "normal"
+        },
+        {
+          "id": "silent_shore_7",
+          "order": 7,
+          "name": "Paslı Kaptan",
+          "type": "elite"
+        },
+        {
+          "id": "silent_shore_8",
+          "order": 8,
+          "name": "Fener Merdiveni",
+          "type": "normal"
+        },
+        {
+          "id": "silent_shore_9",
+          "order": 9,
+          "name": "Dalgakıran Devi",
+          "type": "elite"
+        },
+        {
+          "id": "silent_shore_10",
+          "order": 10,
+          "name": "Sönük Fenerin Bekçisi",
+          "type": "boss",
+          "enemyName": "Sönük Fenerin Bekçisi",
+          "bossId": "silent_shore_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "warlord",
+        "boss": "celestial"
+      },
+      "bossWeakness": "arcane",
+      "bossResistance": "lightning"
+    },
+    {
+      "id": "copper_mines",
+      "name": "Bakır Ocakları",
+      "accentColor": "#eaa76c",
+      "icon": "icons/copper_mines.png",
+      "arc": 1,
+      "orderAfterEternity": 3,
+      "stages": [
+        {
+          "id": "copper_mines_1",
+          "order": 1,
+          "name": "Maden Ağzı",
+          "type": "normal"
+        },
+        {
+          "id": "copper_mines_2",
+          "order": 2,
+          "name": "Kırık Ray",
+          "type": "normal"
+        },
+        {
+          "id": "copper_mines_3",
+          "order": 3,
+          "name": "Cevher Kasası",
+          "type": "treasure"
+        },
+        {
+          "id": "copper_mines_4",
+          "order": 4,
+          "name": "Kızıl Galeri",
+          "type": "normal"
+        },
+        {
+          "id": "copper_mines_5",
+          "order": 5,
+          "name": "Çekiç Ustası",
+          "type": "elite"
+        },
+        {
+          "id": "copper_mines_6",
+          "order": 6,
+          "name": "Duman Kuyusu",
+          "type": "normal"
+        },
+        {
+          "id": "copper_mines_7",
+          "order": 7,
+          "name": "Bakır Böcek",
+          "type": "elite"
+        },
+        {
+          "id": "copper_mines_8",
+          "order": 8,
+          "name": "Derin Ocak",
+          "type": "normal"
+        },
+        {
+          "id": "copper_mines_9",
+          "order": 9,
+          "name": "Vagon Kıran",
+          "type": "elite"
+        },
+        {
+          "id": "copper_mines_10",
+          "order": 10,
+          "name": "Bakır Yürekli Golem",
+          "type": "boss",
+          "enemyName": "Bakır Yürekli Golem",
+          "bossId": "copper_mines_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "stone_sentinel",
+        "boss": "stone_sentinel"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "mist_aqueduct",
+      "name": "Sis Kemeri",
+      "accentColor": "#a2bdd6",
+      "icon": "icons/mist_aqueduct.png",
+      "arc": 1,
+      "orderAfterEternity": 4,
+      "stages": [
+        {
+          "id": "mist_aqueduct_1",
+          "order": 1,
+          "name": "Kuru Kanal",
+          "type": "normal"
+        },
+        {
+          "id": "mist_aqueduct_2",
+          "order": 2,
+          "name": "Sisli Ayaklar",
+          "type": "normal"
+        },
+        {
+          "id": "mist_aqueduct_3",
+          "order": 3,
+          "name": "Sarnıç Hazinesi",
+          "type": "treasure"
+        },
+        {
+          "id": "mist_aqueduct_4",
+          "order": 4,
+          "name": "Kemer Altı",
+          "type": "normal"
+        },
+        {
+          "id": "mist_aqueduct_5",
+          "order": 5,
+          "name": "Buhar Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "mist_aqueduct_6",
+          "order": 6,
+          "name": "Sarkık Halat",
+          "type": "normal"
+        },
+        {
+          "id": "mist_aqueduct_7",
+          "order": 7,
+          "name": "Gri Pelerin",
+          "type": "elite"
+        },
+        {
+          "id": "mist_aqueduct_8",
+          "order": 8,
+          "name": "Su Terazisi",
+          "type": "normal"
+        },
+        {
+          "id": "mist_aqueduct_9",
+          "order": 9,
+          "name": "Sarnıç Yılanı",
+          "type": "elite"
+        },
+        {
+          "id": "mist_aqueduct_10",
+          "order": 10,
+          "name": "Sisin Mimarı",
+          "type": "boss",
+          "enemyName": "Sisin Mimarı",
+          "bossId": "mist_aqueduct_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "leviathan",
+        "boss": "leviathan"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "frost"
+    },
+    {
+      "id": "thorn_citadel",
+      "name": "Diken Hisarı",
+      "accentColor": "#a2dc56",
+      "icon": "icons/thorn_citadel.png",
+      "arc": 1,
+      "orderAfterEternity": 5,
+      "stages": [
+        {
+          "id": "thorn_citadel_1",
+          "order": 1,
+          "name": "Çit Geçidi",
+          "type": "normal"
+        },
+        {
+          "id": "thorn_citadel_2",
+          "order": 2,
+          "name": "Sivri Avlu",
+          "type": "normal"
+        },
+        {
+          "id": "thorn_citadel_3",
+          "order": 3,
+          "name": "Dikenli Kasa",
+          "type": "treasure"
+        },
+        {
+          "id": "thorn_citadel_4",
+          "order": 4,
+          "name": "Tırmanan Sarmaşık",
+          "type": "normal"
+        },
+        {
+          "id": "thorn_citadel_5",
+          "order": 5,
+          "name": "Çit Muhafızı",
+          "type": "elite"
+        },
+        {
+          "id": "thorn_citadel_6",
+          "order": 6,
+          "name": "Dar Burç",
+          "type": "normal"
+        },
+        {
+          "id": "thorn_citadel_7",
+          "order": 7,
+          "name": "Diken Zırhlı Şövalye",
+          "type": "elite"
+        },
+        {
+          "id": "thorn_citadel_8",
+          "order": 8,
+          "name": "Kök Mahzeni",
+          "type": "normal"
+        },
+        {
+          "id": "thorn_citadel_9",
+          "order": 9,
+          "name": "Kuşatma Böceği",
+          "type": "elite"
+        },
+        {
+          "id": "thorn_citadel_10",
+          "order": 10,
+          "name": "Diken Tacı",
+          "type": "boss",
+          "enemyName": "Diken Tacı",
+          "bossId": "thorn_citadel_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "wolf",
+        "elite": "treant",
+        "boss": "warlord"
+      },
+      "bossWeakness": "fire",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "amber_dunes",
+      "name": "Kehribar Kumulları",
+      "accentColor": "#ffc266",
+      "icon": "icons/amber_dunes.png",
+      "arc": 2,
+      "orderAfterEternity": 6,
+      "stages": [
+        {
+          "id": "amber_dunes_1",
+          "order": 1,
+          "name": "Sıcak Basamak",
+          "type": "normal"
+        },
+        {
+          "id": "amber_dunes_2",
+          "order": 2,
+          "name": "Çöken Tepe",
+          "type": "normal"
+        },
+        {
+          "id": "amber_dunes_3",
+          "order": 3,
+          "name": "Kehribar Yığını",
+          "type": "treasure"
+        },
+        {
+          "id": "amber_dunes_4",
+          "order": 4,
+          "name": "Kum Aynası",
+          "type": "normal"
+        },
+        {
+          "id": "amber_dunes_5",
+          "order": 5,
+          "name": "Kum Isıranı",
+          "type": "elite"
+        },
+        {
+          "id": "amber_dunes_6",
+          "order": 6,
+          "name": "Kayıp Kervan",
+          "type": "normal"
+        },
+        {
+          "id": "amber_dunes_7",
+          "order": 7,
+          "name": "Kızıl Akrep",
+          "type": "elite"
+        },
+        {
+          "id": "amber_dunes_8",
+          "order": 8,
+          "name": "Çöl Kuyusu",
+          "type": "normal"
+        },
+        {
+          "id": "amber_dunes_9",
+          "order": 9,
+          "name": "Kehribar Pençe",
+          "type": "elite"
+        },
+        {
+          "id": "amber_dunes_10",
+          "order": 10,
+          "name": "Altın Kabuklu Mahrak",
+          "type": "boss",
+          "enemyName": "Altın Kabuklu Mahrak",
+          "bossId": "amber_dunes_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "salamander",
+        "elite": "stone_sentinel",
+        "boss": "pharaoh"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "sunken_archive",
+      "name": "Batık Arşiv",
+      "accentColor": "#5bd2db",
+      "icon": "icons/sunken_archive.png",
+      "arc": 2,
+      "orderAfterEternity": 7,
+      "stages": [
+        {
+          "id": "sunken_archive_1",
+          "order": 1,
+          "name": "Su Altı Rafları",
+          "type": "normal"
+        },
+        {
+          "id": "sunken_archive_2",
+          "order": 2,
+          "name": "Islak Merdiven",
+          "type": "normal"
+        },
+        {
+          "id": "sunken_archive_3",
+          "order": 3,
+          "name": "Mühürlü Katalog",
+          "type": "treasure"
+        },
+        {
+          "id": "sunken_archive_4",
+          "order": 4,
+          "name": "Yosunlu Okuma Salonu",
+          "type": "normal"
+        },
+        {
+          "id": "sunken_archive_5",
+          "order": 5,
+          "name": "Mürekkep Yılanı",
+          "type": "elite"
+        },
+        {
+          "id": "sunken_archive_6",
+          "order": 6,
+          "name": "Kayıp Kayıt",
+          "type": "normal"
+        },
+        {
+          "id": "sunken_archive_7",
+          "order": 7,
+          "name": "Arşiv Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "sunken_archive_8",
+          "order": 8,
+          "name": "Batık Galeri",
+          "type": "normal"
+        },
+        {
+          "id": "sunken_archive_9",
+          "order": 9,
+          "name": "Sarnıç Yazmanı",
+          "type": "elite"
+        },
+        {
+          "id": "sunken_archive_10",
+          "order": 10,
+          "name": "Derinliklerin Arşivcisi",
+          "type": "boss",
+          "enemyName": "Derinliklerin Arşivcisi",
+          "bossId": "sunken_archive_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "leviathan",
+        "boss": "pharaoh"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "arcane"
+    },
+    {
+      "id": "salt_bastion",
+      "name": "Tuz Surları",
+      "accentColor": "#f4c4cd",
+      "icon": "icons/salt_bastion.png",
+      "arc": 2,
+      "orderAfterEternity": 8,
+      "stages": [
+        {
+          "id": "salt_bastion_1",
+          "order": 1,
+          "name": "Beyaz Yokuş",
+          "type": "normal"
+        },
+        {
+          "id": "salt_bastion_2",
+          "order": 2,
+          "name": "Tuz Basamağı",
+          "type": "normal"
+        },
+        {
+          "id": "salt_bastion_3",
+          "order": 3,
+          "name": "Kristal Ambar",
+          "type": "treasure"
+        },
+        {
+          "id": "salt_bastion_4",
+          "order": 4,
+          "name": "Çatlak Siper",
+          "type": "normal"
+        },
+        {
+          "id": "salt_bastion_5",
+          "order": 5,
+          "name": "Tuz Ağzı",
+          "type": "elite"
+        },
+        {
+          "id": "salt_bastion_6",
+          "order": 6,
+          "name": "Kararmış Kule",
+          "type": "normal"
+        },
+        {
+          "id": "salt_bastion_7",
+          "order": 7,
+          "name": "Gül Tuzu Golemi",
+          "type": "elite"
+        },
+        {
+          "id": "salt_bastion_8",
+          "order": 8,
+          "name": "Set Duvarı",
+          "type": "normal"
+        },
+        {
+          "id": "salt_bastion_9",
+          "order": 9,
+          "name": "Tuz Zırhlı Kral",
+          "type": "elite"
+        },
+        {
+          "id": "salt_bastion_10",
+          "order": 10,
+          "name": "Surların Beyaz Muhafızı",
+          "type": "boss",
+          "enemyName": "Surların Beyaz Muhafızı",
+          "bossId": "salt_bastion_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "stone_sentinel",
+        "elite": "ice_golem",
+        "boss": "stone_sentinel"
+      },
+      "bossWeakness": "nature",
+      "bossResistance": "frost"
+    },
+    {
+      "id": "obsidian_harbor",
+      "name": "Obsidyen Limanı",
+      "accentColor": "#a98aff",
+      "icon": "icons/obsidian_harbor.png",
+      "arc": 2,
+      "orderAfterEternity": 9,
+      "stages": [
+        {
+          "id": "obsidian_harbor_1",
+          "order": 1,
+          "name": "Volkan Camı İskelesi",
+          "type": "normal"
+        },
+        {
+          "id": "obsidian_harbor_2",
+          "order": 2,
+          "name": "Mühürlü Şamandıra",
+          "type": "normal"
+        },
+        {
+          "id": "obsidian_harbor_3",
+          "order": 3,
+          "name": "Kırık Çapa Sandığı",
+          "type": "treasure"
+        },
+        {
+          "id": "obsidian_harbor_4",
+          "order": 4,
+          "name": "Kara Halatlar",
+          "type": "normal"
+        },
+        {
+          "id": "obsidian_harbor_5",
+          "order": 5,
+          "name": "Rıhtım Celladı",
+          "type": "elite"
+        },
+        {
+          "id": "obsidian_harbor_6",
+          "order": 6,
+          "name": "Çatlak Mendirek",
+          "type": "normal"
+        },
+        {
+          "id": "obsidian_harbor_7",
+          "order": 7,
+          "name": "Gece Korsanı",
+          "type": "elite"
+        },
+        {
+          "id": "obsidian_harbor_8",
+          "order": 8,
+          "name": "Yük Rampası",
+          "type": "normal"
+        },
+        {
+          "id": "obsidian_harbor_9",
+          "order": 9,
+          "name": "Islak Cam Pençesi",
+          "type": "elite"
+        },
+        {
+          "id": "obsidian_harbor_10",
+          "order": 10,
+          "name": "Obsidyen Amiral",
+          "type": "boss",
+          "enemyName": "Obsidyen Amiral",
+          "bossId": "obsidian_harbor_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "warlord",
+        "boss": "warlord"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "black_tide",
+      "name": "Kara Gelgit",
+      "accentColor": "#668de2",
+      "icon": "icons/black_tide.png",
+      "arc": 2,
+      "orderAfterEternity": 10,
+      "stages": [
+        {
+          "id": "black_tide_1",
+          "order": 1,
+          "name": "Gece Dalgası",
+          "type": "normal"
+        },
+        {
+          "id": "black_tide_2",
+          "order": 2,
+          "name": "Ters Akıntı",
+          "type": "normal"
+        },
+        {
+          "id": "black_tide_3",
+          "order": 3,
+          "name": "Gelgit Kasası",
+          "type": "treasure"
+        },
+        {
+          "id": "black_tide_4",
+          "order": 4,
+          "name": "Derin Kanal",
+          "type": "normal"
+        },
+        {
+          "id": "black_tide_5",
+          "order": 5,
+          "name": "Köpük Dişi",
+          "type": "elite"
+        },
+        {
+          "id": "black_tide_6",
+          "order": 6,
+          "name": "Boğuk Çan",
+          "type": "normal"
+        },
+        {
+          "id": "black_tide_7",
+          "order": 7,
+          "name": "Karanlık Dalgıç",
+          "type": "elite"
+        },
+        {
+          "id": "black_tide_8",
+          "order": 8,
+          "name": "Suyun Dibi",
+          "type": "normal"
+        },
+        {
+          "id": "black_tide_9",
+          "order": 9,
+          "name": "Gelgit Pençesi",
+          "type": "elite"
+        },
+        {
+          "id": "black_tide_10",
+          "order": 10,
+          "name": "Kara Gelgitin Leviathanı",
+          "type": "boss",
+          "enemyName": "Kara Gelgitin Leviathanı",
+          "bossId": "black_tide_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "leviathan",
+        "boss": "leviathan"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "echo_terrace",
+      "name": "Yankı Terasları",
+      "accentColor": "#bc9fff",
+      "icon": "icons/echo_terrace.png",
+      "arc": 3,
+      "orderAfterEternity": 11,
+      "stages": [
+        {
+          "id": "echo_terrace_1",
+          "order": 1,
+          "name": "İlk Yankı",
+          "type": "normal"
+        },
+        {
+          "id": "echo_terrace_2",
+          "order": 2,
+          "name": "Adım Taşları",
+          "type": "normal"
+        },
+        {
+          "id": "echo_terrace_3",
+          "order": 3,
+          "name": "Ses Mührü",
+          "type": "treasure"
+        },
+        {
+          "id": "echo_terrace_4",
+          "order": 4,
+          "name": "Boş Teras",
+          "type": "normal"
+        },
+        {
+          "id": "echo_terrace_5",
+          "order": 5,
+          "name": "Çan Döven",
+          "type": "elite"
+        },
+        {
+          "id": "echo_terrace_6",
+          "order": 6,
+          "name": "Ters Nota",
+          "type": "normal"
+        },
+        {
+          "id": "echo_terrace_7",
+          "order": 7,
+          "name": "Yankı Golemi",
+          "type": "elite"
+        },
+        {
+          "id": "echo_terrace_8",
+          "order": 8,
+          "name": "Sarp Basamak",
+          "type": "normal"
+        },
+        {
+          "id": "echo_terrace_9",
+          "order": 9,
+          "name": "Suskun Rahip",
+          "type": "elite"
+        },
+        {
+          "id": "echo_terrace_10",
+          "order": 10,
+          "name": "Bin Sesli Velora",
+          "type": "boss",
+          "enemyName": "Bin Sesli Velora",
+          "bossId": "echo_terrace_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "stone_sentinel",
+        "boss": "celestial"
+      },
+      "bossWeakness": "arcane",
+      "bossResistance": "lightning"
+    },
+    {
+      "id": "mercury_foundry",
+      "name": "Cıva Dökümhanesi",
+      "accentColor": "#a8d2dd",
+      "icon": "icons/mercury_foundry.png",
+      "arc": 3,
+      "orderAfterEternity": 12,
+      "stages": [
+        {
+          "id": "mercury_foundry_1",
+          "order": 1,
+          "name": "Kalıp Salonu",
+          "type": "normal"
+        },
+        {
+          "id": "mercury_foundry_2",
+          "order": 2,
+          "name": "Gümüş Kanal",
+          "type": "normal"
+        },
+        {
+          "id": "mercury_foundry_3",
+          "order": 3,
+          "name": "Döküm Kasası",
+          "type": "treasure"
+        },
+        {
+          "id": "mercury_foundry_4",
+          "order": 4,
+          "name": "Cıva Bendi",
+          "type": "normal"
+        },
+        {
+          "id": "mercury_foundry_5",
+          "order": 5,
+          "name": "Kalıp Bekçisi",
+          "type": "elite"
+        },
+        {
+          "id": "mercury_foundry_6",
+          "order": 6,
+          "name": "Kızgın Pota",
+          "type": "normal"
+        },
+        {
+          "id": "mercury_foundry_7",
+          "order": 7,
+          "name": "Akışkan Zırh",
+          "type": "elite"
+        },
+        {
+          "id": "mercury_foundry_8",
+          "order": 8,
+          "name": "Döküm Rampası",
+          "type": "normal"
+        },
+        {
+          "id": "mercury_foundry_9",
+          "order": 9,
+          "name": "Gümüş Omurga",
+          "type": "elite"
+        },
+        {
+          "id": "mercury_foundry_10",
+          "order": 10,
+          "name": "Cıva Ustası Rhodin",
+          "type": "boss",
+          "enemyName": "Cıva Ustası Rhodin",
+          "bossId": "mercury_foundry_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "fire_elemental",
+        "elite": "stone_sentinel",
+        "boss": "warlord"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "cinder_garden",
+      "name": "Kor Bahçesi",
+      "accentColor": "#fb7b54",
+      "icon": "icons/cinder_garden.png",
+      "arc": 3,
+      "orderAfterEternity": 13,
+      "stages": [
+        {
+          "id": "cinder_garden_1",
+          "order": 1,
+          "name": "Sıcak Tohum",
+          "type": "normal"
+        },
+        {
+          "id": "cinder_garden_2",
+          "order": 2,
+          "name": "Kor Fidanlığı",
+          "type": "normal"
+        },
+        {
+          "id": "cinder_garden_3",
+          "order": 3,
+          "name": "Kızıl Mantar Sandığı",
+          "type": "treasure"
+        },
+        {
+          "id": "cinder_garden_4",
+          "order": 4,
+          "name": "Yanık Çardak",
+          "type": "normal"
+        },
+        {
+          "id": "cinder_garden_5",
+          "order": 5,
+          "name": "Alev Salyangozu",
+          "type": "elite"
+        },
+        {
+          "id": "cinder_garden_6",
+          "order": 6,
+          "name": "Sıcak Çiy",
+          "type": "normal"
+        },
+        {
+          "id": "cinder_garden_7",
+          "order": 7,
+          "name": "Kömür Çiçeği",
+          "type": "elite"
+        },
+        {
+          "id": "cinder_garden_8",
+          "order": 8,
+          "name": "Bahçe Çiti",
+          "type": "normal"
+        },
+        {
+          "id": "cinder_garden_9",
+          "order": 9,
+          "name": "Kızıl Polen Devi",
+          "type": "elite"
+        },
+        {
+          "id": "cinder_garden_10",
+          "order": 10,
+          "name": "Küllerin Bahçıvanı",
+          "type": "boss",
+          "enemyName": "Küllerin Bahçıvanı",
+          "bossId": "cinder_garden_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "salamander",
+        "elite": "treant",
+        "boss": "fire_elemental"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "prism_labyrinth",
+      "name": "Prizma Labirenti",
+      "accentColor": "#e6a9ff",
+      "icon": "icons/prism_labyrinth.png",
+      "arc": 3,
+      "orderAfterEternity": 14,
+      "stages": [
+        {
+          "id": "prism_labyrinth_1",
+          "order": 1,
+          "name": "Üçgen Giriş",
+          "type": "normal"
+        },
+        {
+          "id": "prism_labyrinth_2",
+          "order": 2,
+          "name": "Yedi Duvar",
+          "type": "normal"
+        },
+        {
+          "id": "prism_labyrinth_3",
+          "order": 3,
+          "name": "Spektrum Hazinesi",
+          "type": "treasure"
+        },
+        {
+          "id": "prism_labyrinth_4",
+          "order": 4,
+          "name": "Bükülen Koridor",
+          "type": "normal"
+        },
+        {
+          "id": "prism_labyrinth_5",
+          "order": 5,
+          "name": "Kırılım Bekçisi",
+          "type": "elite"
+        },
+        {
+          "id": "prism_labyrinth_6",
+          "order": 6,
+          "name": "Kırmızı Işık Yolu",
+          "type": "normal"
+        },
+        {
+          "id": "prism_labyrinth_7",
+          "order": 7,
+          "name": "Prizma Terzisi",
+          "type": "elite"
+        },
+        {
+          "id": "prism_labyrinth_8",
+          "order": 8,
+          "name": "Mavi Çıkmaz",
+          "type": "normal"
+        },
+        {
+          "id": "prism_labyrinth_9",
+          "order": 9,
+          "name": "Renk Ayıran Dev",
+          "type": "elite"
+        },
+        {
+          "id": "prism_labyrinth_10",
+          "order": 10,
+          "name": "Spektrum Muhafızı",
+          "type": "boss",
+          "enemyName": "Spektrum Muhafızı",
+          "bossId": "prism_labyrinth_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "stone_sentinel",
+        "elite": "void_stalker",
+        "boss": "celestial"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "arcane"
+    },
+    {
+      "id": "iron_orbit",
+      "name": "Demir Yörünge",
+      "accentColor": "#ffb16c",
+      "icon": "icons/iron_orbit.png",
+      "arc": 3,
+      "orderAfterEternity": 15,
+      "stages": [
+        {
+          "id": "iron_orbit_1",
+          "order": 1,
+          "name": "Demir Ray",
+          "type": "normal"
+        },
+        {
+          "id": "iron_orbit_2",
+          "order": 2,
+          "name": "Sapmış Uydu",
+          "type": "normal"
+        },
+        {
+          "id": "iron_orbit_3",
+          "order": 3,
+          "name": "Yörünge Kasası",
+          "type": "treasure"
+        },
+        {
+          "id": "iron_orbit_4",
+          "order": 4,
+          "name": "Dönel Platform",
+          "type": "normal"
+        },
+        {
+          "id": "iron_orbit_5",
+          "order": 5,
+          "name": "Halka Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "iron_orbit_6",
+          "order": 6,
+          "name": "Manyetik Kesişim",
+          "type": "normal"
+        },
+        {
+          "id": "iron_orbit_7",
+          "order": 7,
+          "name": "Çapa Avcısı",
+          "type": "elite"
+        },
+        {
+          "id": "iron_orbit_8",
+          "order": 8,
+          "name": "İç Yörünge",
+          "type": "normal"
+        },
+        {
+          "id": "iron_orbit_9",
+          "order": 9,
+          "name": "Yıldız Demircisi",
+          "type": "elite"
+        },
+        {
+          "id": "iron_orbit_10",
+          "order": 10,
+          "name": "Demir Gezegenin Kalbi",
+          "type": "boss",
+          "enemyName": "Demir Gezegenin Kalbi",
+          "bossId": "iron_orbit_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "stone_sentinel",
+        "boss": "stone_sentinel"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "aurora_vault",
+      "name": "Kutup Işığı Mahzeni",
+      "accentColor": "#81eec5",
+      "icon": "icons/aurora_vault.png",
+      "arc": 4,
+      "orderAfterEternity": 16,
+      "stages": [
+        {
+          "id": "aurora_vault_1",
+          "order": 1,
+          "name": "Yeşil Işık Geçidi",
+          "type": "normal"
+        },
+        {
+          "id": "aurora_vault_2",
+          "order": 2,
+          "name": "Donuk Merdiven",
+          "type": "normal"
+        },
+        {
+          "id": "aurora_vault_3",
+          "order": 3,
+          "name": "Aurora Emaneti",
+          "type": "treasure"
+        },
+        {
+          "id": "aurora_vault_4",
+          "order": 4,
+          "name": "Sessiz Kırağı",
+          "type": "normal"
+        },
+        {
+          "id": "aurora_vault_5",
+          "order": 5,
+          "name": "Kutup Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "aurora_vault_6",
+          "order": 6,
+          "name": "Işık Perdesi",
+          "type": "normal"
+        },
+        {
+          "id": "aurora_vault_7",
+          "order": 7,
+          "name": "Zümrüt Buz Golemi",
+          "type": "elite"
+        },
+        {
+          "id": "aurora_vault_8",
+          "order": 8,
+          "name": "Serin Koridor",
+          "type": "normal"
+        },
+        {
+          "id": "aurora_vault_9",
+          "order": 9,
+          "name": "Mahzen Mızrağı",
+          "type": "elite"
+        },
+        {
+          "id": "aurora_vault_10",
+          "order": 10,
+          "name": "Aurora Kasasının Anahtarcısı",
+          "type": "boss",
+          "enemyName": "Aurora Kasasının Anahtarcısı",
+          "bossId": "aurora_vault_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "ice_golem",
+        "elite": "yeti",
+        "boss": "celestial"
+      },
+      "bossWeakness": "fire",
+      "bossResistance": "frost"
+    },
+    {
+      "id": "dream_marsh",
+      "name": "Düş Bataklığı",
+      "accentColor": "#e798de",
+      "icon": "icons/dream_marsh.png",
+      "arc": 4,
+      "orderAfterEternity": 17,
+      "stages": [
+        {
+          "id": "dream_marsh_1",
+          "order": 1,
+          "name": "Unutkan Su",
+          "type": "normal"
+        },
+        {
+          "id": "dream_marsh_2",
+          "order": 2,
+          "name": "Pembe Mantarlar",
+          "type": "normal"
+        },
+        {
+          "id": "dream_marsh_3",
+          "order": 3,
+          "name": "Rüya Kavanozu",
+          "type": "treasure"
+        },
+        {
+          "id": "dream_marsh_4",
+          "order": 4,
+          "name": "Sürüklenen Kütük",
+          "type": "normal"
+        },
+        {
+          "id": "dream_marsh_5",
+          "order": 5,
+          "name": "Uykucu Avcı",
+          "type": "elite"
+        },
+        {
+          "id": "dream_marsh_6",
+          "order": 6,
+          "name": "Düş Baloncukları",
+          "type": "normal"
+        },
+        {
+          "id": "dream_marsh_7",
+          "order": 7,
+          "name": "Mor Kamış Bekçisi",
+          "type": "elite"
+        },
+        {
+          "id": "dream_marsh_8",
+          "order": 8,
+          "name": "Yumuşak Çamur",
+          "type": "normal"
+        },
+        {
+          "id": "dream_marsh_9",
+          "order": 9,
+          "name": "Kâbus Böceği",
+          "type": "elite"
+        },
+        {
+          "id": "dream_marsh_10",
+          "order": 10,
+          "name": "Bataklığın Rüya Dokuyucusu",
+          "type": "boss",
+          "enemyName": "Bataklığın Rüya Dokuyucusu",
+          "bossId": "dream_marsh_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "treant",
+        "elite": "wolf",
+        "boss": "reaper"
+      },
+      "bossWeakness": "fire",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "mirror_court",
+      "name": "Ayna Divanı",
+      "accentColor": "#a7b7ff",
+      "icon": "icons/mirror_court.png",
+      "arc": 4,
+      "orderAfterEternity": 18,
+      "stages": [
+        {
+          "id": "mirror_court_1",
+          "order": 1,
+          "name": "İlk Yansıma",
+          "type": "normal"
+        },
+        {
+          "id": "mirror_court_2",
+          "order": 2,
+          "name": "Gümüş Avlu",
+          "type": "normal"
+        },
+        {
+          "id": "mirror_court_3",
+          "order": 3,
+          "name": "Ayna Kutusu",
+          "type": "treasure"
+        },
+        {
+          "id": "mirror_court_4",
+          "order": 4,
+          "name": "İçbükey Salon",
+          "type": "normal"
+        },
+        {
+          "id": "mirror_court_5",
+          "order": 5,
+          "name": "Yansıma Mızrağı",
+          "type": "elite"
+        },
+        {
+          "id": "mirror_court_6",
+          "order": 6,
+          "name": "Çift Taht",
+          "type": "normal"
+        },
+        {
+          "id": "mirror_court_7",
+          "order": 7,
+          "name": "Ayna Düellocusu",
+          "type": "elite"
+        },
+        {
+          "id": "mirror_court_8",
+          "order": 8,
+          "name": "Boş Suretler",
+          "type": "normal"
+        },
+        {
+          "id": "mirror_court_9",
+          "order": 9,
+          "name": "Cam Yargıç",
+          "type": "elite"
+        },
+        {
+          "id": "mirror_court_10",
+          "order": 10,
+          "name": "Çift Suretli Hükümdar",
+          "type": "boss",
+          "enemyName": "Çift Suretli Hükümdar",
+          "bossId": "mirror_court_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "warlord",
+        "boss": "pharaoh"
+      },
+      "bossWeakness": "arcane",
+      "bossResistance": "lightning"
+    },
+    {
+      "id": "midnight_observatory",
+      "name": "Geceyarısı Gözlemevi",
+      "accentColor": "#938cff",
+      "icon": "icons/midnight_observatory.png",
+      "arc": 4,
+      "orderAfterEternity": 19,
+      "stages": [
+        {
+          "id": "midnight_observatory_1",
+          "order": 1,
+          "name": "Kubbe Dibi",
+          "type": "normal"
+        },
+        {
+          "id": "midnight_observatory_2",
+          "order": 2,
+          "name": "Yıldız Haritası",
+          "type": "normal"
+        },
+        {
+          "id": "midnight_observatory_3",
+          "order": 3,
+          "name": "Gözlem Sandığı",
+          "type": "treasure"
+        },
+        {
+          "id": "midnight_observatory_4",
+          "order": 4,
+          "name": "Mercek İskelesi",
+          "type": "normal"
+        },
+        {
+          "id": "midnight_observatory_5",
+          "order": 5,
+          "name": "Gözcü Baykuş",
+          "type": "elite"
+        },
+        {
+          "id": "midnight_observatory_6",
+          "order": 6,
+          "name": "Kararmış Meridyen",
+          "type": "normal"
+        },
+        {
+          "id": "midnight_observatory_7",
+          "order": 7,
+          "name": "Kutup Çarkı",
+          "type": "elite"
+        },
+        {
+          "id": "midnight_observatory_8",
+          "order": 8,
+          "name": "Sessiz Teleskop",
+          "type": "normal"
+        },
+        {
+          "id": "midnight_observatory_9",
+          "order": 9,
+          "name": "Gece Gökbilimcisi",
+          "type": "elite"
+        },
+        {
+          "id": "midnight_observatory_10",
+          "order": 10,
+          "name": "Yıldız Avcısı Neros",
+          "type": "boss",
+          "enemyName": "Yıldız Avcısı Neros",
+          "bossId": "midnight_observatory_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "celestial",
+        "boss": "celestial"
+      },
+      "bossWeakness": "nature",
+      "bossResistance": "arcane"
+    },
+    {
+      "id": "hollow_sun",
+      "name": "İçi Boş Güneş",
+      "accentColor": "#ffd56b",
+      "icon": "icons/hollow_sun.png",
+      "arc": 4,
+      "orderAfterEternity": 20,
+      "stages": [
+        {
+          "id": "hollow_sun_1",
+          "order": 1,
+          "name": "Kör Işın",
+          "type": "normal"
+        },
+        {
+          "id": "hollow_sun_2",
+          "order": 2,
+          "name": "Boş Hale",
+          "type": "normal"
+        },
+        {
+          "id": "hollow_sun_3",
+          "order": 3,
+          "name": "Güneş Çentiği",
+          "type": "treasure"
+        },
+        {
+          "id": "hollow_sun_4",
+          "order": 4,
+          "name": "Kavruk Çember",
+          "type": "normal"
+        },
+        {
+          "id": "hollow_sun_5",
+          "order": 5,
+          "name": "Işın Bekçisi",
+          "type": "elite"
+        },
+        {
+          "id": "hollow_sun_6",
+          "order": 6,
+          "name": "Karanlık Gün Ortası",
+          "type": "normal"
+        },
+        {
+          "id": "hollow_sun_7",
+          "order": 7,
+          "name": "Sönük Alev Devriyesi",
+          "type": "elite"
+        },
+        {
+          "id": "hollow_sun_8",
+          "order": 8,
+          "name": "Yutulan Işık",
+          "type": "normal"
+        },
+        {
+          "id": "hollow_sun_9",
+          "order": 9,
+          "name": "Altın Çeper Muhafızı",
+          "type": "elite"
+        },
+        {
+          "id": "hollow_sun_10",
+          "order": 10,
+          "name": "Solgun Güneşin Yutucusu",
+          "type": "boss",
+          "enemyName": "Solgun Güneşin Yutucusu",
+          "bossId": "hollow_sun_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "fire_elemental",
+        "elite": "reaper",
+        "boss": "celestial"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    },
+    {
+      "id": "comet_bridge",
+      "name": "Kuyruklu Yıldız Köprüsü",
+      "accentColor": "#7ae4ff",
+      "icon": "icons/comet_bridge.png",
+      "arc": 5,
+      "orderAfterEternity": 21,
+      "stages": [
+        {
+          "id": "comet_bridge_1",
+          "order": 1,
+          "name": "İlk Payanda",
+          "type": "normal"
+        },
+        {
+          "id": "comet_bridge_2",
+          "order": 2,
+          "name": "Buz Kuyruğu",
+          "type": "normal"
+        },
+        {
+          "id": "comet_bridge_3",
+          "order": 3,
+          "name": "Kuyruk Kristali",
+          "type": "treasure"
+        },
+        {
+          "id": "comet_bridge_4",
+          "order": 4,
+          "name": "Geçit Ayakları",
+          "type": "normal"
+        },
+        {
+          "id": "comet_bridge_5",
+          "order": 5,
+          "name": "Kuyruk Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "comet_bridge_6",
+          "order": 6,
+          "name": "Parçacık Yağmuru",
+          "type": "normal"
+        },
+        {
+          "id": "comet_bridge_7",
+          "order": 7,
+          "name": "Köprü Okçusu",
+          "type": "elite"
+        },
+        {
+          "id": "comet_bridge_8",
+          "order": 8,
+          "name": "Son Bağlantı",
+          "type": "normal"
+        },
+        {
+          "id": "comet_bridge_9",
+          "order": 9,
+          "name": "Göktaşı Devriyesi",
+          "type": "elite"
+        },
+        {
+          "id": "comet_bridge_10",
+          "order": 10,
+          "name": "Köprünün Kuyruklu Muhafızı",
+          "type": "boss",
+          "enemyName": "Köprünün Kuyruklu Muhafızı",
+          "bossId": "comet_bridge_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "ice_golem",
+        "elite": "warlord",
+        "boss": "celestial"
+      },
+      "bossWeakness": "fire",
+      "bossResistance": "frost"
+    },
+    {
+      "id": "rune_necropolis",
+      "name": "Rün Nekropolü",
+      "accentColor": "#87dfbf",
+      "icon": "icons/rune_necropolis.png",
+      "arc": 5,
+      "orderAfterEternity": 22,
+      "stages": [
+        {
+          "id": "rune_necropolis_1",
+          "order": 1,
+          "name": "Mezar Yolu",
+          "type": "normal"
+        },
+        {
+          "id": "rune_necropolis_2",
+          "order": 2,
+          "name": "Çökmüş Kitabe",
+          "type": "normal"
+        },
+        {
+          "id": "rune_necropolis_3",
+          "order": 3,
+          "name": "Mühürlü Lahit",
+          "type": "treasure"
+        },
+        {
+          "id": "rune_necropolis_4",
+          "order": 4,
+          "name": "Kuyu Yazıtı",
+          "type": "normal"
+        },
+        {
+          "id": "rune_necropolis_5",
+          "order": 5,
+          "name": "Yazıt Kazıyıcı",
+          "type": "elite"
+        },
+        {
+          "id": "rune_necropolis_6",
+          "order": 6,
+          "name": "Solgun Meşaleler",
+          "type": "normal"
+        },
+        {
+          "id": "rune_necropolis_7",
+          "order": 7,
+          "name": "Dikilitaş Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "rune_necropolis_8",
+          "order": 8,
+          "name": "Unutulmuş Adlar",
+          "type": "normal"
+        },
+        {
+          "id": "rune_necropolis_9",
+          "order": 9,
+          "name": "Rün Celladı",
+          "type": "elite"
+        },
+        {
+          "id": "rune_necropolis_10",
+          "order": 10,
+          "name": "Adsız Mezar Kralı",
+          "type": "boss",
+          "enemyName": "Adsız Mezar Kralı",
+          "bossId": "rune_necropolis_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "goblin",
+        "elite": "reaper",
+        "boss": "pharaoh"
+      },
+      "bossWeakness": "arcane",
+      "bossResistance": "nature"
+    },
+    {
+      "id": "shattered_sky",
+      "name": "Kırık Gökkubbe",
+      "accentColor": "#a1a2ff",
+      "icon": "icons/shattered_sky.png",
+      "arc": 5,
+      "orderAfterEternity": 23,
+      "stages": [
+        {
+          "id": "shattered_sky_1",
+          "order": 1,
+          "name": "Kubbe Eşiği",
+          "type": "normal"
+        },
+        {
+          "id": "shattered_sky_2",
+          "order": 2,
+          "name": "Asılı Parçalar",
+          "type": "normal"
+        },
+        {
+          "id": "shattered_sky_3",
+          "order": 3,
+          "name": "Kubbe Kalıntısı",
+          "type": "treasure"
+        },
+        {
+          "id": "shattered_sky_4",
+          "order": 4,
+          "name": "Düşen Ufuk",
+          "type": "normal"
+        },
+        {
+          "id": "shattered_sky_5",
+          "order": 5,
+          "name": "Çatlak Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "shattered_sky_6",
+          "order": 6,
+          "name": "Gök Boşluğu",
+          "type": "normal"
+        },
+        {
+          "id": "shattered_sky_7",
+          "order": 7,
+          "name": "Yörünge Sapması",
+          "type": "elite"
+        },
+        {
+          "id": "shattered_sky_8",
+          "order": 8,
+          "name": "Sarkan Yay",
+          "type": "normal"
+        },
+        {
+          "id": "shattered_sky_9",
+          "order": 9,
+          "name": "Kubbe Yontucusu",
+          "type": "elite"
+        },
+        {
+          "id": "shattered_sky_10",
+          "order": 10,
+          "name": "Gökkubbeyi Kıran Velyr",
+          "type": "boss",
+          "enemyName": "Gökkubbeyi Kıran Velyr",
+          "bossId": "shattered_sky_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "stone_sentinel",
+        "boss": "celestial"
+      },
+      "bossWeakness": "lightning",
+      "bossResistance": "frost"
+    },
+    {
+      "id": "zero_threshold",
+      "name": "Sıfır Eşiği",
+      "accentColor": "#f49bd3",
+      "icon": "icons/zero_threshold.png",
+      "arc": 5,
+      "orderAfterEternity": 24,
+      "stages": [
+        {
+          "id": "zero_threshold_1",
+          "order": 1,
+          "name": "Boş Giriş",
+          "type": "normal"
+        },
+        {
+          "id": "zero_threshold_2",
+          "order": 2,
+          "name": "Solan İz",
+          "type": "normal"
+        },
+        {
+          "id": "zero_threshold_3",
+          "order": 3,
+          "name": "Eşik Mührü",
+          "type": "treasure"
+        },
+        {
+          "id": "zero_threshold_4",
+          "order": 4,
+          "name": "Sayıların Ötesi",
+          "type": "normal"
+        },
+        {
+          "id": "zero_threshold_5",
+          "order": 5,
+          "name": "Hiçlik Avcısı",
+          "type": "elite"
+        },
+        {
+          "id": "zero_threshold_6",
+          "order": 6,
+          "name": "Sessiz Çizgi",
+          "type": "normal"
+        },
+        {
+          "id": "zero_threshold_7",
+          "order": 7,
+          "name": "Sıfır Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "zero_threshold_8",
+          "order": 8,
+          "name": "Dönüşsüz Kapı",
+          "type": "normal"
+        },
+        {
+          "id": "zero_threshold_9",
+          "order": 9,
+          "name": "Yokluk Kılıcı",
+          "type": "elite"
+        },
+        {
+          "id": "zero_threshold_10",
+          "order": 10,
+          "name": "Sıfırın Bekçisi",
+          "type": "boss",
+          "enemyName": "Sıfırın Bekçisi",
+          "bossId": "zero_threshold_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "void_stalker",
+        "elite": "reaper",
+        "boss": "reaper"
+      },
+      "bossWeakness": "arcane",
+      "bossResistance": "lightning"
+    },
+    {
+      "id": "dawn_core",
+      "name": "Şafağın Çekirdeği",
+      "accentColor": "#ffd58a",
+      "icon": "icons/dawn_core.png",
+      "arc": 5,
+      "orderAfterEternity": 25,
+      "stages": [
+        {
+          "id": "dawn_core_1",
+          "order": 1,
+          "name": "İlk Işık Çizgisi",
+          "type": "normal"
+        },
+        {
+          "id": "dawn_core_2",
+          "order": 2,
+          "name": "Sıcak Kristal",
+          "type": "normal"
+        },
+        {
+          "id": "dawn_core_3",
+          "order": 3,
+          "name": "Şafak Hazinesi",
+          "type": "treasure"
+        },
+        {
+          "id": "dawn_core_4",
+          "order": 4,
+          "name": "Altın Çeper",
+          "type": "normal"
+        },
+        {
+          "id": "dawn_core_5",
+          "order": 5,
+          "name": "Kor Nöbetçisi",
+          "type": "elite"
+        },
+        {
+          "id": "dawn_core_6",
+          "order": 6,
+          "name": "Aydınlık Yarık",
+          "type": "normal"
+        },
+        {
+          "id": "dawn_core_7",
+          "order": 7,
+          "name": "Şafak Devriyesi",
+          "type": "elite"
+        },
+        {
+          "id": "dawn_core_8",
+          "order": 8,
+          "name": "Çekirdek Kapısı",
+          "type": "normal"
+        },
+        {
+          "id": "dawn_core_9",
+          "order": 9,
+          "name": "Güneş Omurgası",
+          "type": "elite"
+        },
+        {
+          "id": "dawn_core_10",
+          "order": 10,
+          "name": "Şafağın Kalbi Aurel",
+          "type": "boss",
+          "enemyName": "Şafağın Kalbi Aurel",
+          "bossId": "dawn_core_boss"
+        }
+      ],
+      "enemyArchetypes": {
+        "normal": "fire_elemental",
+        "elite": "celestial",
+        "boss": "celestial"
+      },
+      "bossWeakness": "frost",
+      "bossResistance": "fire"
+    }
+  ]
+}

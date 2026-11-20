@@ -4,6 +4,15 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.11.0 — Sonsuzluğun Ötesi: 25 yeni bölge, 250 yeni aşama
+- Sonsuzluk Tahtı'ndan sonra 25 bölge / 250 aşama (toplam 53 bölge / 500 aşama). Bölge, aşama ve boss kimlikleri ile düşman türleri,
+  boss zayıflık/dirençleri `src/data/expansionRegions.json` dosyasından gelir (Cam Ormanı → Şafağın Çekirdeği).
+- Her bölge mevcut kalıbı izler: 5 normal, 2 hazine, 3 elit, 1 boss (hazine/elit/boss garanti ganimetli). Mevcut sıra ve kilit kuralı geçerli;
+  Sonsuzluk İmparatoru'nu yenmiş kayıtlar Cam Ormanı'na doğrudan girer. Eski kayıtlar kimlikleriyle yüklenir; ilerleme x/500.
+- Güç eğrisi Sonsuzluk Tahtı (Sv. 93) değerlerinden aynı eğimle devam eder (Sv. 93–168); ödüller Sv. 78 tavanından %1/seviye artar.
+  Köklerin Mahzeni'nin seviye ölçeklemesi kendi modunda kalır.
+- Keşif Rotası 53 bölgeye uzadı (aynı simge boyutu, kilit/tamamlandı işaretleri, panel). Panelde "Son" düğmesi erişilebilir son bölgeye odaklanır.
+
 ## v1.10.1 — Köklerin Mahzeni: zorluk ve seviye ölçeklemesi
 - Temel zorluk (seviye 6, v1.10.0 değerlerinin üstüne): Goblin Yağmacısı can +%10 / saldırı +%5, Elit Dikenli Ağaç +%15 / +%7,
   Kadim Orman Muhafızı +%20 / +%10. Değerler `src/data/dungeons.ts` içinde savaş başına ayrı (`baseHpBonusPct`, `baseAttackBonusPct`).

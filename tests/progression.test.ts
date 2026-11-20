@@ -14,14 +14,15 @@ describe('progression, league, quests and legacy save migration', () => {
     const monday = Date.parse('2026-05-04T10:00:00Z');
     const tuesday = Date.parse('2026-05-05T10:00:00Z');
     const nextMonday = Date.parse('2026-05-11T00:01:00Z');
-    assert.equal(TOTAL_STAGES, 250);
-    assert.equal(TOTAL_REGIONS, 28);
+    assert.equal(TOTAL_STAGES, 500);
+    assert.equal(TOTAL_REGIONS, 53);
     const allStages = WORLD_REGIONS.flatMap((r) => r.stages);
-    assert.equal(allStages.length, 250);
-    assert.equal(new Set(allStages.map((s) => s.id)).size, 250, 'stage ids must be unique');
-    assert.equal(new Set(allStages.map((s) => s.enemy.id)).size, 250, 'enemy ids must be unique');
-    assert.equal(allStages.filter((s) => s.type === 'boss').length, 34);
-    assert.equal(allStages[allStages.length - 1].id, 'eternity_10');
+    assert.equal(allStages.length, 500);
+    assert.equal(new Set(allStages.map((s) => s.id)).size, 500, 'stage ids must be unique');
+    assert.equal(new Set(allStages.map((s) => s.enemy.id)).size, 500, 'enemy ids must be unique');
+    assert.equal(allStages.filter((s) => s.type === 'boss').length, 59);
+    assert.equal(allStages[249].id, 'eternity_10');
+    assert.equal(allStages[allStages.length - 1].id, 'dawn_core_10');
     assert.equal(allStages[0].recommendedLevel, 1);
     // İlk 120 aşama (2. seçenek) aynen korunmalı: bölge sırası ve aşama kimlikleri değişmemeli.
     const legacyRegionIds = ['forest', 'mountains', 'volcano', 'ruins', 'abyss', 'sky', 'ocean', 'desert', 'swamp', 'moonlit', 'crystal_caves', 'ashen', 'astral', 'spirit', 'chaos'];
@@ -32,7 +33,7 @@ describe('progression, league, quests and legacy save migration', () => {
     assert.ok(allStages[0].enemy.maxHp >= 800, 'first stage must not die in a couple of hits');
     assert.ok(allStages.slice(0, 5).every((s, i, a) => i === 0 || a[i - 1].enemy.maxHp <= s.enemy.maxHp), 'forest 1-5 hp must rise');
     // Eklenen 130 aşama kendi içinde kesintisiz zorlaşmalı.
-    const endgameStages = allStages.slice(120);
+    const endgameStages = allStages.slice(120, 250);
     assert.equal(endgameStages.length, 130);
     assert.ok(endgameStages.every((s, i) => i === 0 || endgameStages[i - 1].recommendedLevel <= s.recommendedLevel), 'endgame difficulty must not regress');
     assert.equal(endgameStages[0].recommendedLevel, 54);

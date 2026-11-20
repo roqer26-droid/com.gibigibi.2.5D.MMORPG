@@ -60,7 +60,7 @@ describe('region unlocking (existing rules)', () => {
     expect(focusRegionIndex(getRegionStatuses(saveWith(upTo(3))))).toBe(3);
     // 2. bölgenin ortasındayken odak 2. bölge
     expect(focusRegionIndex(getRegionStatuses(saveWith([...upTo(1), 'mountains_1'])))).toBe(1);
-    expect(focusRegionIndex(getRegionStatuses(saveWith(allStages.map((s) => s.id))))).toBe(27);
+    expect(focusRegionIndex(getRegionStatuses(saveWith(allStages.map((s) => s.id))))).toBe(52);
   });
 
   it('unlock hint names the previous region', () => {
@@ -75,26 +75,26 @@ describe('region unlocking (existing rules)', () => {
 });
 
 describe('route layout', () => {
-  it('places all 28 regions bottom to top with even spacing', () => {
+  it('places all 53 regions bottom to top with even spacing', () => {
     const l = computeRouteLayout(WORLD_REGIONS.length, 360);
-    expect(l.nodes).toHaveLength(28);
-    expect(l.segments).toHaveLength(27);
+    expect(l.nodes).toHaveLength(53);
+    expect(l.segments).toHaveLength(52);
     for (let i = 1; i < l.nodes.length; i++) {
       expect(l.nodes[i - 1].y - l.nodes[i].y).toBe(SPACING);
     }
-    expect(l.nodes[0].y).toBeGreaterThan(l.nodes[27].y);
-    expect(l.nodes[27].y - ICON_R).toBeGreaterThan(0);
+    expect(l.nodes[0].y).toBeGreaterThan(l.nodes[52].y);
+    expect(l.nodes[52].y - ICON_R).toBeGreaterThan(0);
     expect(l.nodes[0].y + ICON_R).toBeLessThanOrEqual(l.height);
   });
 
   it('alternates left and right so the route winds', () => {
-    const l = computeRouteLayout(28, 360);
-    for (let i = 1; i < 28; i++) expect(l.nodes[i].side).not.toBe(l.nodes[i - 1].side);
+    const l = computeRouteLayout(53, 360);
+    for (let i = 1; i < 53; i++) expect(l.nodes[i].side).not.toBe(l.nodes[i - 1].side);
   });
 
   for (const width of [320, 340, 360, 390, 412, 430, 480]) {
     it(`no overlaps at ${width}px: labels vs icons, labels vs route line, everything inside the screen`, () => {
-      const l = computeRouteLayout(28, width);
+      const l = computeRouteLayout(53, width);
       for (const n of l.nodes) {
         const lb = labelBox(n);
         const nb = nodeBox(n);
@@ -124,10 +124,10 @@ describe('route layout', () => {
 describe('region art', () => {
   const files = readdirSync(new URL('../src/art/regions/', import.meta.url)).map((f) => f.replace(/\.webp$/, ''));
 
-  it('has a transparent image for each of the 24 regions after the first four', () => {
+  it('has a transparent image for each of the 49 regions after the first four', () => {
     const ids = WORLD_REGIONS.slice(4).map((r) => r.id);
-    expect(ids).toHaveLength(24);
+    expect(ids).toHaveLength(49);
     for (const id of ids) expect(files, id).toContain(id);
-    expect(files).toHaveLength(24);
+    expect(files).toHaveLength(49);
   });
 });

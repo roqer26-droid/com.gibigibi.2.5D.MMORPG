@@ -1,4 +1,4 @@
-import { Check, Lock } from 'lucide-react';
+import { Check, ChevronsUp, Lock } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GameSaveState } from '../types/game';
 import { ICON_R, ICON_SIZE, computeRouteLayout, nodeBox } from '../utils/routeLayout';
@@ -111,6 +111,17 @@ export function ExplorationMap({
 
   const selected = statuses[selectedIndex];
 
+  /** Erişilebilir son bölge: açık olan en ileri bölge. Hızlı odak düğmesi buraya götürür. */
+  const latestIndex = useMemo(() => statuses.reduce((acc, st) => (st.unlocked ? st.index : acc), 0), [statuses]);
+  const focusLatest = useCallback(() => {
+    const scroller = scrollerRef.current;
+    const node = layout.nodes[latestIndex];
+    if (!scroller || !node) return;
+    onSelect(latestIndex);
+    const visibleH = scroller.clientHeight - panelH;
+    scroller.scrollTo({ top: Math.max(0, node.y - visibleH * 0.45), behavior: 'smooth' });
+  }, [layout, latestIndex, panelH, onSelect]);
+
   return (
     <div className="relative min-h-0 flex-1 bg-[#070b17]">
       <div
@@ -165,7 +176,13 @@ export function ExplorationMap({
         style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom, 0px))' }}
         data-testid="region-panel"
       >
-        <RegionPanel status={selected} statuses={statuses} onOpenStages={onOpenStages} />
+        <RegionPanel
+          status={selected}
+          statuses={statuses}
+          onOpenStages={onOpenStages}
+          latestName={statuses[latestIndex].region.name}
+          onJumpLatest={focusLatest}
+        />
       </div>
     </div>
   );
@@ -248,10 +265,14 @@ function RegionPanel({
   status,
   statuses,
   onOpenStages,
+  latestName,
+  onJumpLatest,
 }: {
   status: RegionStatus;
   statuses: RegionStatus[];
   onOpenStages: (i: number) => void;
+  latestName: string;
+  onJumpLatest: () => void;
 }) {
   const { region, unlocked, done, total, index } = status;
   return (
@@ -274,6 +295,16 @@ function RegionPanel({
             </p>
           )}
         </div>
+        <button
+          type="button"
+          onClick={onJumpLatest}
+          data-testid="jump-latest"
+          aria-label={`Son açık bölgeye git: ${latestName}`}
+          className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-amber-400/50 bg-slate-900 text-amber-300 active:scale-95"
+        >
+          <ChevronsUp className="h-5 w-5" />
+          <span className="text-[11px] font-bold leading-none">Son</span>
+        </button>
       </div>
       <button
         type="button"

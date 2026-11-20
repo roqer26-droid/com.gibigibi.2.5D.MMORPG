@@ -10,6 +10,7 @@ import {
 } from '../types/game';
 import { tuneStage } from './difficulty';
 import { GEM_INFO } from './skills';
+import expansion from './expansionRegions.json';
 
 const CORE_REGIONS: RegionDef[] = [
   {
@@ -2140,10 +2141,155 @@ const ENDGAME_TEMPLATES: EndgameTemplate[] = [
   },
 ];
 
+
+/* ================================================================== */
+/*  SONSUZLUĞUN ÖTESİ — 25 yeni bölge / 250 aşama (Toplam 500 aşama)    */
+/*  Kaynak: expansionRegions.json (bölge, aşama ve boss kimlikleri).     */
+/*  Mevcut 250 aşama olduğu gibi kalır; rota Sonsuzluk Tahtı'ndan sonra  */
+/*  başlar ve mevcut sıra/kilit kuralıyla açılır (önceki aşama tamam).   */
+/* ================================================================== */
+
+interface ExpansionStageJson {
+  id: string;
+  order: number;
+  name: string;
+  type: StageType;
+  enemyName?: string;
+  bossId?: string;
+}
+interface ExpansionRegionJson {
+  id: string;
+  name: string;
+  accentColor: string;
+  icon: string;
+  arc: number;
+  orderAfterEternity: number;
+  stages: ExpansionStageJson[];
+  enemyArchetypes: { normal: Arch; elite: Arch; boss: Arch };
+  bossWeakness: GemType;
+  bossResistance: GemType;
+}
+interface ExpansionJson {
+  afterRegionId: string;
+  stageCount: number;
+  arcs: { order: number; name: string; suggestedEncounterFocus: string }[];
+  regions: ExpansionRegionJson[];
+}
+
+/** Bölüm adının ilk kelimesi yetmeyen durumlar için kısa sıfatlar (normal düşman adı: "<sıfat> <tür>"). */
+const EXPANSION_ADJ: Record<string, string> = {
+  glass_forest: 'Cam', silent_shore: 'Sessiz', copper_mines: 'Bakır', mist_aqueduct: 'Sis', thorn_citadel: 'Diken',
+  amber_dunes: 'Kehribar', sunken_archive: 'Batık', salt_bastion: 'Tuz', obsidian_harbor: 'Obsidyen', black_tide: 'Kara',
+  echo_terrace: 'Yankı', mercury_foundry: 'Cıva', cinder_garden: 'Kor', prism_labyrinth: 'Prizma', iron_orbit: 'Demir',
+  aurora_vault: 'Kutup', dream_marsh: 'Düş', mirror_court: 'Ayna', midnight_observatory: 'Gece', hollow_sun: 'Sönük',
+  comet_bridge: 'Kuyruklu', rune_necropolis: 'Rün', shattered_sky: 'Kırık', zero_threshold: 'Sıfır', dawn_core: 'Şafak',
+};
+const ARCHETYPE_NOUN: Partial<Record<Arch, string>> = {
+  treant: 'Ağaç Ruhu', goblin: 'Yağmacı', wolf: 'Kurt', yeti: 'Buz Devi', ice_golem: 'Buz Golemi', salamander: 'Semender',
+  fire_elemental: 'Ateş Ruhu', stone_sentinel: 'Taş Nöbetçi', void_stalker: 'Boşluk Avcısı', celestial: 'Gök Varlığı',
+  leviathan: 'Derin Canavar', pharaoh: 'Mumya Muhafız', reaper: 'Biçici', warlord: 'Savaş Beyi',
+};
+/** Tailwind sınıfları statik yazılmalı (JIT). Her yay kendi renk tonunu kullanır. */
+const EXPANSION_ARC_STYLE = [
+  { gradient: 'from-teal-950 via-slate-900 to-slate-950', ability: ['Kalkan', 'Ağır Saldırı'] },
+  { gradient: 'from-blue-950 via-indigo-950 to-slate-950', ability: ['Can Çalma', 'Uzun Savaş'] },
+  { gradient: 'from-orange-950 via-stone-900 to-slate-950', ability: ['Ağır Saldırı', 'Niyet Göstergesi'] },
+  { gradient: 'from-violet-950 via-fuchsia-950 to-slate-950', ability: ['Donmuş Taşlar', 'Faz Geçişi'] },
+  { gradient: 'from-amber-950 via-rose-950 to-slate-950', ability: ['Faz Geçişi', 'Çoklu Davranış'] },
+];
+const EXPANSION_GEMS: GemType[] = ['fire', 'frost', 'nature', 'lightning', 'arcane'];
+const EXPANSION_START_LEVEL = 93;
+
+/**
+ * Eğri, Sonsuzluk Tahtı'nın (Sv. 93) değerlerinden aynı eğimle (≈%1,4/seviye) yumuşakça sürer; böylece Sv. 93-168 aralığı
+ * son hikâye aşamalarından kopmadan yükselir. Ödül de Sv. 78 tavanından yavaşça (%1/seviye) artar.
+ */
+function expansionStage(
+  tpl: { regionId: RegionId; regionName: string; stageNumber: number; type: StageType; level: number; name: string; enemy: EnemyTemplate; boss?: BossTemplate },
+  enemyName: string,
+  title: string | undefined
+): StageDef {
+  const stage = makeEndgameStage({ ...tpl, level: EXPANSION_START_LEVEL });
+  const d = Math.max(0, tpl.level - EXPANSION_START_LEVEL);
+  const hpMul = 1 + 0.014 * d + 0.00003 * d * d;
+  const atkMul = 1 + 0.012 * d + 0.00003 * d * d;
+  const defMul = 1 + 0.008 * d;
+  const rwMul = 1 + 0.01 * d;
+  const rw = stage.rewards;
+  stage.enemy = {
+    ...stage.enemy,
+    name: enemyName,
+    title: title ?? stage.enemy.title,
+    level: tpl.level,
+    maxHp: Math.round(stage.enemy.maxHp * hpMul),
+    attack: Math.round(stage.enemy.attack * atkMul),
+    defense: Math.round(stage.enemy.defense * defMul),
+  };
+  stage.recommendedLevel = tpl.level;
+  stage.rewards = {
+    ...rw,
+    xp: Math.round(rw.xp * rwMul),
+    gold: Math.round(rw.gold * rwMul),
+    crystals: Math.round(rw.crystals * rwMul),
+  };
+  stage.description = stageDescription(tpl.type, tpl.regionName, enemyName, tpl.enemy.weakness, tpl.boss?.title);
+  return stage;
+}
+
+function buildExpansionRegion(r: ExpansionRegionJson, k: number, arcs: ExpansionJson['arcs']): RegionDef {
+  const style = EXPANSION_ARC_STYLE[r.arc - 1];
+  const arc = arcs.find((a) => a.order === r.arc)!;
+  const adj = EXPANSION_ADJ[r.id];
+  const startLevel = EXPANSION_START_LEVEL + 3 * k;
+  const stages = r.stages.map((st, i) => {
+    const type = st.type;
+    const weak = EXPANSION_GEMS[(k * 3 + st.order) % EXPANSION_GEMS.length];
+    const arch = type === 'boss' ? r.enemyArchetypes.boss : type === 'elite' ? r.enemyArchetypes.elite : r.enemyArchetypes.normal;
+    const normalName = `${adj} ${ARCHETYPE_NOUN[arch] ?? 'Muhafız'}`;
+    const boss: BossTemplate | undefined =
+      type === 'boss'
+        ? {
+            name: st.enemyName ?? st.name,
+            arch,
+            weakness: r.bossWeakness,
+            resistance: r.bossResistance,
+            abilities: [...style.ability, 'Faz Değişimi'],
+            bossId: st.bossId as BossId,
+            title: `${r.name} Bossu`,
+          }
+        : undefined;
+    const enemy: EnemyTemplate =
+      boss ?? { name: type === 'normal' ? normalName : st.name, arch, weakness: weak, abilities: [style.ability[i % 2]] };
+    const enemyName = type === 'normal' ? normalName : type === 'boss' ? boss!.name : st.name;
+    const title = type === 'elite' ? 'Bölge Eliti' : type === 'treasure' ? 'Hazine Muhafızı' : undefined;
+    return expansionStage(
+      { regionId: r.id as RegionId, regionName: r.name, stageNumber: st.order, type, level: startLevel + ENDGAME_LEVEL_OFFSETS[i], name: st.name, enemy, boss },
+      enemyName,
+      title
+    );
+  });
+  return {
+    id: r.id as RegionId,
+    name: r.name,
+    subtitle: arc.name,
+    description: `${arc.name} yayının ${r.orderAfterEternity}. diyarı. Odak: ${arc.suggestedEncounterFocus}.`,
+    levelRange: `Sv. ${startLevel} - ${startLevel + 3}`,
+    bgGradient: style.gradient,
+    accentColor: r.accentColor,
+    stages,
+  };
+}
+
+const EXPANSION_REGIONS: RegionDef[] = (expansion as unknown as ExpansionJson).regions
+  .slice()
+  .sort((a, b) => a.orderAfterEternity - b.orderAfterEternity)
+  .map((r, k) => buildExpansionRegion(r, k, (expansion as unknown as ExpansionJson).arcs));
+
 const RAW_REGIONS: RegionDef[] = [
   ...CORE_REGIONS,
   ...NEW_REGION_TEMPLATES.map(buildRegion),
   ...ENDGAME_TEMPLATES.map(buildEndgameRegion),
+  ...EXPANSION_REGIONS,
 ];
 
 /** Zorluk ayarı (difficulty.ts) uygulanmış nihai bölgeler. */

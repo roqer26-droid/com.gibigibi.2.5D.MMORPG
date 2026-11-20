@@ -3,11 +3,19 @@ import type { GameSaveState, RegionDef } from '../types/game';
 
 const ALL_STAGES = WORLD_REGIONS.flatMap((r) => r.stages);
 
-/** Bir aşama, bir önceki aşama tamamlandıysa açıktır (ilk aşama her zaman açık). */
-export function isStageUnlocked(save: Pick<GameSaveState, 'completedStages'>, stageId: string): boolean {
+type ProgressSave = Pick<GameSaveState, 'completedStages'> & Partial<Pick<GameSaveState, 'bossVictories'>>;
+
+/**
+ * Bir aşama, bir önceki aşama tamamlandıysa açıktır (ilk aşama her zaman açık). Önceki aşama bir bossun aşamasıysa ve o boss
+ * daha önce yenildiyse (`bossVictories`) de açılır: Sonsuzluk İmparatoru'nu yenmiş eski kayıtlar Cam Ormanı'na doğrudan girer.
+ */
+export function isStageUnlocked(save: ProgressSave, stageId: string): boolean {
   const idx = ALL_STAGES.findIndex((s) => s.id === stageId);
   if (idx <= 0) return true;
-  return save.completedStages.includes(ALL_STAGES[idx - 1].id);
+  const prev = ALL_STAGES[idx - 1];
+  if (save.completedStages.includes(prev.id)) return true;
+  const bossId = prev.enemy.bossId;
+  return !!bossId && !!save.bossVictories?.includes(bossId);
 }
 
 export interface RegionStatus {
@@ -20,7 +28,7 @@ export interface RegionStatus {
   cleared: boolean;
 }
 
-export function getRegionStatuses(save: Pick<GameSaveState, 'completedStages'>): RegionStatus[] {
+export function getRegionStatuses(save: ProgressSave): RegionStatus[] {
   return WORLD_REGIONS.map((region, index) => {
     const done = region.stages.filter((s) => save.completedStages.includes(s.id)).length;
     return {
