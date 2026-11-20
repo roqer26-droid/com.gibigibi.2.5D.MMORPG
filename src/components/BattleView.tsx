@@ -47,6 +47,8 @@ import {
 } from '../types/game';
 import { getNextStageAfter } from '../data/world';
 import { getStageObjectives, objectiveText, stageStars } from '../data/mastery';
+import { activeCompanionFor, getCompanion } from '../data/companions';
+import { COMPANION_IMAGES } from '../data/companionArt';
 import { computeHeroBuild } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
 
@@ -65,7 +67,7 @@ interface BattleViewProps {
   save: GameSaveState;
   stage: StageDef;
   onMatchStats: (gemsMatched: Partial<Record<GemType, number>>, combo: number, skillUsed: boolean) => void;
-  onCompleteVictory: (stage: StageDef, masteryDone?: [boolean, boolean]) => BattleRewardSummary;
+  onCompleteVictory: (stage: StageDef, masteryDone?: [boolean, boolean], battleToken?: string) => BattleRewardSummary;
   isLeague?: boolean;
   onLeagueDefeat?: () => BattleRewardSummary;
   onLeagueForfeit?: () => void;
@@ -173,6 +175,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   const [paused, setPaused] = useState(false);
   const [masteryOpen, setMasteryOpen] = useState(false);
+  const companionId = useMemo(() => activeCompanionFor(save, save.activeHeroClass), [save.companions, save.activeHeroClass]); // eslint-disable-line react-hooks/exhaustive-deps
   // Ustalık yalnızca hikâye aşamalarında (lig, av ve zindan savaşlarında yok)
   const masteryObjectives = useMemo(
     () => (isLeague || hunt || dungeon ? undefined : getStageObjectives(stage.id)),
@@ -194,6 +197,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
     hunt?: HuntOutcome;
     dungeon?: { completed: boolean; healed: number };
     mastery?: BattleRewardSummary['mastery'];
+    companionParts?: BattleRewardSummary['companionParts'];
   } | null>(null);
   const isHunt = !!hunt;
   const exitLabel = dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
@@ -218,6 +222,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
     setOutcome(null);
     forfeitedRef.current = false;
     let resolved = false;
+    // Savaş sonucu kimliği: aynı sonuç ikinci kez işlenirse yoldaş parçası tekrar verilmez
+    const battleToken = `${stage.id}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
     const initData: BattleSceneInitData = {
       hero,
       build,
@@ -228,6 +234,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
         callbacksRef.current.onMatchStats(gems, combo, skillUsed),
       hunt,
       mastery: masteryObjectives,
+      companion: companionId,
       arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
       startHeroHp: dungeon?.startHp,
       onBattleEnd: (victory, turns, heroHp) => {
@@ -248,10 +255,11 @@ export const BattleView: React.FC<BattleViewProps> = ({
           return;
         }
         if (victory) {
-          const res = callbacksRef.current.onCompleteVictory(stage, masteryObjectives ? battleScene.getMasteryDone() : undefined);
+          const res = callbacksRef.current.onCompleteVictory(stage, masteryObjectives ? battleScene.getMasteryDone() : undefined, battleToken);
           setOutcome({
             victory: true,
             mastery: res.mastery,
+            companionParts: res.companionParts,
             xpGained: res.xpGained,
             goldGained: res.goldGained,
             crystalsGained: res.crystalsGained,
@@ -602,6 +610,22 @@ export const BattleView: React.FC<BattleViewProps> = ({
       {/* PHASER 3 ARENA + BOARD CANVAS */}
       <div className="relative flex min-h-0 w-full flex-1">
         <div ref={mountRef} className="game-no-scroll relative h-full min-h-0 w-full flex-1 overflow-hidden" />
+        {snapshot.companion && (
+          <div
+            className="pointer-events-none absolute left-1.5 top-1.5 z-10 flex items-center gap-1.5 rounded-full border bg-slate-950/85 py-0.5 pl-0.5 pr-2.5"
+            style={{ borderColor: snapshot.companion.state === 'used' ? '#475569' : '#fcd34d99' }}
+            data-testid="companion-hud"
+            data-state={snapshot.companion.state}
+          >
+            <img src={COMPANION_IMAGES[snapshot.companion.id]} alt="" width={30} height={30} draggable={false} className={`h-[30px] w-[30px] ${snapshot.companion.state === 'used' ? 'opacity-40 grayscale' : ''}`} />
+            <span className="leading-tight">
+              <span className="block text-[10px] font-extrabold text-slate-200">{getCompanion(snapshot.companion.id).name}</span>
+              <span className={`block text-[10px] font-bold ${snapshot.companion.state === 'used' ? 'text-slate-500' : snapshot.companion.state === 'armed' ? 'text-sky-300' : 'text-emerald-300'}`}>
+                {snapshot.companion.state === 'used' ? 'Kullanıldı' : snapshot.companion.state === 'armed' ? 'Saldırıyı Bekliyor' : 'Hazır'}
+              </span>
+            </span>
+          </div>
+        )}
         {masteryObjectives && (
           <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
             <button
@@ -1102,6 +1126,12 @@ export const BattleView: React.FC<BattleViewProps> = ({
                   </div>
                 </div>
 
+                {outcome.companionParts && (
+                  <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-950/25 px-3 py-2 text-sm font-bold text-emerald-200" data-testid="companion-parts-gain">
+                    <img src={COMPANION_IMAGES[outcome.companionParts.companionId]} alt="" width={28} height={28} className="h-7 w-7" />
+                    +{outcome.companionParts.parts} {outcome.companionParts.partName}
+                  </div>
+                )}
                 {outcome.mastery && (
                   <div className="mt-3 rounded-2xl border border-amber-400/30 bg-slate-950/70 p-3 text-left" data-testid="mastery-result">
                     <div className="flex items-center justify-center gap-1.5">

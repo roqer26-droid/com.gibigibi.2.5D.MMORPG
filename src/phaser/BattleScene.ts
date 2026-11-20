@@ -21,6 +21,15 @@ import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRe
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
+import type { CompanionId } from '../types/game';
+import {
+  emberTrigger,
+  foxArm,
+  foxDisarm,
+  foxResolve,
+  sproutTrigger,
+  type CompanionState,
+} from '../game/companionEffects';
 import {
   createMasteryState,
   onEnemyAction,
@@ -83,6 +92,8 @@ export interface BattleSceneInitData {
   onBattleEnd: (victory: boolean, turns: number, heroHp: number) => void;
   /** Zindan savaşı: kahramanın savaşa başladığı can (varsayılan tam can) */
   startHeroHp?: number;
+  /** Aktif yoldaş (yoksa tanımsız) */
+  companion?: CompanionId;
   /** Hikâye aşaması ustalık hedefleri (hikâye dışı savaşlarda yok) */
   mastery?: [ObjectiveDef, ObjectiveDef];
   /** Boss Avı modu: özel kural ve arena görseli */
@@ -185,6 +196,9 @@ export class BattleScene extends Phaser.Scene {
   private relicFlags: RelicBattleFlags = freshRelicFlags();
   /** Ustalık sayaçları: gerçek savaş olaylarından beslenir */
   private mastery: MasteryState = createMasteryState();
+  /** Yoldaş: savaş başına tek destek hakkı */
+  private companionState: CompanionState = 'ready';
+  private companionBurn = { turns: 0, perTurn: 0 };
   private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
@@ -206,6 +220,8 @@ export class BattleScene extends Phaser.Scene {
       (resolved.build.relicEffects ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp) : 0);
     this.relicFlags = freshRelicFlags();
     this.mastery = createMasteryState();
+    this.companionState = 'ready';
+    this.companionBurn = { turns: 0, perTurn: 0 };
     this.heroMaxMana = resolved.build.stats.mana;
     this.heroMana = Math.round(this.heroMaxMana * 0.25);
     this.heroUlti = 0;
@@ -1362,6 +1378,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.mastery = onFrozenCleared(onResolve(this.mastery, counts, squares.length), frozenCleared);
+    this.applyCompanionOnMatch(counts, squares.length);
 
     // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
     this.applyHuntFireRule(counts);
@@ -1474,8 +1491,16 @@ export class BattleScene extends Phaser.Scene {
         this.heroMaxHp * 0.025 * counts.nature * comboMult * bonus * (1 + build.passives.natureHealOnlyPct / 100)
       );
       const shieldAmt = Math.round((16 + build.stats.defense * 0.9) * counts.nature * 0.55 * bonus);
+      // Kök Filizi: eşik, eşleşmenin iyileştirmesi uygulanmadan önce kontrol edilir
+      let sproutHeal = 0;
+      if (this.initData.companion === 'root_sprout') {
+        const sp = sproutTrigger(this.companionState, this.heroHp, this.heroMaxHp, counts.nature);
+        this.companionState = sp.state;
+        sproutHeal = sp.heal;
+      }
       this.launchOrbs(centers.nature, this.heroContainer.x, this.heroContainer.y, 0x22c55e, () => {
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt + sproutHeal);
+        if (sproutHeal > 0) this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 90, `KÖK FİLİZİ +${sproutHeal} Can`, '#86efac', 15);
         this.heroShield = Math.max(this.heroShield, capGemShield(this.heroShield + shieldAmt, this.heroMaxHp));
         this.spawnFloatingText(
           this.heroContainer.x - 16,
@@ -1687,6 +1712,7 @@ export class BattleScene extends Phaser.Scene {
     const enragedNow = this.enemyEnraged && !enragedBefore;
     if (!phaseChanged && !enragedNow) return;
     this.plannedAction = planEnemyAction(this.enemy);
+    if (this.plannedAction.kind === 'attack') this.companionState = foxDisarm(this.companionState); // plan normal saldırıya döndü
     this.phaseNotice = {
       seq: ++this.phaseNoticeSeq,
       text: phaseNoticeText({
@@ -1864,6 +1890,18 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    // Köz Ejderciği yanması
+    if (this.companionBurn.turns > 0) {
+      this.companionBurn.turns -= 1;
+      const cb = this.companionBurn.perTurn;
+      this.enemyHp = Math.max(0, this.enemyHp - cb);
+      this.spawnFloatingText(this.enemyContainer.x - 22, this.enemyContainer.y - 40, `KÖZ -${cb}`, '#fdba74');
+      if (this.enemyHp <= 0) {
+        this.handleVictory();
+        return;
+      }
+    }
+
     // Poison DoT (Zehir Çiçeği yeteneği)
     if (this.enemyPoisonTurns > 0) {
       this.enemyPoisonTurns -= 1;
@@ -2009,6 +2047,7 @@ export class BattleScene extends Phaser.Scene {
         this.heroDodgeBuffTurns > 0 ? '#f0abfc' : '#38bdf8',
         19
       );
+      this.companionState = foxDisarm(this.companionState); // ağır saldırı gerçekleşmedi: Tilki hakkı harcanmaz
       // Ustalık: ağır saldırı sıyrılmayla gerçekten iptal edildi
       this.mastery = onEnemyAction(this.mastery, this.plannedAction, { cancelled: true, hpDamage: 0 });
       // Karşı Saldırı pasifi: sıyrılınca hasar yansıt
@@ -2052,6 +2091,14 @@ export class BattleScene extends Phaser.Scene {
 
     const mitigation = 100 / (100 + this.initData.build.stats.defense * 1.45);
     let dmg = Math.max(8, Math.round(rawAtk * mitigation));
+    if (this.initData.companion === 'ice_fox') {
+      const fx = foxResolve(this.companionState, action.kind, dmg);
+      this.companionState = fx.state;
+      dmg = fx.dmg;
+      if (fx.absorbed > 0) {
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 80, `BUZ TİLKİSİ -${fx.absorbed}`, '#7dd3fc', 16);
+      }
+    }
 
     SoundEngine.playWeaponHit(this.enemy.isBoss);
     if (this.initData.settings.screenShake) {
@@ -3177,6 +3224,26 @@ export class BattleScene extends Phaser.Scene {
     return [...dots, `Zayıflık: ${weakName}`].join(' • ');
   }
 
+  /** Yoldaş: Köz Ejderciği (ilk kare → yanma) ve Buz Tilkisi (ağır saldırı hazırlığında ilk buz eşleşmesi → hazırlan). */
+  private applyCompanionOnMatch(counts: Record<GemType, number>, squareCount: number) {
+    const id = this.initData.companion;
+    if (!id) return;
+    if (id === 'ember_whelp') {
+      const r = emberTrigger(this.companionState, squareCount, this.initData.build.stats.attack);
+      this.companionState = r.state;
+      if (r.burn) {
+        this.companionBurn = { turns: r.burn.turns, perTurn: r.burn.perTurn };
+        this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 70, 'KÖZ EJDERCİĞİ: YANMA!', '#fb923c', 15);
+      }
+    } else if (id === 'ice_fox') {
+      const next = foxArm(this.companionState, this.plannedAction.kind, counts.frost);
+      if (next !== this.companionState) {
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 110, 'BUZ TİLKİSİ HAZIR!', '#7dd3fc', 15);
+      }
+      this.companionState = next;
+    }
+  }
+
   /** Savaşta tamamlanan iki ustalık hedefi (zafer anında okunur). */
   public getMasteryDone(): [boolean, boolean] {
     const o = this.initData.mastery;
@@ -3188,6 +3255,7 @@ export class BattleScene extends Phaser.Scene {
     this.lastIntentSignature = this.intentSignature();
     this.initData.onCombatUpdate({
       mastery: this.initData.mastery ? this.initData.mastery.map((o) => progressOf(this.mastery, o)) : undefined,
+      companion: this.initData.companion ? { id: this.initData.companion, state: this.companionState } : undefined,
       heroHp: this.heroHp,
       heroMaxHp: this.heroMaxHp,
       heroShield: this.heroShield,

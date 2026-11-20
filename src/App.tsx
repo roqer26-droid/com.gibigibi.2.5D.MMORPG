@@ -14,6 +14,8 @@ import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
+import { applyEliteParts, setActiveCompanion, unlockCompanion } from './data/companions';
+import type { CompanionId } from './types/game';
 import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
 import type { DungeonId, RegionId, RelicId } from './types/game';
@@ -365,7 +367,7 @@ export function App() {
   };
 
   const handleCompleteVictory = useCallback(
-    (stage: StageDef, masteryDone?: [boolean, boolean]): BattleRewardSummary => {
+    (stage: StageDef, masteryDone?: [boolean, boolean], battleToken?: string): BattleRewardSummary => {
       if (activeLeagueOpponent) return handleLeagueResult(true);
       const xpGained = stage.rewards.xp;
       const goldGained = stage.rewards.gold;
@@ -395,6 +397,8 @@ export function App() {
       let newLevel = save.heroes[save.activeHeroClass].level;
       // Ustalık: zafer yıldızı + savaşta tamamlanan hedefler (aynı kayıt güncellemesinde yazılır)
       const masteryOutcome = applyStageMastery(saveRef.current, stage, masteryDone).outcome;
+      // Yoldaş parçası: elit zaferi (tekrarlar dahil); aynı savaş sonucu ikinci kez işlenmez
+      const partsGain = applyEliteParts(saveRef.current, stage, battleToken).gain;
 
       setSave((prev) => {
         const hero = prev.heroes[prev.activeHeroClass];
@@ -405,6 +409,7 @@ export function App() {
 
         const withMastery = applyStageMastery(prev, stage, masteryDone).save;
         const completedStages = withMastery.completedStages;
+        const withParts = applyEliteParts(prev, stage, battleToken).save;
 
         const bossVictories =
           stage.enemy.bossId && !prev.bossVictories.includes(stage.enemy.bossId)
@@ -414,6 +419,7 @@ export function App() {
         return recordQuestActivity({
           ...prev,
           mastery: withMastery.mastery,
+          companions: withParts.companions,
           gold: prev.gold + goldGained,
           crystals: prev.crystals + crystalsGained,
           completedStages,
@@ -441,7 +447,7 @@ export function App() {
         }, 550);
       }
 
-      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome };
+      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome, companionParts: partsGain ?? undefined };
     },
     [save.activeHeroClass, save.heroes, activeLeagueOpponent, activeStage, setSave]
   );
@@ -502,6 +508,22 @@ export function App() {
     setSave(res.save);
     SoundEngine.playLootReveal(tier === 2);
     if (res.toast) pushToast(res.toast);
+  };
+
+  const handleUnlockCompanion = (id: CompanionId) => {
+    const res = unlockCompanion(saveRef.current, id);
+    if (res.ok) {
+      setSave(res.save);
+      SoundEngine.playLootReveal(true);
+    }
+    if (res.toast) pushToast(res.toast);
+  };
+
+  const handleSetCompanion = (id: CompanionId | null) => {
+    const cur = saveRef.current;
+    const res = setActiveCompanion(cur, cur.activeHeroClass, id);
+    if (res.ok) setSave(res.save);
+    else if (res.toast) pushToast(res.toast);
   };
 
   const handleStartStage = (stage: StageDef) => {
@@ -687,6 +709,8 @@ export function App() {
           onBack={() => setRoute('menu')}
           onSelectHero={handleSelectHero}
           onUnlockHero={handleUnlockHero}
+          onUnlockCompanion={handleUnlockCompanion}
+          onSetCompanion={handleSetCompanion}
           onOpenSkillTree={() => setRoute('skills')}
         />
       )}

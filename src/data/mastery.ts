@@ -1,4 +1,5 @@
 import type { GameSaveState, GemType, MasterySave, Rarity, RegionDef, RegionId, StageDef, StageMastery } from '../types/game';
+import { creditChestParts } from './companions';
 import { generateEquipmentItem } from './items';
 import { WORLD_REGIONS } from './world';
 
@@ -362,16 +363,20 @@ export function claimMasteryChest(save: GameSaveState, regionId: RegionId, tier:
   }
   const reward = chestReward(region, tier);
   const item = generateEquipmentItem({ level: reward.level, rarity: reward.rarity, preferredClass: save.activeHeroClass });
+  const claimed: GameSaveState = {
+    ...save,
+    gold: save.gold + reward.gold,
+    crystals: save.crystals + reward.crystals,
+    inventory: [...save.inventory, item],
+    mastery: { ...save.mastery, chests: [...save.mastery.chests, key] },
+  };
+  // Yoldaş parça payı (ikinci / üçüncü sandık) aynı kayıt güncellemesinde yazılır
+  const credited = creditChestParts(claimed, regionId, tier);
+  const partsText = credited.gain ? `, +${credited.gain.parts} ${credited.gain.partName}` : '';
   return {
-    save: {
-      ...save,
-      gold: save.gold + reward.gold,
-      crystals: save.crystals + reward.crystals,
-      inventory: [...save.inventory, item],
-      mastery: { ...save.mastery, chests: [...save.mastery.chests, key] },
-    },
+    save: credited.save,
     ok: true,
     reward: { ...reward, itemName: item.name },
-    toast: `${region.name} sandığı açıldı: +${reward.gold.toLocaleString('tr-TR')} altın, +${reward.crystals} kristal, ${item.name}`,
+    toast: `${region.name} sandığı açıldı: +${reward.gold.toLocaleString('tr-TR')} altın, +${reward.crystals} kristal, ${item.name}${partsText}`,
   };
 }

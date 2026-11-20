@@ -1,6 +1,7 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
+import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
 import { isSetSlot, SET_IDS } from '../data/sets';
@@ -18,7 +19,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 type RawSave = Record<string, unknown>;
 
@@ -41,6 +42,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   7: (raw) => raw,
   // v8 -> v9: aşama ustalığı (`mastery`) eklendi. Tamamlanmış aşamalar zafer yıldızını zaten taşır; hedefler boş başlar.
   8: (raw) => raw,
+  // v9 -> v10: yoldaşlar (`companions`) eklendi; eksikse boş başlar, alınmış ustalık sandıklarının parça payı yüklemede bir kez tanınır.
+  9: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -115,7 +118,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
           : {},
     };
   });
-  return {
+  const sanitized: GameSaveState = {
     ...save,
     heroes,
     gold: Math.floor(finiteOr(save.gold, 0)),
@@ -129,7 +132,10 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     huntRecords: sanitizeHuntRecords(save.huntRecords),
     dungeons: sanitizeDungeonSaves(save.dungeons),
     mastery: sanitizeMastery(save.mastery),
+    companions: sanitizeCompanions(save.companions, Object.keys(heroes)),
   };
+  // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
+  return reconcileCompanionParts(sanitized);
 }
 
 function safeSetItem(key: string, value: string): boolean {
@@ -175,6 +181,7 @@ export function createInitialSaveState(): GameSaveState {
     huntRecords: createHuntRecords(),
     dungeons: createDungeonSaves(),
     mastery: emptyMastery(),
+    companions: emptyCompanionSave(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

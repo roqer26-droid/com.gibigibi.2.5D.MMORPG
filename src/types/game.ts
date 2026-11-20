@@ -637,6 +637,19 @@ export interface MasterySave {
   chests: string[];
 }
 
+export type CompanionId = 'root_sprout' | 'ice_fox' | 'ember_whelp';
+
+/** Yoldaşlar: parçalar, açılanlar, kahraman başına aktif yoldaş ve parça payı kayıtları */
+export interface CompanionSave {
+  parts: Record<CompanionId, number>;
+  unlocked: CompanionId[];
+  active: Partial<Record<HeroClassId, CompanionId>>;
+  /** Parça payı verilmiş ustalık sandıkları ("<bölge>:<sıra>"); her sandık payı bir kez tanınır */
+  creditedChests: string[];
+  /** İşlenmiş savaş sonuçları (aynı sonucun ikinci kez parça vermesini engeller) */
+  processed: string[];
+}
+
 export interface GameSaveState {
   version: number;
   activeHeroClass: HeroClassId;
@@ -656,6 +669,8 @@ export interface GameSaveState {
   dungeons: Record<DungeonId, DungeonSave>;
   /** Üç Yıldızlı Aşama Ustalığı */
   mastery: MasterySave;
+  /** Yoldaşlar */
+  companions: CompanionSave;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
@@ -674,6 +689,8 @@ import type { IntentView } from '../game/enemyIntent';
 export interface BattleCombatSnapshot {
   /** Ustalık hedeflerinin savaş içi ilerlemesi (hikâye aşamalarında) */
   mastery?: { current: number; target: number; done: boolean }[];
+  /** Aktif yoldaşın savaş durumu */
+  companion?: { id: CompanionId; state: 'ready' | 'armed' | 'used' };
   heroHp: number;
   heroMaxHp: number;
   heroShield: number;
@@ -722,6 +739,8 @@ export interface BattleRewardSummary {
   leaguePoints?: number;
   /** Hikâye aşaması ustalığı: bu zaferde kazanılan yıldızlar ve sandık yakınlığı */
   mastery?: import('../data/mastery').MasteryOutcome;
+  /** Elit zaferinden kazanılan yoldaş parçası */
+  companionParts?: { companionId: CompanionId; parts: number; partName: string };
 }
 
 export type ScreenRoute =

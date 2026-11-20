@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.14.0 — Yoldaşlar
+- Kök Filizi, Buz Tilkisi ve Köz Ejderciği (`src/data/companions.ts`, tüm sayılar ayarlanabilir). Açmak için parça + doğru modda boss zaferi gerekir:
+  Kök Filizi 24 Kök Parçası + Seçimli Zindanlar · Köklerin Mahzeni (Kadim Orman Muhafızı); Buz Tilkisi 32 Buz Parçası + Boss Avları · Donmuş Taht
+  (Buz Kraliçesi); Köz Ejderciği 40 Köz Parçası + Boss Avları · Kül Arenası (Cehennem Ejderhası). Hikâyedeki boss zaferi av/zindan şartını karşılamaz.
+- Parça kazanma: ilgili bölgenin her elit zaferi 2 parça (tekrarlar dahil); ikinci/üçüncü ustalık sandığı 4/6 parça. Eski kayıtta zaten alınmış
+  sandıkların payı yüklemede bir kez tanınır. Aynı savaş sonucu ikinci kez işlenmez; zafer ekranında kazanılan parça görünür. Kayıt sürümü 10.
+- Kahramanlar ekranında "Yoldaşlar": görsel, etki, "14/24 parça", boss şartı (mod ve arena adıyla), "Yoldaşı Aç" ve kahraman başına tek aktif yoldaş.
+- Savaş: Kök Filizi (%40 altında ilk doğa eşleşmesi +%10 can, eşik iyileştirmeden önce kontrol edilir), Buz Tilkisi (ağır saldırı hazırlanırken ilk buz
+  eşleşmesi, saldırı gerçekleşince hasarın %35'i karşılanır), Köz Ejderciği (ilk 2×2 kare: 2 tur yanma, tur başı saldırının %15'i). Savaş başına tek destek;
+  zindanda her karşılaşmada yenilenir. Savaş ekranında küçük yoldaş görseli ve Hazır / Saldırıyı Bekliyor / Kullanıldı durumu.
+
 ## v1.13.2 — İtemleri Sat
 - Envanterdeki "Sıradanları Parçala" düğmesi "İtemleri Sat" oldu ve tam ekran satış ekranı açar: nadirlik renk düğmeleri (adet / "3/8 seçili"),
   tek tek seçim, set simgeli satırlar, sabit alt çubuk (seçili item, toplam altın, "Seçilenleri Sat") ve satış öncesi onay

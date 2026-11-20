@@ -13,7 +13,8 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
-import { GameSaveState, HeroClassId } from '../types/game';
+import { CompanionId, GameSaveState, HeroClassId } from '../types/game';
+import { CompanionsSection } from './CompanionsSection';
 import { computeEnchantAura } from '../phaser/HeroRenderer';
 import { computeHeroBuild, xpRequiredForLevel } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
@@ -23,6 +24,8 @@ interface HeroesScreenProps {
   onBack: () => void;
   onSelectHero: (classId: HeroClassId) => void;
   onUnlockHero: (classId: HeroClassId) => void;
+  onUnlockCompanion: (id: CompanionId) => void;
+  onSetCompanion: (id: CompanionId | null) => void;
   onOpenSkillTree: () => void;
 }
 
@@ -31,6 +34,8 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
   onBack,
   onSelectHero,
   onUnlockHero,
+  onUnlockCompanion,
+  onSetCompanion,
   onOpenSkillTree,
 }) => {
   const [inspectId, setInspectId] = useState<HeroClassId>(save.activeHeroClass);
@@ -331,6 +336,14 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => document.querySelector('[data-testid=companions]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          data-testid="jump-companions"
+          className="shrink-0 rounded-xl border border-amber-500/40 bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-200"
+        >
+          Yoldaşlar
+        </button>
         <div className="hidden items-center gap-2 text-xs font-bold sm:flex">
           <span className="flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-950/35 px-2.5 py-1 text-amber-300">
             <Coins className="h-3.5 w-3.5" />
@@ -428,6 +441,8 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
           <div className="hidden lg:col-span-7 lg:block">
             <HeroDetail id={inspectId} />
           </div>
+
+          <CompanionsSection save={save} onUnlock={onUnlockCompanion} onSetActive={onSetCompanion} />
         </div>
       </div>
 
