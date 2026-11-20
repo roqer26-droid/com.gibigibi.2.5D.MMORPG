@@ -11,6 +11,7 @@ import {
   type RelicDef,
 } from '../data/dungeons';
 import type { DungeonId, GameSaveState, RelicId } from '../types/game';
+import { HERO_CLASSES } from '../data/classes';
 import { computeHeroBuild } from '../utils/rpgLogic';
 
 interface DungeonScreenProps {
@@ -106,6 +107,8 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
   const hp = run ? dungeonStartHp(save, run) : maxHp;
   const battleNo = run ? run.battle + 1 : 1;
   const last = d.last;
+  const heroMismatch = !!run?.heroClass && run.heroClass !== save.activeHeroClass;
+  const nextEnemy = run?.enemies?.[run.battle];
 
   return (
     <div className="flex h-full flex-col bg-[#060912]" data-testid="dungeon-screen">
@@ -147,6 +150,11 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
             <p className="mt-3 text-center text-[12px] text-slate-400">
               Can: <strong className="text-emerald-300">{hp}/{maxHp}</strong>
             </p>
+            {heroMismatch && run.heroClass && (
+              <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-950/30 px-2.5 py-2 text-[12px] font-bold text-amber-200" data-testid="dungeon-hero-lock">
+                Bu deneme {HERO_CLASSES[run.heroClass].name} (Sv. {run.heroLevel}) ile başladı. O kahramanla devam et ya da zindanı bırak.
+              </p>
+            )}
           </div>
         ) : run ? (
           <div data-testid="dungeon-progress">
@@ -165,7 +173,18 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
               <p className="mt-3 text-sm text-slate-300">
                 Sıradaki düşman: <strong className="text-amber-300">{getEnemyName(def, run.battle)}</strong>
               </p>
+              {nextEnemy && (
+                <p className="mt-1 text-[12px] text-slate-400" data-testid="dungeon-enemy-stats">
+                  Can {nextEnemy.hp.toLocaleString('tr-TR')} · Saldırı {nextEnemy.attack.toLocaleString('tr-TR')}
+                  {run.heroLevel ? ` · Sv. ${run.heroLevel} kahramana göre` : ''}
+                </p>
+              )}
               {run.battle >= total - 1 && <p className="mt-1 text-[12px] font-bold text-rose-300">Son savaş: boss!</p>}
+              {heroMismatch && run.heroClass && (
+                <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-950/30 px-2.5 py-2 text-[12px] font-bold text-amber-200" data-testid="dungeon-hero-lock">
+                  Bu deneme {HERO_CLASSES[run.heroClass].name} (Sv. {run.heroLevel}) ile başladı. O kahramanla devam et ya da zindanı bırak.
+                </p>
+              )}
             </div>
 
             <h3 className="mb-2 mt-4 text-[13px] font-extrabold uppercase tracking-widest text-slate-400">Aktif güçler</h3>
@@ -249,7 +268,7 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
           {run && run.phase === 'choice' ? (
             <button
               type="button"
-              disabled={!picked}
+              disabled={!picked || heroMismatch}
               onClick={() => picked && onChoose(picked)}
               data-testid="dungeon-confirm"
               className="gold-btn flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
@@ -260,8 +279,9 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
             <button
               type="button"
               onClick={onEnterBattle}
+              disabled={heroMismatch}
               data-testid="dungeon-enter"
-              className="gold-btn flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950"
+              className="gold-btn flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Swords className="h-5 w-5" /> {run.battle === 0 && run.relics.length === 0 ? 'Savaşa Gir' : 'Devam Et'}
             </button>

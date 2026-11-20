@@ -12,6 +12,7 @@ import { QuestsScreen } from './components/QuestsScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
+import { HERO_CLASSES } from './data/classes';
 import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
 import type { DungeonId, RelicId } from './types/game';
@@ -520,13 +521,17 @@ export function App() {
     const cur = saveRef.current;
     const run = cur.dungeons[id].active;
     if (!run || run.phase !== 'battle') return;
+    if (run.heroClass && run.heroClass !== cur.activeHeroClass) {
+      pushToast(`Bu deneme ${HERO_CLASSES[run.heroClass].name} ile başladı; o kahramanla devam et ya da zindanı bırak.`);
+      return;
+    }
     const def = getDungeon(id);
     SoundEngine.unlock();
     setActiveLeagueOpponent(null);
     setActiveHunt(null);
     setDungeonJustCompleted(false);
     setDungeonBattle({ id, battleNo: run.battle + 1, total: def.battles.length, relics: [...run.relics], startHp: dungeonStartHp(cur, run) });
-    setActiveStage(dungeonBattleStage(def, run.battle));
+    setActiveStage(dungeonBattleStage(def, run.battle, run));
     setRoute('battle');
   };
 

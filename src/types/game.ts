@@ -551,6 +551,11 @@ export interface DungeonRun {
   offer: RelicId[] | null;
   /** Biten savaşların kaydı (zindan ilerlemesi) */
   results: { turns: number; hpAfter: number }[];
+  /** Denemeyi başlatan kahraman ve seviyesi (v1.10.1+); eski denemelerde yoktur */
+  heroClass?: HeroClassId;
+  heroLevel?: number;
+  /** Üç düşmanın deneme başında BİR KEZ hesaplanan can/saldırı değerleri; savaş ortasında kapanıp açılınca bunlar kullanılır */
+  enemies: { hp: number; attack: number }[];
 }
 
 export interface DungeonResult {

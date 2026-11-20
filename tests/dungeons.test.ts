@@ -4,6 +4,10 @@ import {
   RELICS,
   RELIC_IDS,
   applyRelicsToBuild,
+  baseDungeonEnemies,
+  computeDungeonEnemies,
+  legacyDungeonEnemies,
+  levelFactors,
   chooseDungeonRelic,
   completeDungeonBattle,
   computeRelicEffects,
@@ -37,6 +41,56 @@ function win(save: GameSaveState, hp: number, turns = 5) {
   return completeDungeonBattle(save, 'roots_vault', { heroHp: hp, turns }, { rand: seq(0, 0), now: 1000 });
 }
 
+describe('dungeon level scaling', () => {
+  it('at the reference level 6 the base bonuses apply directly on the v1.10.0 values', () => {
+    const legacy = legacyDungeonEnemies(def);
+    const at6 = computeDungeonEnemies(def, 6);
+    const bonus = [[10, 5], [15, 7], [20, 10]];
+    at6.forEach((v, i) => {
+      expect(v.hp).toBe(Math.round(legacy[i].hp * (1 + bonus[i][0] / 100)));
+      expect(v.attack).toBe(Math.round(legacy[i].attack * (1 + bonus[i][1] / 100)));
+    });
+    expect(at6).toEqual(baseDungeonEnemies(def));
+    expect(def.battles.map((b) => [b.baseHpBonusPct, b.baseAttackBonusPct])).toEqual(bonus);
+  });
+
+  it('is monotonic: lower levels get weaker, higher levels stronger enemies, within the clamps', () => {
+    let prev = computeDungeonEnemies(def, 1);
+    for (let l = 2; l <= 50; l++) {
+      const cur = computeDungeonEnemies(def, l);
+      cur.forEach((v, i) => {
+        expect(v.hp).toBeGreaterThanOrEqual(prev[i].hp);
+        expect(v.attack).toBeGreaterThanOrEqual(prev[i].attack);
+      });
+      prev = cur;
+    }
+    const base = baseDungeonEnemies(def);
+    expect(computeDungeonEnemies(def, 3)[0].hp).toBeLessThan(base[0].hp);
+    expect(computeDungeonEnemies(def, 10)[0].hp).toBeGreaterThan(base[0].hp);
+    const f1 = levelFactors(def.scaling, 1);
+    expect(f1.hp).toBe(def.scaling.minHpFactor);
+    expect(levelFactors(def.scaling, 50).hp).toBe(def.scaling.maxHpFactor);
+    expect(levelFactors(def.scaling, 50).attack).toBe(def.scaling.maxAttackFactor);
+  });
+
+  it('the run records hero, level and the three enemies once; later changes do not recompute them', () => {
+    let s = unlockedSave();
+    s = { ...s, heroes: { ...s.heroes, warrior: { ...s.heroes.warrior, level: 10 } } };
+    const run = startDungeonRun(s, 'roots_vault').save.dungeons.roots_vault.active!;
+    expect(run.heroClass).toBe('warrior');
+    expect(run.heroLevel).toBe(10);
+    expect(run.enemies).toEqual(computeDungeonEnemies(def, 10));
+    // kahraman sonradan seviye atlasa / ekipman değişse de kayıtlı değerler kullanılır
+    expect(dungeonBattleStage(def, 1, run).enemy.maxHp).toBe(run.enemies[1].hp);
+    // güç seçimi ve savaş ilerlemesi değerleri değiştirmez
+    let t = startDungeonRun(s, 'roots_vault').save;
+    t = win(t, 500).save;
+    t = chooseDungeonRelic(t, 'roots_vault', t.dungeons.roots_vault.active!.offer![0]).save;
+    expect(t.dungeons.roots_vault.active!.enemies).toEqual(run.enemies);
+  });
+
+});
+
 describe('dungeon data', () => {
   it('Köklerin Mahzeni uses the existing Goblin, Elit Dikenli Ağaç and Orman Muhafızı enemies in order', () => {
     expect(def.name).toBe('Köklerin Mahzeni');
@@ -49,8 +103,8 @@ describe('dungeon data', () => {
   it('the dungeon\'s own hp / attack multipliers are applied on top of the game data', () => {
     const base = WORLD_REGIONS[0].stages.find((s) => s.id === 'forest_4')!.enemy;
     const custom = { ...def, battles: def.battles.map((b, i) => (i === 1 ? { ...b, hpMult: 2, attackMult: 1.5 } : b)) };
-    const e = dungeonBattleStage(custom, 1).enemy;
-    expect(e.maxHp).toBe(Math.round(base.maxHp * 2));
+    const e = legacyDungeonEnemies(custom)[1];
+    expect(e.hp).toBe(Math.round(base.maxHp * 2));
     expect(e.attack).toBe(Math.round(base.attack * 1.5));
   });
 
@@ -297,6 +351,18 @@ describe('saving, loading and recovery', () => {
       setItem: (k: string, v: string) => void store.set(k, v),
       removeItem: (k: string) => void store.delete(k),
     };
+  });
+
+  it('enemy values survive save/load; a pre-update run without them is completed with the v1.10.0 values', () => {
+    let s = unlockedSave();
+    s = startDungeonRun(s, 'roots_vault').save;
+    saveGameState(s);
+    expect(loadGameState().save.dungeons.roots_vault.active!.enemies).toEqual(s.dungeons.roots_vault.active!.enemies);
+    const old = { roots_vault: { attempts: 1, completions: 0, last: null, active: { runId: 'old', battle: 1, phase: 'battle', hp: 300, relics: ['ember_echo'], offer: null, results: [{ turns: 4, hpAfter: 100 }] } } };
+    const run = sanitizeDungeonSaves(old).roots_vault.active!;
+    expect(run.enemies).toEqual(legacyDungeonEnemies(def));
+    expect(run.heroClass).toBeUndefined();
+    expect(run.battle).toBe(1);
   });
 
   it('closing during the choice screen resumes with the SAME two offered cards', () => {

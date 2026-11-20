@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.10.1 — Köklerin Mahzeni: zorluk ve seviye ölçeklemesi
+- Temel zorluk (seviye 6, v1.10.0 değerlerinin üstüne): Goblin Yağmacısı can +%10 / saldırı +%5, Elit Dikenli Ağaç +%15 / +%7,
+  Kadim Orman Muhafızı +%20 / +%10. Değerler `src/data/dungeons.ts` içinde savaş başına ayrı (`baseHpBonusPct`, `baseAttackBonusPct`).
+- Seviye ölçeklemesi: değer = temel × clamp((seviye/6)^üs, min, max); can üssü 0,75, saldırı üssü 0,5 (sınırlar 0,45–2,6 ve 0,6–1,8).
+  Yalnızca kahramanın seviyesine bağlıdır; ekipman, set bonusu ve geçici güçler düşmanı değiştirmez.
+- Yeni denemede kahraman, seviye ve üç düşmanın can/saldırı değerleri bir kez hesaplanıp denemeye yazılır; savaş ortasında çıkıp dönünce
+  ya da oyun yeniden açılınca bunlar kullanılır. Deneme başka kahramanla sürdürülemez (zindan ekranı uyarır). Güncelleme öncesi başlamış
+  denemeler v1.10.0 değerleriyle tamamlanır. Kayıt sürümü 8.
+- Zindan ekranında sıradaki düşmanın can/saldırısı ve ölçeklendiği seviye görünür.
+- Denge aracı artık yetenek, Ulti ve zindan güçlerinin savaş içi etkilerini içerir: `npm run sim:dungeon -- 6,10,15 200 new 1`.
+
 ## v1.10.0 — Seçimli Zindanlar: Köklerin Mahzeni
 - **Seçimli Zindanlar** ana menüde. İlk zindan **Köklerin Mahzeni**: Büyülü Orman'ın 8 aşamasını tamamlayınca açılır;
   kilitliyken "Büyülü Orman bölgesini tamamla (x/8 aşama)" yazar.

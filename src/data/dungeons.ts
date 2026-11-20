@@ -1,3 +1,4 @@
+import { HERO_CLASSES } from './classes';
 import { WORLD_REGIONS } from './world';
 import type {
   DungeonId,
@@ -196,9 +197,31 @@ export function relicStartShield(effects: RelicEffects, heroMaxHp: number): numb
 export interface DungeonBattleDef {
   /** Mevcut oyun verisinden kullanılan düşmanın aşaması */
   stageId: string;
-  /** Zindanın kendi can/hasar ayarı: aşamadaki (zorluk ayarlı) değerlerle çarpılır */
+  /** v1.10.0 zindan çarpanları (sabit): aşamadaki (zorluk ayarlı) değerlerle çarpılır */
   hpMult: number;
   attackMult: number;
+  /** v1.10.1 temel zorluk artışı (%): çarpanlar uygulandıktan sonra, referans seviyedeki değerin üstüne eklenir */
+  baseHpBonusPct: number;
+  baseAttackBonusPct: number;
+}
+
+/**
+ * Seviye ölçeklemesi. Düşman değeri = (aşama × çarpan × temel artış) × clamp((seviye / referans)^üs, min, max).
+ * Referans seviyede (6) katsayı 1'dir: temel zorluk doğrudan uygulanır.
+ * Üsler oyunun kendi eğrisinden gelir: aşama canı seviye 6→15 arasında ≈(L/6)^0,8 büyür (ham veri + difficulty.ts),
+ * kahramanın hamle başına hasarı ≈L^0,6 (`damagePerMove`), dayanıklılığı (can × savunma) ≈L^0,7.
+ * Üsler bunların biraz altında tutulur: seviye ve ekipmanla güçlenmek savaşta avantaj olmaya devam eder.
+ * Yalnızca seviyeye bağlıdır; ekipman, set bonusu ve geçici güçler düşman değerlerini değiştirmez.
+ */
+export interface DungeonLevelScaling {
+  referenceLevel: number;
+  hpExponent: number;
+  attackExponent: number;
+  /** Katsayı sınırları (düşük seviyede aşırı kolaylaşma / yüksek seviyede aşırı zorlaşma olmasın) */
+  minHpFactor: number;
+  maxHpFactor: number;
+  minAttackFactor: number;
+  maxAttackFactor: number;
 }
 
 export interface DungeonDef {
@@ -209,6 +232,7 @@ export interface DungeonDef {
   /** Bu bölge tamamlanınca (tüm aşamaları) açılır */
   unlockRegionId: RegionId;
   battles: DungeonBattleDef[];
+  scaling: DungeonLevelScaling;
   /** İlk `healAfterBattles` zaferden sonra max canın bu yüzdesi kadar iyileşilir */
   healPctOfMax: number;
   healAfterBattles: number;
@@ -230,11 +254,20 @@ export const DUNGEONS: DungeonDef[] = [
     description: 'Ormanın altındaki mahzende üç savaş seni bekliyor. Her zaferden sonra geçici bir güç seç ve boss’a hazırlan.',
     unlockRegionId: 'forest',
     battles: [
-      // Denge: `npm run sim:dungeon` (seviye 6, beceri yok, başlangıç ekipmanı): savaşçı/şövalye ≈%90+, korucu ≈%65, büyücü ≈%25
-      { stageId: 'forest_1', hpMult: 1.3, attackMult: 1.4 },
-      { stageId: 'forest_4', hpMult: 1.4, attackMult: 1.4 },
-      { stageId: 'forest_5', hpMult: 1.5, attackMult: 1.3 },
+      // hpMult/attackMult = v1.10.0 değerleri (değiştirme); baseHpBonusPct/baseAttackBonusPct = v1.10.1 ilk denge değerleri.
+      { stageId: 'forest_1', hpMult: 1.3, attackMult: 1.4, baseHpBonusPct: 10, baseAttackBonusPct: 5 },
+      { stageId: 'forest_4', hpMult: 1.4, attackMult: 1.4, baseHpBonusPct: 15, baseAttackBonusPct: 7 },
+      { stageId: 'forest_5', hpMult: 1.5, attackMult: 1.3, baseHpBonusPct: 20, baseAttackBonusPct: 10 },
     ],
+    scaling: {
+      referenceLevel: 6,
+      hpExponent: 0.75,
+      attackExponent: 0.5,
+      minHpFactor: 0.45,
+      maxHpFactor: 2.6,
+      minAttackFactor: 0.6,
+      maxAttackFactor: 1.8,
+    },
     healPctOfMax: 20,
     healAfterBattles: 2,
     offerSize: 2,
@@ -251,18 +284,61 @@ export function getDungeon(id: DungeonId): DungeonDef {
 
 export const BATTLE_COUNT = (def: DungeonDef) => def.battles.length;
 
-/** Zindan savaşı için aşama: oyundaki düşman + zindanın kendi can/hasar çarpanları. */
-export function dungeonBattleStage(def: DungeonDef, index: number): StageDef {
-  const b = def.battles[index];
-  const stage = WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === b.stageId)!;
+const baseStage = (b: DungeonBattleDef): StageDef =>
+  WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === b.stageId)!;
+
+export interface DungeonEnemyValues {
+  hp: number;
+  attack: number;
+}
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+/** Seviyeye göre can/saldırı katsayıları (referans seviyede 1). */
+export function levelFactors(sc: DungeonLevelScaling, level: number): { hp: number; attack: number } {
+  const ratio = Math.max(1, level) / sc.referenceLevel;
+  return {
+    hp: clamp(Math.pow(ratio, sc.hpExponent), sc.minHpFactor, sc.maxHpFactor),
+    attack: clamp(Math.pow(ratio, sc.attackExponent), sc.minAttackFactor, sc.maxAttackFactor),
+  };
+}
+
+/** v1.10.0 değerleri (yalnızca zindan çarpanları): güncelleme öncesi başlamış denemeler bunlarla tamamlanır. */
+export function legacyDungeonEnemies(def: DungeonDef): DungeonEnemyValues[] {
+  return def.battles.map((b) => {
+    const e = baseStage(b).enemy;
+    return { hp: Math.max(1, Math.round(e.maxHp * b.hpMult)), attack: Math.max(1, Math.round(e.attack * b.attackMult)) };
+  });
+}
+
+/** Temel zorluk (referans seviye): v1.10.0 değerleri × (1 + temel artış). */
+export function baseDungeonEnemies(def: DungeonDef): DungeonEnemyValues[] {
+  return legacyDungeonEnemies(def).map((v, i) => ({
+    hp: Math.max(1, Math.round(v.hp * (1 + def.battles[i].baseHpBonusPct / 100))),
+    attack: Math.max(1, Math.round(v.attack * (1 + def.battles[i].baseAttackBonusPct / 100))),
+  }));
+}
+
+/** Deneme başında bir kez hesaplanır: temel zorluk × seviye katsayısı. */
+export function computeDungeonEnemies(def: DungeonDef, heroLevel: number): DungeonEnemyValues[] {
+  const f = levelFactors(def.scaling, heroLevel);
+  return baseDungeonEnemies(def).map((v) => ({
+    hp: Math.max(1, Math.round(v.hp * f.hp)),
+    attack: Math.max(1, Math.round(v.attack * f.attack)),
+  }));
+}
+
+/**
+ * Zindan savaşı için aşama. `run` verilirse düşman değerleri denemeye kayıtlı olanlardır (yeniden hesaplanmaz);
+ * verilmezse temel zorluk (referans seviye) gösterilir.
+ */
+export function dungeonBattleStage(def: DungeonDef, index: number, run?: Pick<DungeonRun, 'enemies'> | null): StageDef {
+  const stage = baseStage(def.battles[index]);
+  const v = run?.enemies?.[index] ?? baseDungeonEnemies(def)[index];
   return {
     ...stage,
     id: `dungeon:${def.id}:${index}`,
-    enemy: {
-      ...stage.enemy,
-      maxHp: Math.max(1, Math.round(stage.enemy.maxHp * b.hpMult)),
-      attack: Math.max(1, Math.round(stage.enemy.attack * b.attackMult)),
-    },
+    enemy: { ...stage.enemy, maxHp: v.hp, attack: v.attack },
   };
 }
 
@@ -304,6 +380,17 @@ function sanitizeResults(v: unknown): { turns: number; hpAfter: number }[] {
   return v.slice(0, 10).map((r) => ({ turns: Math.floor(finite((r as { turns?: unknown })?.turns, 1, 1)), hpAfter: Math.floor(finite((r as { hpAfter?: unknown })?.hpAfter, 1, 1)) }));
 }
 
+/** Kayıtlı düşman değerleri geçerliyse korunur; yoksa (güncelleme öncesi deneme) v1.10.0 değerleriyle doldurulur. */
+function sanitizeEnemies(v: unknown, def: DungeonDef): DungeonEnemyValues[] {
+  const legacy = legacyDungeonEnemies(def);
+  if (!Array.isArray(v) || v.length !== def.battles.length) return legacy;
+  const out = v.map((e) => ({
+    hp: Math.floor(finite((e as { hp?: unknown })?.hp, 0, 0)),
+    attack: Math.floor(finite((e as { attack?: unknown })?.attack, 0, 0)),
+  }));
+  return out.every((e) => e.hp >= 1 && e.attack >= 1) ? out : legacy;
+}
+
 const sanitizeRelics = (v: unknown): RelicId[] =>
   Array.isArray(v) ? Array.from(new Set(v.filter((x): x is RelicId => RELIC_IDS.includes(x as RelicId)))) : [];
 
@@ -321,7 +408,7 @@ export function sanitizeDungeonSaves(value: unknown): Record<DungeonId, DungeonS
       completions: Math.floor(finite(r.completions, 0)),
       last: null,
     };
-    const a = r.active as Partial<DungeonRun> | null | undefined;
+    const a = r.active as (Partial<DungeonRun> & { enemies?: unknown }) | null | undefined;
     if (a && typeof a === 'object' && typeof a.runId === 'string') {
       const battle = Math.floor(finite(a.battle, 0));
       const phase = a.phase === 'choice' ? 'choice' : 'battle';
@@ -335,6 +422,8 @@ export function sanitizeDungeonSaves(value: unknown): Record<DungeonId, DungeonS
           relics: sanitizeRelics(a.relics),
           offer: phase === 'choice' ? offer : null,
           results: sanitizeResults(a.results),
+          enemies: sanitizeEnemies(a.enemies, def),
+          ...(typeof a.heroClass === 'string' && a.heroClass in HERO_CLASSES ? { heroClass: a.heroClass, heroLevel: Math.max(1, Math.floor(finite(a.heroLevel, 1, 1))) } : {}),
         };
       }
     }
@@ -385,6 +474,9 @@ export function startDungeonRun(save: GameSaveState, id: DungeonId, now: number 
     relics: [],
     offer: null,
     results: [],
+    heroClass: save.activeHeroClass,
+    heroLevel: save.heroes[save.activeHeroClass].level,
+    enemies: computeDungeonEnemies(def, save.heroes[save.activeHeroClass].level),
   };
   return { save: withDungeon(save, id, { ...d, active: run, attempts: d.attempts + 1 }), ok: true };
 }

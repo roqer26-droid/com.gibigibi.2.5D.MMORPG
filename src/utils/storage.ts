@@ -17,7 +17,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 type RawSave = Record<string, unknown>;
 
@@ -36,6 +36,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   5: (raw) => raw,
   // v6 -> v7: zindan durumu (`dungeons`) eklendi; eksikse varsayılanlarla birleştirilir.
   6: (raw) => raw,
+  // v8: zindan denemesine kahraman/seviye ve kayıtlı düşman değerleri eklendi (eksikler sanitizeDungeonSaves'te tamamlanır)
+  7: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
