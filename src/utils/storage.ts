@@ -1,5 +1,6 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
+import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
 import { isSetSlot, SET_IDS } from '../data/sets';
 import { createLeagueSave } from '../data/league';
@@ -16,7 +17,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 type RawSave = Record<string, unknown>;
 
@@ -33,6 +34,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   4: (raw) => raw,
   // v5 -> v6: eşyalara isteğe bağlı `setId` eklendi. Set bilgisi olmayan eski eşyalar normal ekipman olarak yüklenir.
   5: (raw) => raw,
+  // v6 -> v7: zindan durumu (`dungeons`) eklendi; eksikse varsayılanlarla birleştirilir.
+  6: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -119,6 +122,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     claimedQuests: stringArray(save.claimedQuests),
     bossVictories: stringArray(save.bossVictories) as GameSaveState['bossVictories'],
     huntRecords: sanitizeHuntRecords(save.huntRecords),
+    dungeons: sanitizeDungeonSaves(save.dungeons),
   };
 }
 
@@ -163,6 +167,7 @@ export function createInitialSaveState(): GameSaveState {
     questPeriods: createQuestPeriods(),
     league: createLeagueSave(),
     huntRecords: createHuntRecords(),
+    dungeons: createDungeonSaves(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

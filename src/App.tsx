@@ -13,6 +13,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import type { HuntDef } from './data/hunts';
+import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
+import type { DungeonId, RelicId } from './types/game';
 import { generateEquipmentItem } from './data/items';
 import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
@@ -56,7 +58,7 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'upgrade';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'upgrade';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
@@ -67,6 +69,9 @@ const WorldMapScreen = lazy(() =>
 );
 const HuntsScreen = lazy(() =>
   import('./components/HuntsScreen').then((m) => ({ default: m.HuntsScreen }))
+);
+const DungeonScreen = lazy(() =>
+  import('./components/DungeonScreen').then((m) => ({ default: m.DungeonScreen }))
 );
 const LeagueScreen = lazy(() =>
   import('./components/LeagueScreen').then((m) => ({ default: m.LeagueScreen }))
@@ -109,6 +114,9 @@ export function App() {
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
   const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
+  // Seçimli Zindan: açık savaşın sabit parametreleri (kayıttaki deneme savaş sonunda değişse de savaş ekranı sabit kalır)
+  const [dungeonBattle, setDungeonBattle] = useState<{ id: DungeonId; battleNo: number; total: number; relics: RelicId[]; startHp: number } | null>(null);
+  const [dungeonJustCompleted, setDungeonJustCompleted] = useState(false);
   // Ekipman Geliştir: nereden açıldı (geri dönüş) ve açılışta seçili eşya; ekipman ekranındaki seçim geri dönüşte korunur
   const [upgradeOrigin, setUpgradeOrigin] = useState<'menu' | 'equipment'>('menu');
   const [upgradeInitialId, setUpgradeInitialId] = useState<string | null>(null);
@@ -146,6 +154,7 @@ export function App() {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return;
     }
+    if (route === 'dungeons') return setRoute('menu');
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route === 'upgrade') return setRoute(upgradeOrigin);
     if (route === 'hunts') {
@@ -481,6 +490,7 @@ export function App() {
 
   const handleStartStage = (stage: StageDef) => {
     SoundEngine.unlock();
+    setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(null);
     setActiveStage(stage);
@@ -491,6 +501,7 @@ export function App() {
     const found = findStageById(hunt.storyStageId);
     if (!found) return;
     SoundEngine.unlock();
+    setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(hunt);
     setActiveStage(found.stage);
@@ -504,10 +515,62 @@ export function App() {
     return outcome;
   };
 
+  /** Kayıttaki zindan denemesinin sıradaki savaşını açar. */
+  const enterDungeonBattle = (id: DungeonId) => {
+    const cur = saveRef.current;
+    const run = cur.dungeons[id].active;
+    if (!run || run.phase !== 'battle') return;
+    const def = getDungeon(id);
+    SoundEngine.unlock();
+    setActiveLeagueOpponent(null);
+    setActiveHunt(null);
+    setDungeonJustCompleted(false);
+    setDungeonBattle({ id, battleNo: run.battle + 1, total: def.battles.length, relics: [...run.relics], startHp: dungeonStartHp(cur, run) });
+    setActiveStage(dungeonBattleStage(def, run.battle));
+    setRoute('battle');
+  };
+
+  const handleDungeonStart = (id: DungeonId) => {
+    const res = startDungeonRun(saveRef.current, id);
+    if (!res.ok) return res.toast && pushToast(res.toast);
+    setSave(res.save);
+    enterDungeonBattle(id);
+  };
+
+  const handleDungeonChoose = (id: DungeonId, relic: RelicId) => {
+    const res = chooseDungeonRelic(saveRef.current, id, relic);
+    if (!res.ok) return res.toast && pushToast(res.toast);
+    setSave(res.save); // seçim + ilerleme tek güncellemede kaydedilir, sonra savaş açılır
+    enterDungeonBattle(id);
+  };
+
+  const handleDungeonAbandon = (id: DungeonId) => {
+    const res = endDungeonRun(saveRef.current, id);
+    if (res.ok) setSave(res.save);
+    pushToast('Zindan denemesi bırakıldı.');
+  };
+
+  const handleDungeonBattleEnd = (victory: boolean, turns: number, heroHp: number) => {
+    const info = dungeonBattle;
+    if (!info) return { completed: false, healed: 0 };
+    if (!victory) {
+      const res = endDungeonRun(saveRef.current, info.id);
+      if (res.ok) setSave(res.save);
+      return { completed: false, healed: 0 };
+    }
+    const res = completeDungeonBattle(saveRef.current, info.id, { heroHp, turns });
+    if (res.ok) {
+      setSave(res.save);
+      if (res.completed) setDungeonJustCompleted(true);
+    }
+    return { completed: res.completed, healed: res.healed };
+  };
+
   const handleStartLeague = (opponent: LeagueOpponent) => {
     const current = refreshProgressPeriods(saveRef.current);
     setSave(current);
     SoundEngine.unlock();
+    setDungeonBattle(null);
     setActiveHunt(null);
     setActiveLeagueOpponent(opponent);
     setActiveStage(createLeagueStage(opponent, current.heroes[current.activeHeroClass].level));
@@ -589,6 +652,7 @@ export function App() {
             if (dest === 'equipment') equipSelRef.current = null;
             if (dest === 'upgrade') { setUpgradeOrigin('menu'); setUpgradeInitialId(null); }
             if (dest === 'hunts') setSelectedHuntId(null);
+            if (dest === 'dungeons') setDungeonJustCompleted(false);
             if (dest === 'quests') { setQuestTab('main'); setQuestBack('menu'); }
             if (dest === 'achievements') { setQuestTab('achievement'); setQuestBack('menu'); }
             setRoute(dest);
@@ -696,8 +760,23 @@ export function App() {
         />
       )}
 
+      {route === 'dungeons' && (
+        <DungeonScreen
+          save={save}
+          dungeonId="roots_vault"
+          justCompleted={dungeonJustCompleted}
+          onBack={() => { setDungeonJustCompleted(false); setRoute('menu'); }}
+          onStart={() => handleDungeonStart('roots_vault')}
+          onEnterBattle={() => enterDungeonBattle('roots_vault')}
+          onChoose={(relic) => handleDungeonChoose('roots_vault', relic)}
+          onAbandon={() => handleDungeonAbandon('roots_vault')}
+        />
+      )}
+
       {route === 'battle' && activeStage && (
         <BattleView
+          dungeon={dungeonBattle ?? undefined}
+          onDungeonBattleEnd={handleDungeonBattleEnd}
           hunt={activeHunt ?? undefined}
           onHuntVictory={handleHuntVictory}
           save={save}
@@ -708,6 +787,7 @@ export function App() {
           onLeagueDefeat={activeLeagueOpponent ? () => handleLeagueResult(false) : undefined}
           onLeagueForfeit={activeLeagueOpponent ? () => { handleLeagueResult(false, true); } : undefined}
           onExitToMap={() => {
+            if (dungeonBattle) { setRoute('dungeons'); return; }
             if (activeHunt) { setSelectedHuntId(null); setRoute('hunts'); return; }
             setRoute(activeLeagueOpponent ? 'league' : 'world');
           }}

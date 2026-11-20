@@ -1,7 +1,7 @@
 {
   "name": "react-vite-tailwind",
   "private": true,
-  "version": "1.9.0",
+  "version": "1.10.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "android:sync": "node scripts/sync-android-version.mjs && vite build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug",
-    "sim": "vite-node scripts/simulate-battle.ts"
+    "sim": "vite-node scripts/simulate-battle.ts",
+    "sim:dungeon": "vite-node scripts/simulate-dungeon.ts"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.10",

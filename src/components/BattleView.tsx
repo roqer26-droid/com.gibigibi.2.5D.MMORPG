@@ -32,6 +32,8 @@ import { describeWeakness } from '../game/weaknessInfo';
 import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
+import { applyRelicsToBuild, getRelic } from '../data/dungeons';
+import type { RelicId } from '../types/game';
 import { GEM_INFO, RARITY_META, getFullSkillCodex, getSkillLoadout } from '../data/skills';
 import { BattleScene, BattleSceneInitData } from '../phaser/BattleScene';
 import {
@@ -68,6 +70,9 @@ interface BattleViewProps {
   /** Boss Avı modu: av tanımı ve zafer kaydı */
   hunt?: HuntDef;
   onHuntVictory?: (hunt: HuntDef, turns: number) => HuntOutcome;
+  /** Zindan modu: savaş numarası, kalıcı güçler ve başlangıç canı; sonuç App'te kayda işlenir */
+  dungeon?: { battleNo: number; total: number; relics: RelicId[]; startHp: number };
+  onDungeonBattleEnd?: (victory: boolean, turns: number, heroHp: number) => { completed: boolean; healed: number };
   onExitToMap: () => void;
   onNextStage: (stage: StageDef) => void;
   onEquipItem: (item: EquipmentItem) => void;
@@ -84,6 +89,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   onLeagueForfeit,
   hunt,
   onHuntVictory,
+  dungeon,
+  onDungeonBattleEnd,
   onExitToMap,
   onNextStage,
   onEquipItem,
@@ -96,7 +103,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
-  const build = useMemo(() => computeHeroBuild(hero), [hero]);
+  const build = useMemo(() => {
+    const b = computeHeroBuild(hero);
+    return dungeon ? applyRelicsToBuild(b, dungeon.relics) : b;
+  }, [hero, dungeon]);
   /** Sınıf + seviyeye göre açılan yetenek yükü */
   const loadout = useMemo(
     () => getSkillLoadout(save.activeHeroClass, hero.level),
@@ -108,7 +118,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
   );
 
   const [snapshot, setSnapshot] = useState<BattleCombatSnapshot>({
-    heroHp: build.stats.health,
+    heroHp: Math.min(build.stats.health, dungeon?.startHp ?? build.stats.health),
     heroMaxHp: build.stats.health,
     heroShield: build.passives.startShield,
     heroMana: Math.round(build.stats.mana * 0.25),
@@ -174,13 +184,14 @@ export const BattleView: React.FC<BattleViewProps> = ({
     leaguePoints?: number;
     turns?: number;
     hunt?: HuntOutcome;
+    dungeon?: { completed: boolean; healed: number };
   } | null>(null);
   const isHunt = !!hunt;
-  const exitLabel = isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
+  const exitLabel = dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
 
   // Latest callbacks in refs so Phaser never holds stale closures
-  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory });
-  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory };
+  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd });
+  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd };
 
   // Switch music mode
   useEffect(() => {
@@ -208,9 +219,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
         callbacksRef.current.onMatchStats(gems, combo, skillUsed),
       hunt,
       arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
-      onBattleEnd: (victory, turns) => {
+      startHeroHp: dungeon?.startHp,
+      onBattleEnd: (victory, turns, heroHp) => {
         if (resolved) return;
         resolved = true;
+        if (dungeon) {
+          const res = callbacksRef.current.onDungeonBattleEnd?.(victory, turns, heroHp);
+          setOutcome({ victory, turns, dungeon: res ?? { completed: false, healed: 0 } });
+          return;
+        }
         if (hunt) {
           if (victory) {
             const huntResult = callbacksRef.current.onHuntVictory?.(hunt, turns);
@@ -263,6 +280,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       gameRef.current = null;
     };
   }, [stage.id, hunt?.id, battleKey]);
+  // (zindan savaşı: stage.id her savaşta farklıdır; yeniden kurulum aşama kimliğiyle olur)
 
   // Sync updated audio/shake settings into running scene
   useEffect(() => {
@@ -420,6 +438,12 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
           {/* Enemy / Boss Bars */}
           <div className="min-w-0 max-w-[270px] text-right">
+            {dungeon && (
+              <div className="mb-0.5 text-[10px] font-extrabold text-emerald-300" data-testid="dungeon-hud">
+                Savaş {dungeon.battleNo}/{dungeon.total}
+                {dungeon.relics.length > 0 && <span className="text-amber-300"> · {dungeon.relics.length} güç</span>}
+              </div>
+            )}
             <div className="flex items-center justify-end gap-1.5 text-[11px] font-bold">
               {snapshot.enemyShield > 0 && (
                 <span className="flex items-center gap-0.5 rounded bg-sky-500/25 px-1.5 text-[10px] text-sky-200">
@@ -828,6 +852,12 @@ export const BattleView: React.FC<BattleViewProps> = ({
             <p className="mt-1 text-xs text-slate-400">
               {stage.name} • Zayıflık: {GEM_INFO[snapshot.enemyWeakness].name}
             </p>
+            {dungeon && (
+              <p className="mt-1 text-[11px] font-bold text-emerald-300">
+                Savaş {dungeon.battleNo}/{dungeon.total}
+                {dungeon.relics.length > 0 && ` · ${dungeon.relics.map((r) => getRelic(r).name).join(', ')}`}
+              </p>
+            )}
             <div className="mt-5 flex flex-col gap-2.5">
               <button
                 type="button"
@@ -901,7 +931,43 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 : 'border-rose-500/60'
             }`}
           >
-            {outcome.victory && hunt ? (
+            {dungeon && outcome.dungeon ? (
+              outcome.victory ? (
+                <>
+                  <div className="text-xs font-extrabold uppercase tracking-widest text-emerald-300">
+                    {outcome.dungeon.completed ? 'ZİNDAN TAMAMLANDI!' : `SAVAŞ ${dungeon.battleNo}/${dungeon.total} KAZANILDI`}
+                  </div>
+                  <h2 className="mt-1 font-display text-3xl font-black text-white">ZAFER!</h2>
+                  <p className="mt-1 text-xs text-slate-300">{stage.enemy.name} yenildi.</p>
+                  {outcome.dungeon.healed > 0 && (
+                    <p className="mt-2 text-sm font-bold text-emerald-300">+{outcome.dungeon.healed} can yenilendi</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={onExitToMap}
+                    data-testid="dungeon-battle-continue"
+                    className="gold-btn mt-5 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950"
+                  >
+                    {outcome.dungeon.completed ? 'Ödülü Gör' : 'Güç Seç'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-display text-3xl font-black text-rose-400">YENİLGİ</h2>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                    Zindan denemesi sona erdi; geçici güçlerin kayboldu. Yeniden deneyerek baştan başlayabilirsin.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onExitToMap}
+                    data-testid="dungeon-battle-continue"
+                    className="gold-btn mt-5 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950"
+                  >
+                    Zindana Dön
+                  </button>
+                </>
+              )
+            ) : outcome.victory && hunt ? (
               <>
                 <div className="text-xs font-extrabold uppercase tracking-widest" style={{ color: hunt.accent }}>
                   BOSS AVI TAMAMLANDI!

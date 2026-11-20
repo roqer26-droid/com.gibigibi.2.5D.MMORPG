@@ -15,12 +15,14 @@ import {
   Award,
   Target,
   Hammer,
+  Skull,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { QUESTS_LIST } from '../data/quests';
 import { getFullSkillCodex } from '../data/skills';
 import { HUNTS, isHuntUnlocked } from '../data/hunts';
+import { DUNGEONS, isDungeonUnlocked, dungeonUnlockText } from '../data/dungeons';
 import { tierFor } from '../data/league';
 import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
@@ -38,6 +40,7 @@ export type MenuDest =
   | 'quests'
   | 'achievements'
   | 'hunts'
+  | 'dungeons'
   | 'league';
 
 const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
@@ -170,6 +173,24 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         ? { text: 'Yeni', cls: 'bg-rose-500 text-white' }
         : undefined,
     },
+    ...DUNGEONS.map((dg): MenuTile => {
+      const open = isDungeonUnlocked(save, dg);
+      const active = save.dungeons[dg.id].active;
+      return {
+        id: 'dungeons',
+        label: 'Seçimli Zindanlar',
+        sub: !open
+          ? `Kilitli: ${dungeonUnlockText(save, dg)}`
+          : active
+            ? `${dg.name} · Savaş ${active.battle + 1}/${dg.battles.length}`
+            : `${dg.name} · ${save.dungeons[dg.id].completions} tamamlama`,
+        Icon: Skull,
+        border: open ? 'border-emerald-400/45' : 'border-slate-700',
+        iconWrap: open ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700/40 text-slate-400',
+        badge: active ? { text: 'Devam Et', cls: 'bg-emerald-400 text-slate-950' } : !open ? { text: 'Kilitli', cls: 'bg-slate-700 text-slate-200' } : undefined,
+        wide: !open,
+      };
+    }),
     {
       id: 'league',
       label: 'Rekabet Ligi',

@@ -526,6 +526,49 @@ export interface HuntRecord {
   firstRewardClaimed: boolean;
 }
 
+export type DungeonId = 'roots_vault';
+
+export type RelicId =
+  | 'healing_essence'
+  | 'ulti_spark'
+  | 'square_bulwark'
+  | 'ember_echo'
+  | 'frost_flow'
+  | 'ready_guardian';
+
+/** Aktif zindan denemesi: kapanıp açılınca buradan devam edilir (savaş ortasında kayıt yoktur). */
+export interface DungeonRun {
+  runId: string;
+  /** Oynanacak (ya da oynanmakta olan) savaşın sırası, 0 tabanlı */
+  battle: number;
+  /** 'battle': savaş bekliyor/oynanıyor, 'choice': güç seçimi bekliyor */
+  phase: 'battle' | 'choice';
+  /** Sonraki savaşın BAŞLANGIÇ canı (savaş ortasında kapanırsa savaş bu canla yeniden başlar) */
+  hp: number;
+  /** Seçilmiş geçici güçler */
+  relics: RelicId[];
+  /** Seçim bekliyorsa teklif edilen iki güç (kapanıp açılınca aynısı) */
+  offer: RelicId[] | null;
+  /** Biten savaşların kaydı (zindan ilerlemesi) */
+  results: { turns: number; hpAfter: number }[];
+}
+
+export interface DungeonResult {
+  runId: string;
+  relics: RelicId[];
+  reward: { gold: number; crystals: number };
+  results: { turns: number; hpAfter: number }[];
+  completedAt: number;
+}
+
+export interface DungeonSave {
+  active: DungeonRun | null;
+  attempts: number;
+  completions: number;
+  /** Son tamamlanan deneme: sonuç ekranı tekrar açılsa da ödül ikinci kez verilmez */
+  last: DungeonResult | null;
+}
+
 export interface GameSaveState {
   version: number;
   activeHeroClass: HeroClassId;
@@ -542,6 +585,7 @@ export interface GameSaveState {
   questPeriods: { daily: QuestPeriod; weekly: QuestPeriod };
   league: LeagueSave;
   huntRecords: Record<HuntId, HuntRecord>;
+  dungeons: Record<DungeonId, DungeonSave>;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;

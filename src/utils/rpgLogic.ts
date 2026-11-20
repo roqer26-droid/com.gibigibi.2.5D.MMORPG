@@ -1,5 +1,6 @@
 import { HERO_CLASSES } from '../data/classes';
 import { RARITY_META } from '../data/skills';
+import type { RelicEffects } from '../data/dungeons';
 import { computeSetEffects, getAllSetProgress, type SetEffects, type SetProgress } from '../data/sets';
 import { periodQuestValue } from './questProgress';
 import {
@@ -77,6 +78,8 @@ export interface ComputedHeroBuild {
   setEffects: SetEffects;
   /** Tüm setlerin kuşanılmış parça durumu */
   sets: SetProgress[];
+  /** Zindan geçici güçlerinin toplam etkisi (yalnızca zindan savaşlarında dolu) */
+  relicEffects?: RelicEffects;
   powerRating: number;
 }
 

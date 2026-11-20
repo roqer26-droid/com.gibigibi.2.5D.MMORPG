@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HERO_CLASSES } from '../data/classes';
 import { ACTIVE_SKILLS, CLASS_SKILLS, GEM_INFO, getSkillLoadout } from '../data/skills';
+import { freshRelicFlags, relicStartShield, resolveRelicMatch, type RelicBattleFlags } from '../data/dungeons';
 import { freshSetFlags, getSet, resolveSetFirstMatch, type SetTurnFlags } from '../data/sets';
 import { SoundEngine } from '../audio/SoundEngine';
 import {
@@ -67,8 +68,10 @@ export interface BattleSceneInitData {
   settings: GameSettings;
   onCombatUpdate: (snapshot: BattleCombatSnapshot) => void;
   onMatchStats: (gemsMatched: Partial<Record<GemType, number>>, combo: number, skillUsed: boolean) => void;
-  /** `turns`: savaşın bittiği andaki tur numarası (av rekoru için) */
-  onBattleEnd: (victory: boolean, turns: number) => void;
+  /** `turns`: savaşın bittiği andaki tur numarası (av rekoru için); `heroHp`: kahramanın kalan canı (zindan can taşıma) */
+  onBattleEnd: (victory: boolean, turns: number, heroHp: number) => void;
+  /** Zindan savaşı: kahramanın savaşa başladığı can (varsayılan tam can) */
+  startHeroHp?: number;
   /** Boss Avı modu: özel kural ve arena görseli */
   hunt?: HuntDef;
   arenaImage?: string;
@@ -165,6 +168,8 @@ export class BattleScene extends Phaser.Scene {
   private setFlags: SetTurnFlags = freshSetFlags();
   /** Buzul bonusunun şu an oluşturduğu birikmiş kalkan (üst sınır için) */
   private setShieldPool = 0;
+  /** Zindan geçici güçleri: tur eşleşmesi (her tur) ve ilk kare (savaş boyunca) kullanım bilgisi */
+  private relicFlags: RelicBattleFlags = freshRelicFlags();
   private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
@@ -180,8 +185,11 @@ export class BattleScene extends Phaser.Scene {
     this.initData = resolved;
     this.enemy = { ...resolved.stage.enemy };
     this.heroMaxHp = resolved.build.stats.health;
-    this.heroHp = this.heroMaxHp;
-    this.heroShield = resolved.build.passives.startShield;
+    this.heroHp = Math.max(1, Math.min(this.heroMaxHp, Math.round(resolved.startHeroHp ?? this.heroMaxHp)));
+    this.heroShield =
+      resolved.build.passives.startShield +
+      (resolved.build.relicEffects ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp) : 0);
+    this.relicFlags = freshRelicFlags();
     this.heroMaxMana = resolved.build.stats.mana;
     this.heroMana = Math.round(this.heroMaxMana * 0.25);
     this.heroUlti = 0;
@@ -992,6 +1000,22 @@ export class BattleScene extends Phaser.Scene {
     await this.applyGravityAndRefill();
   }
 
+  private applyRelicEffects(counts: Record<GemType, number>, squareCount: number) {
+    const effects = this.initData.build.relicEffects;
+    if (!effects || (effects.firstMatchUlti <= 0 && effects.squareShieldPct <= 0)) return;
+    const res = resolveRelicMatch({ effects, flags: this.relicFlags, counts, squareCount, heroMaxHp: this.heroMaxHp });
+    this.relicFlags = res.flags;
+    if (res.ulti > 0) {
+      this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + res.ulti);
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 152, `+${res.ulti} Ulti (Kıvılcım)`, '#fde047', 15);
+    }
+    if (res.shield > 0) {
+      this.heroShield += res.shield;
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 168, `+${res.shield} Kalkan (Siper)`, '#86efac', 15);
+    }
+    this.emitSnapshot();
+  }
+
   /** Kuşanılmış setlerin 4 parça bonusları: her biri oyuncu turunda yalnızca bir kez tetiklenir. */
   private applySetFirstMatchEffects(counts: Record<GemType, number>, squareCount: number) {
     const effects = this.initData.build.setEffects;
@@ -1317,6 +1341,8 @@ export class BattleScene extends Phaser.Scene {
     this.applyHuntFireRule(counts);
     // Ekipman seti bonusları: turun ilk ateş / kare / doğa eşleşmesi
     this.applySetFirstMatchEffects(counts, squares.length);
+    // Zindan geçici güçleri: turun ilk eşleşmesi ulti, savaşın ilk karesi kalkan
+    this.applyRelicEffects(counts, squares.length);
 
     // Play match audio based on dominant gem
     const dominant = (Object.keys(counts) as GemType[]).sort((a, b) => counts[b] - counts[a])[0];
@@ -1927,6 +1953,7 @@ export class BattleScene extends Phaser.Scene {
     this.comboCount = 0;
     this.huntRuleUsed = false;
     this.setFlags = freshSetFlags();
+    this.relicFlags = { ...this.relicFlags, turnMatchUsed: false };
     SoundEngine.setIntensity(1);
     this.turnPhase = 'player';
     this.inputLocked = false;
@@ -2815,7 +2842,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.emitSnapshot();
     this.time.delayedCall(750, () => {
-      this.initData.onBattleEnd(true, this.turnNumber);
+      this.initData.onBattleEnd(true, this.turnNumber, Math.max(1, Math.round(this.heroHp)));
     });
   }
 
@@ -2832,7 +2859,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.emitSnapshot();
     this.time.delayedCall(700, () => {
-      this.initData.onBattleEnd(false, this.turnNumber);
+      this.initData.onBattleEnd(false, this.turnNumber, 0);
     });
   }
 

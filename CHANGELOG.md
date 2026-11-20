@@ -4,6 +4,20 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.10.0 — Seçimli Zindanlar: Köklerin Mahzeni
+- **Seçimli Zindanlar** ana menüde. İlk zindan **Köklerin Mahzeni**: Büyülü Orman'ın 8 aşamasını tamamlayınca açılır;
+  kilitliyken "Büyülü Orman bölgesini tamamla (x/8 aşama)" yazar.
+- Akış: Goblin Yağmacısı → güç seç → Elit Dikenli Ağaç → güç seç → Kadim Orman Muhafızı. Mevcut savaş motoru
+  (2×2 kare, düşman niyeti, zayıflık, set bonusları) aynen kullanılır; zindanın can/hasar çarpanları `src/data/dungeons.ts`.
+- Can savaşlar arasında taşınır; ilk iki zaferden sonra max canın %20'si yenilenir (üst sınır max can).
+- 6 geçici güç (Şifalı Öz, Ulti Kıvılcımı, Kare Siper, Köz Yankısı, Buz Akışı, Hazır Muhafız); her seçimde iki farklı
+  kart, ilk seçimdeki güç ikincide sunulmaz. Değerler tek veri kaynağında.
+- Seçim ekranı: dikey iki büyük kart, "Devam Et" ile onay. Seçim + ilerleme tek kayıt güncellemesiyle yazılır.
+  Oyun seçim ekranında kapanırsa aynı iki kartla devam eder; savaş ortasında kapanırsa o savaş başlangıç canı ve
+  seçilmiş güçlerle yeniden başlar. Ana menüde aktif zindan için "Devam Et". Zindanı bırakma onay ister.
+- Ödül (760 altın + 40 kristal) yalnızca boss zaferinde, tamamlanma kaydıyla aynı güncellemede ve deneme başına bir kez verilir.
+- Kayıt sürümü 7 (eski kayıtlar sorunsuz taşınır). Denge aracı: `npm run sim:dungeon`.
+
 ## v1.9.0 — Akıllı kuşanma, hızlı geliştirme, okunaklı zayıflık
 - **En İyilerini Kuşan** artık setleri dikkate alır ve önce önizleme açar. Kuşanılmış + çantadaki eşyalar
   (seviyesi uygun olanlar) ve mevcut kombinasyon aday olarak değerlendirilir; bir eşya iki yuvaya seçilmez,
