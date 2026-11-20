@@ -90,6 +90,9 @@ export interface EquipmentVisual {
   variant: 'iron' | 'oak' | 'frost' | 'flame' | 'arcane' | 'shadow' | 'royal' | 'mythic';
 }
 
+/** Ekipman seti kimliği (bir eşya en fazla bir setin parçasıdır) */
+export type EquipmentSetId = 'ember' | 'glacier' | 'life';
+
 export interface EquipmentItem {
   id: string;
   name: string;
@@ -99,6 +102,8 @@ export interface EquipmentItem {
   rarity: Rarity;
   levelReq: number;
   upgradeLevel: number;
+  /** Set parçasıysa seti; eski eşyalarda yoktur (normal ekipman) */
+  setId?: EquipmentSetId;
   element: ElementType;
   stats: Partial<StatBlock>;
   specialBonus?: string;

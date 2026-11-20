@@ -9,6 +9,7 @@ import {
   Gem,
 } from 'lucide-react';
 import { HERO_CLASSES } from '../data/classes';
+import { getEquippedSetProgress } from '../data/sets';
 import { RARITY_META, SLOT_LABELS } from '../data/skills';
 import { EquipmentItem, EquipmentSlot, GameSaveState } from '../types/game';
 import { computeEnchantAura, ENCHANT_TIERS } from '../phaser/HeroRenderer';
@@ -16,6 +17,7 @@ import { computeHeroBuild, getItemPowerScore } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
 import { ItemArtSvg, ItemCard } from './ItemCard';
 import { ItemTooltipPanel } from './ItemTooltipModal';
+import { SetIcon, SetsModal } from './SetUi';
 
 interface EquipmentInventoryScreenProps {
   save: GameSaveState;
@@ -47,6 +49,8 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   const cls = HERO_CLASSES[hero.classId];
   const build = useMemo(() => computeHeroBuild(hero), [hero]);
   const aura = useMemo(() => computeEnchantAura(hero), [hero]);
+  const equippedSets = useMemo(() => getEquippedSetProgress(hero.equipped), [hero.equipped]);
+  const [showSets, setShowSets] = useState(false);
 
   const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories'>('all');
   const [sortBy, setSortBy] = useState<'rarity' | 'level' | 'power'>('rarity');
@@ -268,6 +272,39 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
               <div className="flex flex-col gap-2">{RIGHT_SLOTS.map(renderSlotBox)}</div>
             </div>
 
+            {/* Aktif setler: dokununca ayrıntılar açılır */}
+            <button
+              type="button"
+              onClick={() => setShowSets(true)}
+              className="mb-3 flex min-h-[48px] w-full items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-left transition hover:border-amber-400/50"
+              data-testid="active-sets"
+              aria-label="Aktif setler, ayrıntıları aç"
+            >
+              <span className="shrink-0 text-[12px] font-bold text-slate-300">Setler</span>
+              <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+                {equippedSets.length === 0 ? (
+                  <span className="text-[12px] text-slate-500">Aktif set yok</span>
+                ) : (
+                  equippedSets.map(({ def, count, twoActive, fourActive }) => (
+                    <span
+                      key={def.id}
+                      data-set={def.id}
+                      data-active={twoActive}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-extrabold ${
+                        twoActive ? 'text-slate-50' : 'border-slate-700 text-slate-400'
+                      }`}
+                      style={twoActive ? { borderColor: `${def.glow}aa`, background: `${def.glow}22` } : undefined}
+                    >
+                      <SetIcon set={def} size={14} />
+                      {def.shortName} {count}/4
+                      {twoActive && <span className="text-[10px] font-bold text-emerald-300">{fourActive ? '2+4' : '2'}</span>}
+                    </span>
+                  ))
+                )}
+              </span>
+              <span className="shrink-0 text-[12px] font-bold text-amber-300">Detay →</span>
+            </button>
+
             {/* Live Attributes Grid */}
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-xs sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
               <div>
@@ -391,6 +428,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                   <ItemTooltipPanel
                     item={selectedItem.item}
                     equippedInSlot={hero.equipped[selectedItem.item.slot]}
+                    heroEquipped={hero.equipped}
                     isEquipped={selectedItem.isEquipped}
                     heroLevel={hero.level}
                     gold={save.gold}
@@ -442,6 +480,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
           </div>
         </div>
       </div>
+      {showSets && <SetsModal equipped={hero.equipped} onClose={() => setShowSets(false)} />}
     </div>
   );
 };

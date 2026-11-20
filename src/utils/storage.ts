@@ -1,6 +1,7 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
+import { isSetSlot, SET_IDS } from '../data/sets';
 import { createLeagueSave } from '../data/league';
 import { GameSaveState, HeroClassId, HeroProgress, HuntId, HuntRecord } from '../types/game';
 import { dayKey } from './calendar';
@@ -15,7 +16,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 type RawSave = Record<string, unknown>;
 
@@ -30,6 +31,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   // v4 -> v5: av kayıtları (huntRecords) eklendi; eksik alan varsayılanlarla birleştirilir.
   // Av açılışı bossVictories/completedStages'tan türetildiği için eski boss zaferleri geçerlidir.
   4: (raw) => raw,
+  // v5 -> v6: eşyalara isteğe bağlı `setId` eklendi. Set bilgisi olmayan eski eşyalar normal ekipman olarak yüklenir.
+  5: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -55,6 +58,17 @@ const stringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? Array.from(new Set(value.filter((x): x is string => typeof x === 'string')))
     : [];
+
+/** Geçersiz set kimliğini ya da set yuvası olmayan eşyadaki set kimliğini temizler (eşya normal ekipman olur). */
+function sanitizeItemSet<T extends { setId?: unknown; slot?: unknown }>(item: T, slotKey?: string): T {
+  if (item.setId === undefined) return item;
+  const slot = slotKey ?? String(item.slot);
+  const valid = typeof item.setId === 'string' && (SET_IDS as string[]).includes(item.setId) && isSetSlot(slot);
+  if (valid) return item;
+  const { setId: _drop, ...rest } = item;
+  void _drop;
+  return rest as T;
+}
 
 /** Av kayıtlarını doğrular: eksik av için boş kayıt, bozuk değerler için güvenli varsayılan. */
 export function sanitizeHuntRecords(value: unknown): Record<HuntId, HuntRecord> {
@@ -85,7 +99,12 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
       xp: finiteOr(h.xp, 0),
       skillPoints: Math.floor(finiteOr(h.skillPoints, 0)),
       skillRanks: h.skillRanks && typeof h.skillRanks === 'object' ? h.skillRanks : {},
-      equipped: h.equipped && typeof h.equipped === 'object' ? h.equipped : {},
+      equipped:
+        h.equipped && typeof h.equipped === 'object'
+          ? (Object.fromEntries(
+              Object.entries(h.equipped).map(([slot, it]) => [slot, it ? sanitizeItemSet(it, slot) : it])
+            ) as typeof h.equipped)
+          : {},
     };
   });
   return {
@@ -94,7 +113,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     gold: Math.floor(finiteOr(save.gold, 0)),
     crystals: Math.floor(finiteOr(save.crystals, 0)),
     inventory: Array.isArray(save.inventory)
-      ? save.inventory.filter((i) => i && typeof i.id === 'string')
+      ? save.inventory.filter((i) => i && typeof i.id === 'string').map((i) => sanitizeItemSet(i))
       : [],
     completedStages: stringArray(save.completedStages),
     claimedQuests: stringArray(save.claimedQuests),

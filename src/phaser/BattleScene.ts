@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HERO_CLASSES } from '../data/classes';
-import { ACTIVE_SKILLS, CLASS_SKILLS, GEM_INFO } from '../data/skills';
+import { ACTIVE_SKILLS, CLASS_SKILLS, GEM_INFO, getSkillLoadout } from '../data/skills';
+import { freshSetFlags, getSet, resolveSetFirstMatch, type SetTurnFlags } from '../data/sets';
 import { SoundEngine } from '../audio/SoundEngine';
 import {
   ActiveSkillDef,
@@ -160,6 +161,10 @@ export class BattleScene extends Phaser.Scene {
   private turnNumber = 1;
   /** Av kuralı bu oyuncu turunda tetiklendi mi (zincirde tekrar etmez) */
   private huntRuleUsed = false;
+  /** Set "turun ilk eşleşmesi" bonuslarının bu oyuncu turundaki kullanım bilgisi */
+  private setFlags: SetTurnFlags = freshSetFlags();
+  /** Buzul bonusunun şu an oluşturduğu birikmiş kalkan (üst sınır için) */
+  private setShieldPool = 0;
   private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
@@ -187,6 +192,8 @@ export class BattleScene extends Phaser.Scene {
     this.enemyShield = 0;
     this.enemyTurnCounter = this.enemy.attackInterval;
     this.plannedAction = planEnemyAction(this.enemy);
+    this.setFlags = freshSetFlags();
+    this.setShieldPool = 0;
     this.phaseNotice = undefined;
     this.enemyFrozenTurns = 0;
     this.enemyBurnTurns = 0;
@@ -985,6 +992,47 @@ export class BattleScene extends Phaser.Scene {
     await this.applyGravityAndRefill();
   }
 
+  /** Kuşanılmış setlerin 4 parça bonusları: her biri oyuncu turunda yalnızca bir kez tetiklenir. */
+  private applySetFirstMatchEffects(counts: Record<GemType, number>, squareCount: number) {
+    const effects = this.initData.build.setEffects;
+    if (
+      effects.firstFireUlti <= 0 &&
+      effects.squareShieldPct <= 0 &&
+      effects.natureCooldownReduce <= 0
+    ) {
+      return;
+    }
+    const hero = this.initData.hero;
+    const res = resolveSetFirstMatch({
+      effects,
+      flags: this.setFlags,
+      counts,
+      squareCount,
+      heroMaxHp: this.heroMaxHp,
+      heroShield: this.heroShield,
+      shieldPool: this.setShieldPool,
+      cooldowns: this.skillCooldowns,
+      skillOrder: getSkillLoadout(hero.classId, hero.level).map((sk) => sk.id),
+    });
+    this.setFlags = res.flags;
+    this.setShieldPool = res.shieldPool;
+
+    if (res.ulti > 0) {
+      this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + res.ulti);
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 104, `+${res.ulti} Ulti (${getSet('ember').shortName})`, '#fb923c', 15);
+    }
+    if (res.shield > 0) {
+      this.heroShield += res.shield;
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 120, `+${res.shield} Kalkan (${getSet('glacier').shortName})`, '#7dd3fc', 15);
+    }
+    if (res.cooldownTarget) {
+      const id = res.cooldownTarget;
+      this.skillCooldowns[id] = Math.max(0, (this.skillCooldowns[id] ?? 0) - res.cooldownReduce);
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 136, `Bekleme -${res.cooldownReduce} (${getSet('life').shortName})`, '#86efac', 15);
+    }
+    this.emitSnapshot();
+  }
+
   private applyHuntFireRule(counts: Record<GemType, number>) {
     const hunt = this.initData.hunt;
     if (!hunt) return;
@@ -1267,6 +1315,8 @@ export class BattleScene extends Phaser.Scene {
 
     // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
     this.applyHuntFireRule(counts);
+    // Ekipman seti bonusları: turun ilk ateş / kare / doğa eşleşmesi
+    this.applySetFirstMatchEffects(counts, squares.length);
 
     // Play match audio based on dominant gem
     const dominant = (Object.keys(counts) as GemType[]).sort((a, b) => counts[b] - counts[a])[0];
@@ -1367,7 +1417,10 @@ export class BattleScene extends Phaser.Scene {
           build.passives.gemBonuses.nature +
           (classId === 'paladin' ? 30 : 0)) /
           100;
-      const healAmt = Math.round(this.heroMaxHp * 0.025 * counts.nature * comboMult * bonus);
+      // Yaşam seti 2 parça: yalnızca iyileştirmeyi artırır (kalkan etkilenmez)
+      const healAmt = Math.round(
+        this.heroMaxHp * 0.025 * counts.nature * comboMult * bonus * (1 + build.passives.natureHealOnlyPct / 100)
+      );
       const shieldAmt = Math.round((16 + build.stats.defense * 0.9) * counts.nature * 0.55 * bonus);
       this.launchOrbs(centers.nature, this.heroContainer.x, this.heroContainer.y, 0x22c55e, () => {
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
@@ -1873,6 +1926,7 @@ export class BattleScene extends Phaser.Scene {
     this.turnNumber += 1;
     this.comboCount = 0;
     this.huntRuleUsed = false;
+    this.setFlags = freshSetFlags();
     SoundEngine.setIntensity(1);
     this.turnPhase = 'player';
     this.inputLocked = false;
@@ -1952,6 +2006,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.heroShield > 0) {
       const abs = Math.min(this.heroShield, dmg);
       this.heroShield -= abs;
+      this.setShieldPool = Math.min(this.setShieldPool, this.heroShield);
       dmg -= abs;
       if (abs > 0) {
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 62, `Kalkan -${abs}`, '#86efac');

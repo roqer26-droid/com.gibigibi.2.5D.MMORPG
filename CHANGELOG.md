@@ -4,6 +4,25 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.8.0 — Ekipman setleri
+- **Üç set:** Köz (Volkanik Topraklar), Buzul (Donmuş Dağlar), Yaşam (Büyülü Orman). Her set kask,
+  göğüslük, eldiven ve çizmeden oluşur. Bonuslar aynı setten KUŞANILMIŞ 2 ve 4 parçada açılır;
+  4 parçada iki bonus birlikte çalışır. Bir eşya en fazla bir setin parçasıdır.
+  - **Köz:** 2p ateş taşı hasarı +%10 · 4p turun ilk ateş eşleşmesi +5 ulti.
+  - **Buzul:** 2p buz taşlarından mana +%10 · 4p turun ilk 2×2 karesi max canın %5'i kadar kalkan
+    (bu bonustan biriken kalkan max canın %15'ini geçmez).
+  - **Yaşam:** 2p doğa taşlarından iyileştirme +%10 (kalkan etkilenmez) · 4p turun ilk doğa eşleşmesi,
+    bekleme süresi en yüksek yeteneğin süresini 1 tur azaltır (eşitlikte yetenek sırası).
+- Bonus değerleri `src/data/sets.ts` içinde; açıklama metinleri bu değerlerden üretilir.
+- "Turun ilk eşleşmesi" bonusları gerçek oyuncu turuna bağlı: zincir eşleşmeleri ve aynı anda oluşan birden
+  çok kare bonusu tekrar tetiklemez. Köz 4p + Kül Arenası kuralı birlikte +10 ulti verir (üst sınır aşılmaz).
+- **Düşme:** set bölgelerinde düşmesi kesinleşen ve yuvası uygun (kask/göğüslük/eldiven/çizme) ekipman %20
+  ihtimalle set parçası olur (`SET_DROP_CHANCE`). Eşyanın düşme ihtimali değişmedi.
+- **Arayüz:** eşya detayında set adı, kuşanılan parça sayısı ve 2/4 parça bonusları (aktif = "Aktif",
+  bekleyen = soluk + "Gerekli: N"); ekipman ekranında aktif setler şeridi ve ayrıntı penceresi; eşya
+  karşılaştırmasında kazanılacak/kaybedilecek set bonusu; eşya kartlarında set simgesi.
+- Kayıt sürümü 6. Set bilgisi olmayan eski eşyalar normal ekipman olarak yüklenir; geçersiz set kimlikleri temizlenir.
+
 ## v1.7.0 — Düşman niyeti göstergesi
 - Düşmanın yaklaşan eylemi ve kalan tur, can çubuğunun altında simgeyle gösterilir:
   "Saldırı · 2 tur sonra", "Ağır saldırı · 1 tur sonra", "Taş dondurma · 2 tur sonra",

@@ -1,7 +1,9 @@
 import React from 'react';
+import { getSet } from '../data/sets';
 import { RARITY_META } from '../data/skills';
 import { EquipmentItem } from '../types/game';
 import { getItemPowerScore } from '../utils/rpgLogic';
+import { SetIcon } from './SetUi';
 
 export const ItemArtSvg: React.FC<{ item: EquipmentItem; size?: number }> = ({ item, size = 40 }) => {
   const { primaryColor, secondaryColor, glowColor } = item.visual;
@@ -228,7 +230,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     >
       {/* Top badges */}
       <div className="flex w-full items-center justify-between text-[10px] font-bold">
-        <span className="rounded bg-black/50 px-1.5 py-0.5 text-slate-300">Sv.{item.levelReq}</span>
+        <span className="flex items-center gap-1 rounded bg-black/50 px-1.5 py-0.5 text-slate-300">
+          {item.setId && <SetIcon set={getSet(item.setId)} size={12} />}
+          Sv.{item.levelReq}
+        </span>
         {item.upgradeLevel > 0 && (
           <span className="rounded bg-amber-500/90 px-1.5 py-0.5 text-slate-950">
             +{item.upgradeLevel}

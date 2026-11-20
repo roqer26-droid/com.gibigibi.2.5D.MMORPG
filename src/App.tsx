@@ -12,6 +12,7 @@ import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import type { HuntDef } from './data/hunts';
 import { generateEquipmentItem } from './data/items';
+import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
 import { QUESTS_LIST } from './data/quests';
 import { computeEnchantAura, ENCHANT_TIERS } from './phaser/HeroRenderer';
@@ -355,15 +356,21 @@ export function App() {
       const didDrop =
         Boolean(stage.rewards.guaranteedRarity) || Math.random() <= stage.rewards.dropChance;
 
-      const droppedItem = didDrop
-        ? generateEquipmentItem({
-            // Kahraman seviye sınırı (50) üzerindeki aşamalardan düşen eşyalar
-            // da kuşanılabilir olsun diye eşya gereksinimi bu sınırda tutulur.
-            level: Math.max(1, Math.min(stage.recommendedLevel, 50)),
-            rarity: rollStageRarity(stage),
-            preferredClass: Math.random() < 0.65 ? save.activeHeroClass : undefined,
-          })
-        : null;
+      let droppedItem: EquipmentItem | null = null;
+      if (didDrop) {
+        // Kahraman seviye sınırı (50) üzerindeki aşamalardan düşen eşyalar
+        // da kuşanılabilir olsun diye eşya gereksinimi bu sınırda tutulur.
+        const dropParams = {
+          level: Math.max(1, Math.min(stage.recommendedLevel, 50)),
+          rarity: rollStageRarity(stage),
+          preferredClass: Math.random() < 0.65 ? save.activeHeroClass : undefined,
+        };
+        const rolled = generateEquipmentItem(dropParams);
+        // Köz / Buzul / Yaşam bölgelerinde uygun yuvadaki eşya %20 ihtimalle set parçası olur
+        droppedItem = rollSetDrop(rolled, stage.regionId, ({ slot, element }) =>
+          generateEquipmentItem({ ...dropParams, slot, forcedElement: element })
+        );
+      }
 
       let leveledUp = false;
       let levelsGained = 0;

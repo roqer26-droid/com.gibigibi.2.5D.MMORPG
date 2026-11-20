@@ -2,6 +2,7 @@ import React from 'react';
 import { Hammer, Coins, Sparkles, ShieldCheck, Trash2, ArrowUpRight, ArrowDownRight, X } from 'lucide-react';
 import { categoryLabel } from '../data/items';
 import { RARITY_META, SLOT_LABELS } from '../data/skills';
+import { diffSetsOnEquip, getSet, type EquippedMap } from '../data/sets';
 import { EquipmentItem, StatBlock } from '../types/game';
 import {
   getDismantleYield,
@@ -10,10 +11,13 @@ import {
   getItemPowerScore,
 } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
+import { ItemSetSection, SetDiffList } from './SetUi';
 
 interface ItemTooltipPanelProps {
   item: EquipmentItem;
   equippedInSlot?: EquipmentItem;
+  /** Kahramanın şu an kuşandığı tüm ekipman (set sayımı ve karşılaştırma için) */
+  heroEquipped?: EquippedMap;
   isEquipped: boolean;
   heroLevel: number;
   gold: number;
@@ -40,6 +44,7 @@ const STAT_LABELS: { key: keyof StatBlock; label: string; suffix?: string }[] = 
 export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
   item,
   equippedInSlot,
+  heroEquipped = {},
   isEquipped,
   heroLevel,
   gold,
@@ -58,6 +63,9 @@ export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
   const dismantleYield = getDismantleYield(item);
   const canAffordEnhance = gold >= enhanceCost.gold && crystals >= enhanceCost.crystals && item.upgradeLevel < 10;
   const levelTooHigh = heroLevel < item.levelReq;
+  const itemSet = item.setId ? getSet(item.setId) : null;
+  // Kuşanılırsa set parça sayıları ve bonuslar nasıl değişir (set parçası olmayan eşya da set parçasını çıkarabilir)
+  const setDiffs = !isEquipped ? diffSetsOnEquip(heroEquipped, item.slot, item) : [];
 
   return (
     <div className={`fantasy-panel relative flex flex-col rounded-2xl border-2 p-4 ${meta.borderClass}`}>
@@ -141,6 +149,9 @@ export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
           </div>
         )}
       </div>
+
+      {itemSet && <ItemSetSection set={itemSet} equipped={heroEquipped} isEquipped={isEquipped} />}
+      <SetDiffList diffs={setDiffs} />
 
       {equippedInSlot && !isEquipped && (
         <div className="mt-2 rounded-lg bg-slate-900/70 px-3 py-1.5 text-[11px] text-slate-400">

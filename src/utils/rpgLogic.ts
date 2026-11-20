@@ -1,5 +1,6 @@
 import { HERO_CLASSES } from '../data/classes';
 import { RARITY_META } from '../data/skills';
+import { computeSetEffects, getAllSetProgress, type SetEffects, type SetProgress } from '../data/sets';
 import { periodQuestValue } from './questProgress';
 import {
   EquipmentItem,
@@ -68,8 +69,14 @@ export interface ComputedHeroBuild {
     dodgeCounterPct: number;
     stormOverloadPct: number;
     dragonScalePct: number;
+    /** Set bonusu: doğa taşlarından gelen İYİLEŞTİRME artışı (kalkana uygulanmaz) */
+    natureHealOnlyPct: number;
     gemBonuses: Record<GemType, number>;
   };
+  /** Kuşanılmış setlerden açılan toplam etkiler (savaşta turun ilk eşleşmesi bonusları dahil) */
+  setEffects: SetEffects;
+  /** Tüm setlerin kuşanılmış parça durumu */
+  sets: SetProgress[];
   powerRating: number;
 }
 
@@ -113,6 +120,7 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
     dodgeCounterPct: 0,
     stormOverloadPct: 0,
     dragonScalePct: 0,
+    natureHealOnlyPct: 0,
     gemBonuses: {
       fire: 0,
       frost: 0,
@@ -256,7 +264,13 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
       passives.startShield * 1.2
   );
 
-  return { stats, passives, powerRating };
+  // Ekipman setleri: kuşanılmış parçalara göre 2/4 parça bonusları mevcut pasiflere eklenir
+  const setEffects = computeSetEffects(hero.equipped);
+  passives.fireDmgPct += setEffects.fireDmgPct;
+  passives.frostManaPct += setEffects.frostManaPct;
+  passives.natureHealOnlyPct += setEffects.natureHealPct;
+
+  return { stats, passives, setEffects, sets: getAllSetProgress(hero.equipped), powerRating };
 }
 
 export function getEnhanceCost(item: EquipmentItem): { gold: number; crystals: number } {
