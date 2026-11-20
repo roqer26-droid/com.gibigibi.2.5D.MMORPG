@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Sparkles,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { HERO_CLASSES } from '../data/classes';
 import { getEquippedSetProgress } from '../data/sets';
+import { planBestEquipment, type EquipPlan } from '../game/equipPlanner';
 import { RARITY_META, SLOT_LABELS } from '../data/skills';
 import { EquipmentItem, EquipmentSlot, GameSaveState } from '../types/game';
 import { computeEnchantAura, ENCHANT_TIERS } from '../phaser/HeroRenderer';
@@ -17,17 +18,29 @@ import { computeHeroBuild, getItemPowerScore } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
 import { ItemArtSvg, ItemCard } from './ItemCard';
 import { ItemTooltipPanel } from './ItemTooltipModal';
+import { AutoEquipPreview } from './AutoEquipPreview';
 import { SetIcon, SetsModal } from './SetUi';
+
+export interface EquipSelection {
+  id: string;
+  isEquipped: boolean;
+  slot?: EquipmentSlot;
+}
 
 interface EquipmentInventoryScreenProps {
   save: GameSaveState;
   onBack: () => void;
   onEquipItem: (item: EquipmentItem, targetSlot?: EquipmentSlot) => void;
   onUnequipSlot: (slot: EquipmentSlot) => void;
-  onEnhanceItem: (itemId: string, isEquipped: boolean, slot?: EquipmentSlot) => void;
+  /** Geliştirme ekranını bu eşya seçili olarak açar */
+  onOpenUpgrade: (sel: EquipSelection) => void;
+  /** Ekran yeniden açıldığında (ör. geliştirmeden dönünce) geri yüklenecek seçim */
+  initialSelection?: EquipSelection | null;
+  onSelectionChange?: (sel: EquipSelection | null) => void;
   onDismantleItem: (itemId: string) => void;
   onSellItem: (itemId: string) => void;
-  onAutoEquipBest: () => void;
+  /** Önizlemede onaylanan ekipman planını tek kayıt güncellemesiyle uygular */
+  onApplyEquipPlan: (plan: EquipPlan) => void;
   onDismantleLowRarity: () => void;
 }
 
@@ -39,10 +52,12 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   onBack,
   onEquipItem,
   onUnequipSlot,
-  onEnhanceItem,
+  onOpenUpgrade,
+  initialSelection = null,
+  onSelectionChange,
   onDismantleItem,
   onSellItem,
-  onAutoEquipBest,
+  onApplyEquipPlan,
   onDismantleLowRarity,
 }) => {
   const hero = save.heroes[save.activeHeroClass];
@@ -51,14 +66,15 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   const aura = useMemo(() => computeEnchantAura(hero), [hero]);
   const equippedSets = useMemo(() => getEquippedSetProgress(hero.equipped), [hero.equipped]);
   const [showSets, setShowSets] = useState(false);
+  const [equipPlan, setEquipPlan] = useState<EquipPlan | null>(null);
 
   const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories'>('all');
   const [sortBy, setSortBy] = useState<'rarity' | 'level' | 'power'>('rarity');
-  const [selectedRef, setSelectedRef] = useState<{
-    id: string;
-    isEquipped: boolean;
-    slot?: EquipmentSlot;
-  } | null>(null);
+  const [selectedRef, setSelectedRef] = useState<EquipSelection | null>(initialSelection);
+  useEffect(() => {
+    onSelectionChange?.(selectedRef);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRef]);
   const [dragOverSlot, setDragOverSlot] = useState<EquipmentSlot | null>(null);
 
   const filteredInventory = useMemo(() => {
@@ -250,7 +266,8 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
               </div>
               <button
                 type="button"
-                onClick={onAutoEquipBest}
+                onClick={() => setEquipPlan(planBestEquipment(hero, save.inventory))}
+                data-testid="auto-equip-btn"
                 className="flex items-center gap-1.5 rounded-xl border border-amber-400/50 bg-amber-500/15 px-3 py-1.5 text-xs font-bold text-amber-200 hover:bg-amber-500/25"
               >
                 <Wand2 className="h-3.5 w-3.5" />
@@ -309,35 +326,35 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-xs sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
               <div>
                 <span className="text-[10px] text-slate-400">Can</span>
-                <p className="font-bold text-emerald-400">{build.stats.health}</p>
+                <p data-stat="health" className="font-bold text-emerald-400">{build.stats.health}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Saldırı</span>
-                <p className="font-bold text-rose-400">{build.stats.attack}</p>
+                <p data-stat="attack" className="font-bold text-rose-400">{build.stats.attack}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Savunma</span>
-                <p className="font-bold text-amber-300">{build.stats.defense}</p>
+                <p data-stat="defense" className="font-bold text-amber-300">{build.stats.defense}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Mana</span>
-                <p className="font-bold text-sky-400">{build.stats.mana}</p>
+                <p data-stat="mana" className="font-bold text-sky-400">{build.stats.mana}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Kritik Şans</span>
-                <p className="font-bold text-yellow-300">%{build.stats.critChance}</p>
+                <p data-stat="critChance" className="font-bold text-yellow-300">%{build.stats.critChance}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Kritik Hasar</span>
-                <p className="font-bold text-orange-300">%{build.stats.critDamage}</p>
+                <p data-stat="critDamage" className="font-bold text-orange-300">%{build.stats.critDamage}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Sıyrılma</span>
-                <p className="font-bold text-cyan-300">%{build.stats.dodge}</p>
+                <p data-stat="dodge" className="font-bold text-cyan-300">%{build.stats.dodge}</p>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400">Elemental</span>
-                <p className="font-bold text-purple-300">+%{build.stats.elementalDamage}</p>
+                <p data-stat="elementalDamage" className="font-bold text-purple-300">+%{build.stats.elementalDamage}</p>
               </div>
             </div>
           </div>
@@ -422,17 +439,25 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                 )}
               </div>
 
-              {/* Tooltip & Action Inspector */}
+              {/* Eşya detayı: dar ekranda alt çekmece (sabit eylem alanlı), geniş ekranda yan panel */}
               <div className="xl:col-span-5">
                 {selectedItem ? (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30 bg-black/60 xl:hidden"
+                      onClick={() => setSelectedRef(null)}
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-h-[82dvh] w-full max-w-xl flex-col xl:static xl:z-auto xl:max-h-[calc(100dvh-7rem)] xl:max-w-none"
+                      data-testid="item-detail-sheet"
+                    >
                   <ItemTooltipPanel
                     item={selectedItem.item}
                     equippedInSlot={hero.equipped[selectedItem.item.slot]}
                     heroEquipped={hero.equipped}
                     isEquipped={selectedItem.isEquipped}
                     heroLevel={hero.level}
-                    gold={save.gold}
-                    crystals={save.crystals}
                     onEquip={() => {
                       onEquipItem(selectedItem.item);
                     }}
@@ -444,8 +469,12 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                           }
                         : undefined
                     }
-                    onEnhance={() =>
-                      onEnhanceItem(selectedItem.item.id, selectedItem.isEquipped, selectedItem.slot)
+                    onOpenUpgrade={() =>
+                      onOpenUpgrade({
+                        id: selectedItem.item.id,
+                        isEquipped: selectedItem.isEquipped,
+                        slot: selectedItem.slot,
+                      })
                     }
                     onDismantle={
                       !selectedItem.isEquipped
@@ -465,6 +494,8 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                     }
                     onClose={() => setSelectedRef(null)}
                   />
+                    </div>
+                  </>
                 ) : (
                   <div className="fantasy-panel flex h-full min-h-[260px] flex-col items-center justify-center rounded-2xl p-6 text-center text-xs text-slate-400">
                     <Sparkles className="mb-2 h-8 w-8 text-amber-400/60" />
@@ -481,6 +512,16 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
         </div>
       </div>
       {showSets && <SetsModal equipped={hero.equipped} onClose={() => setShowSets(false)} />}
+      {equipPlan && (
+        <AutoEquipPreview
+          plan={equipPlan}
+          onCancel={() => setEquipPlan(null)}
+          onApply={() => {
+            onApplyEquipPlan(equipPlan);
+            setEquipPlan(null);
+          }}
+        />
+      )}
     </div>
   );
 };

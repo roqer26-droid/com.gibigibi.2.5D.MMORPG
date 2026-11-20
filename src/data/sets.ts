@@ -252,15 +252,20 @@ export interface SetDiff {
  * bonuslar nasıl değişir? Yalnızca sayısı değişen setler döner.
  */
 export function diffSetsOnEquip(equipped: EquippedMap, slot: EquipmentSlot, incoming: EquipmentItem | null): SetDiff[] {
-  const before = countEquippedSets(equipped);
   const next: EquippedMap = { ...equipped };
   if (incoming) next[slot] = { ...incoming, slot };
   else delete next[slot];
-  const after = countEquippedSets(next);
+  return diffEquipped(equipped, next);
+}
+
+/** İki ekipman kombinasyonu arasındaki set parça sayısı ve bonus değişimleri (yalnızca değişen setler). */
+export function diffEquipped(before: EquippedMap, after: EquippedMap): SetDiff[] {
+  const bc = countEquippedSets(before);
+  const ac = countEquippedSets(after);
   const out: SetDiff[] = [];
   for (const def of EQUIPMENT_SETS) {
-    const b = before[def.id] ?? 0;
-    const a = after[def.id] ?? 0;
+    const b = bc[def.id] ?? 0;
+    const a = ac[def.id] ?? 0;
     if (a === b) continue;
     const gained: (2 | 4)[] = [];
     const lost: (2 | 4)[] = [];

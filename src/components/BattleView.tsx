@@ -28,6 +28,8 @@ import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
 import { ARENA_IMAGES } from '../data/huntArt';
 import { describeIntent, type IntentIcon } from '../game/enemyIntent';
+import { describeWeakness } from '../game/weaknessInfo';
+import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
 import { GEM_INFO, RARITY_META, getFullSkillCodex, getSkillLoadout } from '../data/skills';
@@ -146,6 +148,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   // Boss faz değişimi: kısa bildirim niyet alanının yerine geçer, sonra yeni planı gösterir
   const [phaseNotice, setPhaseNotice] = useState<string | null>(null);
+  const [showWeak, setShowWeak] = useState(false);
   const lastNoticeSeq = useRef(0);
   useEffect(() => {
     const n = snapshot.phaseNotice;
@@ -277,6 +280,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (outcome) return;
+      if (e.key === 'Escape' && showWeak) {
+        setShowWeak(false);
+        return;
+      }
       if (e.key === 'Escape') {
         if (showSkillBook) {
           setShowSkillBook(false);
@@ -303,7 +310,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [paused, outcome, showSkillBook, cls.ultimateSkill.id, loadout]);
+  }, [paused, outcome, showSkillBook, showWeak, cls.ultimateSkill.id, loadout]);
 
   const skillIcon = (key: string) => {
     switch (key) {
@@ -464,13 +471,18 @@ export const BattleView: React.FC<BattleViewProps> = ({
                   data-intent-kind={it.icon}
                   data-intent-turns={it.turns}
                 >
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/50"
-                    style={{ background: weak.colorHex }}
-                    title={snapshot.enemyNextWarning}
-                    aria-label={snapshot.enemyNextWarning}
-                    data-testid="weakness-dot"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowWeak((v) => !v)}
+                    aria-label={`Zayıflık: ${weak.name}. Ayrıntı için dokun`}
+                    aria-expanded={showWeak}
+                    data-testid="weakness-btn"
+                    data-weakness={snapshot.enemyWeakness}
+                    className="relative flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full border before:absolute before:-inset-3 before:content-['']"
+                    style={{ borderColor: weak.colorHex, background: `${weak.colorHex}33` }}
+                  >
+                    <GemIcon gem={snapshot.enemyWeakness} size={12} />
+                  </button>
                   {phaseNotice ? (
                     <div
                       className="intent-notice flex h-[18px] min-w-0 items-center gap-1 rounded-md border border-amber-400/60 bg-amber-950/60 px-1.5 text-[11px] font-extrabold text-amber-200"
@@ -496,6 +508,61 @@ export const BattleView: React.FC<BattleViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Zayıflık açıklaması: ekran sınırlarına sığar, dışına dokunmak kapatır */}
+      {showWeak && (() => {
+        const w = GEM_INFO[snapshot.enemyWeakness];
+        const info = describeWeakness({
+          weakness: snapshot.enemyWeakness,
+          resistance: stage.enemy.resistance,
+          weaknessBonusPct: build.passives.weaknessBonusPct,
+          isBoss: stage.enemy.isBoss,
+          bossId: stage.enemy.bossId,
+          nameOf: (g) => GEM_INFO[g].name,
+        });
+        return (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowWeak(false)} aria-hidden="true" />
+            <div
+              role="dialog"
+              aria-label="Element zayıflığı"
+              data-testid="weakness-popover"
+              className="fantasy-panel fixed left-2 right-2 z-50 mx-auto max-h-[calc(100dvh-84px)] max-w-sm overflow-y-auto rounded-2xl border-2 p-3.5"
+              style={{ top: 'calc(62px + env(safe-area-inset-top, 0px))', borderColor: `${w.colorHex}99` }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2"
+                  style={{ borderColor: w.colorHex, background: `${w.colorHex}33` }}
+                >
+                  <GemIcon gem={info.gem} size={22} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Düşman zayıflığı</div>
+                  <div className="font-display text-[17px] font-bold leading-tight" style={{ color: w.colorHex }} data-testid="weakness-name">
+                    {info.title}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowWeak(false)}
+                  aria-label="Kapat"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <ul className="mt-2.5 space-y-1.5 text-[14px] leading-snug text-slate-200" data-testid="weakness-lines">
+                {info.lines.map((l) => (
+                  <li key={l} className="rounded-lg bg-slate-950/60 px-2.5 py-1.5">
+                    {l}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        );
+      })()}
 
       {/* PHASER 3 ARENA + BOARD CANVAS */}
       <div ref={mountRef} className="game-no-scroll relative flex-1 min-h-0 w-full overflow-hidden" />

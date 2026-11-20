@@ -7,8 +7,9 @@ import type {
   HeroClassId,
   HuntId,
 } from '../types/game';
+import { planBestEquipment, type EquipPlan } from '../game/equipPlanner';
 import { recordQuestActivity } from '../utils/questProgress';
-import { getDismantleYield, getEnhanceCost, getItemPowerScore } from '../utils/rpgLogic';
+import { getDismantleYield, getEnhanceCost } from '../utils/rpgLogic';
 
 /**
  * Kayıt durumu üzerindeki saf işlemler. Hiçbiri ses/toast gibi yan etki üretmez;
@@ -31,19 +32,6 @@ export interface ActionResult {
 const unchanged = (save: GameSaveState, toast?: string): ActionResult => ({ save, toast });
 
 export const MAX_UPGRADE_LEVEL = 10;
-
-export const EQUIP_SLOT_ORDER: EquipmentSlot[] = [
-  'weapon',
-  'offhand',
-  'helmet',
-  'chest',
-  'gloves',
-  'pants',
-  'boots',
-  'necklace',
-  'ring1',
-  'ring2',
-];
 
 export function selectHero(save: GameSaveState, classId: HeroClassId): ActionResult {
   if (!save.heroUnlocks.includes(classId)) return unchanged(save);
@@ -196,39 +184,57 @@ export function sellItem(save: GameSaveState, itemId: string): ActionResult {
   };
 }
 
-export function autoEquipBest(save: GameSaveState): ActionResult {
+/**
+ * Önerilen ekipman planını TEK kayıt güncellemesiyle uygular: kuşanılan eşyalar çantadan çıkar,
+ * yerlerinden çıkan eşyalar çantaya döner. Plan bayatsa (envanter/ekipman değişmişse) hiçbir şey değişmez.
+ */
+export function applyEquipPlan(save: GameSaveState, plan: EquipPlan): ActionResult {
   const hero = save.heroes[save.activeHeroClass];
-  let pool = [...save.inventory];
-  const equipped = { ...hero.equipped };
+  if (save.activeHeroClass !== plan.classId) {
+    return unchanged(save, 'Aktif kahraman değişti, öneriyi yeniden hesapla.');
+  }
+  if (plan.unchanged) return unchanged(save, 'Mevcut ekipmanların önerilen kombinasyonda.');
 
-  EQUIP_SLOT_ORDER.forEach((slot) => {
-    const current = equipped[slot];
-    const currentScore = current ? getItemPowerScore(current) : -1;
-    const isRing = slot === 'ring1' || slot === 'ring2';
-
-    const best = pool
-      .filter((item) => {
-        if (item.levelReq > hero.level) return false;
-        return isRing ? item.slot === 'ring1' || item.slot === 'ring2' : item.slot === slot;
-      })
-      .sort((a, b) => getItemPowerScore(b) - getItemPowerScore(a))[0];
-
-    if (best && getItemPowerScore(best) > currentScore) {
-      pool = pool.filter((i) => i.id !== best.id);
-      if (current) pool.push(current);
-      equipped[slot] = { ...best, slot };
+  const invById = new Map(save.inventory.map((i) => [i.id, i]));
+  const proposedIds = new Set<string>();
+  for (const [slot, item] of Object.entries(plan.proposed) as [EquipmentSlot, EquipmentItem | undefined][]) {
+    if (!item) continue;
+    const worn = hero.equipped[slot];
+    const available = worn?.id === item.id || invById.has(item.id);
+    if (!available || proposedIds.has(item.id)) {
+      return unchanged(save, 'Ekipman değişti, öneriyi yeniden hesapla.');
     }
-  });
+    proposedIds.add(item.id);
+  }
+
+  // Yeni kuşanılanlar çantadan çıkar; eski kuşanılanlardan artık takılmayanlar çantaya döner
+  const inventory = save.inventory.filter((i) => !proposedIds.has(i.id));
+  for (const item of Object.values(hero.equipped)) {
+    if (item && !proposedIds.has(item.id)) inventory.push(item);
+  }
+  const equipped: Partial<Record<EquipmentSlot, EquipmentItem>> = {};
+  for (const [slot, item] of Object.entries(plan.proposed) as [EquipmentSlot, EquipmentItem | undefined][]) {
+    if (!item) continue;
+    // Çantadaki/kuşanılmış güncel eşya nesnesini kullan (geliştirme seviyesi vb. güncel kalsın)
+    const live = hero.equipped[slot]?.id === item.id ? hero.equipped[slot]! : invById.get(item.id)!;
+    equipped[slot] = { ...live, slot };
+  }
 
   return {
     save: {
       ...save,
-      inventory: pool,
+      inventory,
       heroes: { ...save.heroes, [save.activeHeroClass]: { ...hero, equipped } },
     },
     sound: 'lootReveal',
-    toast: 'En güçlü ekipmanlar otomatik kuşanıldı!',
+    toast: 'Önerilen ekipmanlar kuşanıldı!',
   };
+}
+
+/** Önizlemesiz hızlı yol: planı hesaplar ve uygular (testler ve geriye uyumluluk için). */
+export function autoEquipBest(save: GameSaveState): ActionResult {
+  const hero = save.heroes[save.activeHeroClass];
+  return applyEquipPlan(save, planBestEquipment(hero, save.inventory));
 }
 
 export function dismantleCommonItems(save: GameSaveState): ActionResult {

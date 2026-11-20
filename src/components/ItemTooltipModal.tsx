@@ -7,7 +7,6 @@ import { EquipmentItem, StatBlock } from '../types/game';
 import {
   getDismantleYield,
   getEffectiveItemStats,
-  getEnhanceCost,
   getItemPowerScore,
 } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
@@ -20,11 +19,10 @@ interface ItemTooltipPanelProps {
   heroEquipped?: EquippedMap;
   isEquipped: boolean;
   heroLevel: number;
-  gold: number;
-  crystals: number;
   onEquip?: () => void;
   onUnequip?: () => void;
-  onEnhance: () => void;
+  /** Geliştirme ekranını bu eşya seçili olarak açar (geliştirmenin kendisi ayrı ekranda yapılır) */
+  onOpenUpgrade: () => void;
   onDismantle?: () => void;
   onSell?: () => void;
   onClose?: () => void;
@@ -47,11 +45,9 @@ export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
   heroEquipped = {},
   isEquipped,
   heroLevel,
-  gold,
-  crystals,
   onEquip,
   onUnequip,
-  onEnhance,
+  onOpenUpgrade,
   onDismantle,
   onSell,
   onClose,
@@ -59,21 +55,26 @@ export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
   const meta = RARITY_META[item.rarity];
   const stats = getEffectiveItemStats(item);
   const eqStats = equippedInSlot && !isEquipped ? getEffectiveItemStats(equippedInSlot) : null;
-  const enhanceCost = getEnhanceCost(item);
   const dismantleYield = getDismantleYield(item);
-  const canAffordEnhance = gold >= enhanceCost.gold && crystals >= enhanceCost.crystals && item.upgradeLevel < 10;
+  const maxed = item.upgradeLevel >= 10;
   const levelTooHigh = heroLevel < item.levelReq;
   const itemSet = item.setId ? getSet(item.setId) : null;
   // Kuşanılırsa set parça sayıları ve bonuslar nasıl değişir (set parçası olmayan eşya da set parçasını çıkarabilir)
   const setDiffs = !isEquipped ? diffSetsOnEquip(heroEquipped, item.slot, item) : [];
 
   return (
-    <div className={`fantasy-panel relative flex flex-col rounded-2xl border-2 p-4 ${meta.borderClass}`}>
+    <div
+      className={`fantasy-panel relative flex max-h-[inherit] min-h-0 flex-col overflow-hidden rounded-2xl border-2 ${meta.borderClass}`}
+      data-testid="item-detail"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="item-detail-scroll">
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 rounded-lg bg-slate-800/80 p-1.5 text-slate-400 hover:text-white"
+          aria-label="Kapat"
+          data-testid="detail-close"
+          className="absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-800/90 text-slate-300 hover:text-white"
         >
           <X className="h-4 w-4" />
         </button>
@@ -161,67 +162,71 @@ export const ItemTooltipPanel: React.FC<ItemTooltipPanelProps> = ({
 
       <p className="mt-2 text-[11px] leading-relaxed text-slate-400">{item.description}</p>
 
-      {/* Actions */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {!isEquipped && onEquip && (
+      {/* İkincil eylemler (kaydırılan alanda): parçala / sat */}
+      {!isEquipped && (onDismantle || onSell) && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {onDismantle && (
+            <button
+              type="button"
+              onClick={onDismantle}
+              className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-purple-500/35 bg-purple-950/50 px-2.5 py-2 text-[12px] font-semibold text-purple-200 hover:bg-purple-900/60"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-purple-400" />
+              Parçala (+{dismantleYield.crystals} Kristal)
+            </button>
+          )}
+          {onSell && (
+            <button
+              type="button"
+              onClick={onSell}
+              className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-950/40 px-2.5 py-2 text-[12px] font-semibold text-amber-200 hover:bg-amber-900/50"
+            >
+              <Coins className="h-3.5 w-3.5 text-amber-400" />
+              Sat (+{item.sellValue} Altın)
+            </button>
+          )}
+        </div>
+      )}
+      </div>
+
+      {/* Sabit eylem alanı: içerik bunun üzerinde kaydırılır; alt güvenli alan hesaba katılır */}
+      <div
+        className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-700/70 bg-[#0a0f1e] px-4 pt-3"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
+        data-testid="item-detail-actions"
+      >
+        {!isEquipped && onEquip ? (
           <button
             type="button"
             disabled={levelTooHigh}
             onClick={onEquip}
-            className="gold-btn col-span-2 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-950 disabled:opacity-45 disabled:cursor-not-allowed"
+            data-testid="detail-equip"
+            className="gold-btn flex min-h-[52px] items-center justify-center gap-2 rounded-xl px-3 text-[15px] font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-45"
           >
-            <ShieldCheck className="h-4 w-4" />
-            {levelTooHigh ? `Seviye ${item.levelReq} Gerekli` : 'Kuşan'}
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            <span className="truncate">{levelTooHigh ? `Seviye ${item.levelReq}` : 'Kuşan'}</span>
           </button>
-        )}
-        {isEquipped && onUnequip && (
+        ) : isEquipped && onUnequip ? (
           <button
             type="button"
             onClick={onUnequip}
-            className="col-span-2 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
+            data-testid="detail-unequip"
+            className="flex min-h-[52px] items-center justify-center rounded-xl border border-slate-600 bg-slate-800 px-3 text-[14px] font-bold text-slate-100 hover:bg-slate-700"
           >
-            Çıkar (Envantere Koy)
+            Çıkar
           </button>
+        ) : (
+          <span />
         )}
-
         <button
           type="button"
-          disabled={!canAffordEnhance}
-          onClick={onEnhance}
-          className="col-span-2 flex items-center justify-between rounded-xl border border-sky-500/40 bg-sky-950/60 px-3 py-2 text-xs font-semibold text-sky-200 hover:bg-sky-900/70 disabled:opacity-45 disabled:cursor-not-allowed"
+          onClick={onOpenUpgrade}
+          data-testid="detail-upgrade"
+          className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 border-sky-400/60 bg-sky-950/70 px-3 text-[15px] font-bold text-sky-100 hover:bg-sky-900/70"
         >
-          <span className="flex items-center gap-1.5 font-bold">
-            <Hammer className="h-4 w-4 text-sky-400" />
-            {item.upgradeLevel >= 10 ? 'Maksimum Seviye (+10)' : `Geliştir (+${item.upgradeLevel + 1})`}
-          </span>
-          {item.upgradeLevel < 10 && (
-            <span className="text-[11px] text-amber-300">
-              {enhanceCost.gold} Altın • {enhanceCost.crystals} Kristal
-            </span>
-          )}
+          <Hammer className="h-4 w-4 shrink-0 text-sky-300" />
+          <span className="truncate">{maxed ? 'Maksimum +10' : `Geliştir +${item.upgradeLevel + 1}`}</span>
         </button>
-
-        {!isEquipped && onDismantle && (
-          <button
-            type="button"
-            onClick={onDismantle}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-purple-500/35 bg-purple-950/50 px-2.5 py-2 text-[11px] font-semibold text-purple-200 hover:bg-purple-900/60"
-          >
-            <Trash2 className="h-3.5 w-3.5 text-purple-400" />
-            Parçala (+{dismantleYield.crystals} Kristal)
-          </button>
-        )}
-
-        {!isEquipped && onSell && (
-          <button
-            type="button"
-            onClick={onSell}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-950/40 px-2.5 py-2 text-[11px] font-semibold text-amber-200 hover:bg-amber-900/50"
-          >
-            <Coins className="h-3.5 w-3.5 text-amber-400" />
-            Sat (+{item.sellValue} Altın)
-          </button>
-        )}
       </div>
     </div>
   );

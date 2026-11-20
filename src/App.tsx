@@ -1,9 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
+import type { EquipPlan } from './game/equipPlanner';
 import { exitNativeApp, onNativeBack } from './native';
 import { findStageById } from './data/world';
 import { LevelUpModal, LootRevealModal } from './components/CelebrationModals';
-import { EquipmentInventoryScreen } from './components/EquipmentInventoryScreen';
+import { EquipmentInventoryScreen, type EquipSelection } from './components/EquipmentInventoryScreen';
+import { UpgradeScreen } from './components/UpgradeScreen';
 import { HeroesScreen } from './components/HeroesScreen';
 import { MainMenu } from './components/MainMenu';
 import { QuestsScreen } from './components/QuestsScreen';
@@ -37,7 +39,7 @@ import {
 } from './utils/rpgLogic';
 import { isQuestClaimed, markQuestClaimed, recordQuestActivity, refreshProgressPeriods } from './utils/questProgress';
 import {
-  autoEquipBest,
+  applyEquipPlan,
   dismantleCommonItems,
   dismantleItem,
   enhanceItem,
@@ -54,7 +56,7 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'upgrade';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
@@ -107,6 +109,10 @@ export function App() {
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
   const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
+  // Ekipman Geliştir: nereden açıldı (geri dönüş) ve açılışta seçili eşya; ekipman ekranındaki seçim geri dönüşte korunur
+  const [upgradeOrigin, setUpgradeOrigin] = useState<'menu' | 'equipment'>('menu');
+  const [upgradeInitialId, setUpgradeInitialId] = useState<string | null>(null);
+  const equipSelRef = useRef<EquipSelection | null>(null);
   // Dünya Haritası gezinti durumu: harita/aşama görünümü + seçili bölge + kaydırma konumu.
   // Aşama ekranından ve savaştan dönünce korunur; ana menüden girişte sıfırlanır.
   const [worldView, setWorldView] = useState<WorldView>('map');
@@ -141,6 +147,7 @@ export function App() {
       return;
     }
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
+    if (route === 'upgrade') return setRoute(upgradeOrigin);
     if (route === 'hunts') {
       if (selectedHuntId) return setSelectedHuntId(null);
       return setRoute('menu');
@@ -209,7 +216,7 @@ export function App() {
   const handleUnequipSlot = (slot: EquipmentSlot) => runAction((s) => unequipSlot(s, slot));
   const handleDismantleItem = (itemId: string) => runAction((s) => dismantleItem(s, itemId));
   const handleSellItem = (itemId: string) => runAction((s) => sellItem(s, itemId));
-  const handleAutoEquipBest = () => runAction(autoEquipBest);
+  const handleApplyEquipPlan = (plan: EquipPlan) => runAction((s) => applyEquipPlan(s, plan));
   const handleDismantleLowRarity = () => runAction(dismantleCommonItems);
   const handleUpgradeSkillNode = (nodeId: string) => runAction((s) => upgradeSkillNode(s, nodeId));
   const handleResetSkills = () => runAction(resetSkills);
@@ -579,6 +586,8 @@ export function App() {
           }}
           onNavigate={(dest) => {
             if (dest === 'world') resetWorldNav();
+            if (dest === 'equipment') equipSelRef.current = null;
+            if (dest === 'upgrade') { setUpgradeOrigin('menu'); setUpgradeInitialId(null); }
             if (dest === 'hunts') setSelectedHuntId(null);
             if (dest === 'quests') { setQuestTab('main'); setQuestBack('menu'); }
             if (dest === 'achievements') { setQuestTab('achievement'); setQuestBack('menu'); }
@@ -604,11 +613,30 @@ export function App() {
           onBack={() => setRoute('menu')}
           onEquipItem={handleEquipItem}
           onUnequipSlot={handleUnequipSlot}
-          onEnhanceItem={handleEnhanceItem}
+          initialSelection={equipSelRef.current}
+          onSelectionChange={(sel) => { equipSelRef.current = sel; }}
+          onOpenUpgrade={(sel) => {
+            equipSelRef.current = sel;
+            setUpgradeOrigin('equipment');
+            setUpgradeInitialId(sel.id);
+            setRoute('upgrade');
+          }}
           onDismantleItem={handleDismantleItem}
           onSellItem={handleSellItem}
-          onAutoEquipBest={handleAutoEquipBest}
+          onApplyEquipPlan={handleApplyEquipPlan}
           onDismantleLowRarity={handleDismantleLowRarity}
+        />
+      )}
+
+      {route === 'upgrade' && (
+        <UpgradeScreen
+          save={save}
+          initialItemId={upgradeInitialId}
+          onEnhance={handleEnhanceItem}
+          onBack={(selected) => {
+            if (upgradeOrigin === 'equipment' && selected) equipSelRef.current = selected;
+            setRoute(upgradeOrigin);
+          }}
         />
       )}
 

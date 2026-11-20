@@ -4,6 +4,25 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.9.0 — Akıllı kuşanma, hızlı geliştirme, okunaklı zayıflık
+- **En İyilerini Kuşan** artık setleri dikkate alır ve önce önizleme açar. Kuşanılmış + çantadaki eşyalar
+  (seviyesi uygun olanlar) ve mevcut kombinasyon aday olarak değerlendirilir; bir eşya iki yuvaya seçilmez,
+  yüzükler iki farklı eşya olur. Önizleme: değişecek ekipmanlar, özellik farkı, savaş gücü, set bonuslarının
+  açılması/kapanması; "Kuşan" tüm değişiklikleri TEK kayıt güncellemesiyle uygular, "Vazgeç" hiçbir şeyi değiştirmez.
+  Mevcut kombinasyon en iyisiyse "Mevcut ekipmanların önerilen kombinasyonda" gösterilir.
+  - Puanlama (`src/game/equipPlanner.ts`, ayarlanabilir): eşya puanı = oyunun güç puanı (geliştirme dahil).
+    Set bonusu puanı = bonus değeri × birim puan × (koşullu bonuslar için gerçekleşme olasılığı) × (1 + (seviye-1) × 0.06).
+  - Kesin ve hızlı: aynı yuva + aynı set kimliği için en iyi eşya yeter, ≤256 kombinasyon denenir (20.000 eşyada <300 ms).
+- **Ekipman Geliştir ekranı:** ana ekranda "Ekipman" yanında çekiç simgeli "Geliştir". "Kuşanılanlar" / "Çantadakiler"
+  sekmeleri, slot sıralı liste (simge, ad, nadirlik, +seviye, set simgesi). Kompakt panel: mevcut → sonraki seviye,
+  özellik değişimi, maliyet ve elindeki kaynak, "Başarı ihtimali %100 · başarısızlık yok" (oyunda başarısızlık
+  mekaniği yok), altta sabit "Geliştir" düğmesi. Yetersiz kaynakta düğme pasif ve eksik miktar yazar; maksimumda
+  "Maksimum Seviye". Tek dokunuş = tek geliştirme (işlem sonrası kısa kilit, hızlı çift dokunma iki kez geliştirmez).
+- **Eşya detayı** alt çekmece oldu: özellikler/set açıklamaları kaydırılır, alttaki sabit alanda Kuşan/Çıkar ve
+  Geliştir. Geliştir aynı ekranı eşya seçili açar; geri dönünce ekipman ekranı ve seçili eşya korunur.
+- **Zayıflık göstergesi:** renkli nokta yerine element simgeli düğme (geniş dokunma alanı). Dokununca elementin adı
+  ve mevcut savaş kurallarına göre etkisi (+%45 hasar, altın taş kuralı, direnç, faz değişimi) açılır.
+
 ## v1.8.0 — Ekipman setleri
 - **Üç set:** Köz (Volkanik Topraklar), Buzul (Donmuş Dağlar), Yaşam (Büyülü Orman). Her set kask,
   göğüslük, eldiven ve çizmeden oluşur. Bonuslar aynı setten KUŞANILMIŞ 2 ve 4 parçada açılır;

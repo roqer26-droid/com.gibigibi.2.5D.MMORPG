@@ -14,6 +14,7 @@ import {
   Trophy,
   Award,
   Target,
+  Hammer,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
@@ -31,6 +32,7 @@ import { HeroPaperdoll } from './HeroPaperdoll';
 export type MenuDest =
   | 'heroes'
   | 'equipment'
+  | 'upgrade'
   | 'skills'
   | 'world'
   | 'quests'
@@ -121,6 +123,14 @@ export const MainMenu: React.FC<MainMenuProps> = ({
       Icon: Shield,
       border: 'border-amber-500/35',
       iconWrap: 'bg-amber-500/15 text-amber-300',
+    },
+    {
+      id: 'upgrade',
+      label: 'Geliştir',
+      sub: 'Güçlendir',
+      Icon: Hammer,
+      border: 'border-sky-500/45',
+      iconWrap: 'bg-sky-500/15 text-sky-300',
     },
     {
       id: 'skills',
