@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.13.2 — İtemleri Sat
+- Envanterdeki "Sıradanları Parçala" düğmesi "İtemleri Sat" oldu ve tam ekran satış ekranı açar: nadirlik renk düğmeleri (adet / "3/8 seçili"),
+  tek tek seçim, set simgeli satırlar, sabit alt çubuk (seçili item, toplam altın, "Seçilenleri Sat") ve satış öncesi onay
+  ("12 item satılacak · +1.840 altın"). Satış her itemin mevcut `sellValue` fiyatıyla, itemler ve altın tek kayıt güncellemesinde işlenir;
+  hızlı çift dokunuş ikinci satış yapmaz. Kuşanılmış (ve varsa kilitli) itemler satılamaz. (`sellItems`, `isSellable`)
+
 ## v1.13.1 — Görevler sıralaması
 - Görevler/Başarımlar sekmelerinde görevler ödülü hazır → devam eden → ödülü alınmış sırasıyla gruplanır (grup içi sıra korunur).
   Ödül alınınca görev anında "Ödülü alınmış" grubuna iner, tamamlanan görev listenin başına çıkar. "Ödülü Al" düğmesi büyük ve belirgin.

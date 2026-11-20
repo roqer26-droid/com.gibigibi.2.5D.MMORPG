@@ -170,6 +170,26 @@ export function dismantleItem(save: GameSaveState, itemId: string): ActionResult
   };
 }
 
+/** Satılabilir mi: yalnızca çantadaki, kuşanılmamış ve (varsa) kilitlenmemiş eşyalar. Fiyat her eşyanın kendi `sellValue` değeridir. */
+export function isSellable(save: GameSaveState, item: EquipmentItem): boolean {
+  if ((item as EquipmentItem & { locked?: boolean }).locked) return false;
+  return !Object.values(save.heroes).some((h) => Object.values(h.equipped).some((e) => e?.id === item.id));
+}
+
+/** Toplu satış: tüm seçili eşyalar ve altın TEK kayıt güncellemesinde işlenir; çantada olmayan/satılamayan kimlikler yok sayılır (çift çağrı etkisiz). */
+export function sellItems(save: GameSaveState, itemIds: string[]): ActionResult {
+  const ids = new Set(itemIds);
+  const sold = save.inventory.filter((i) => ids.has(i.id) && isSellable(save, i));
+  if (sold.length === 0) return unchanged(save, 'Satılacak item seçilmedi.');
+  const gold = sold.reduce((sum, i) => sum + i.sellValue, 0);
+  const soldIds = new Set(sold.map((i) => i.id));
+  return {
+    save: { ...save, gold: save.gold + gold, inventory: save.inventory.filter((i) => !soldIds.has(i.id)) },
+    sound: 'gemSelect',
+    toast: `${sold.length} item satıldı: +${gold.toLocaleString('tr-TR')} Altın`,
+  };
+}
+
 export function sellItem(save: GameSaveState, itemId: string): ActionResult {
   const item = save.inventory.find((i) => i.id === itemId);
   if (!item) return unchanged(save);

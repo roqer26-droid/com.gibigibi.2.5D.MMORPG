@@ -4,7 +4,6 @@ import {
   Sparkles,
   Wand2,
   SlidersHorizontal,
-  Trash2,
   Coins,
   Gem,
 } from 'lucide-react';
@@ -19,6 +18,7 @@ import { HeroPaperdoll } from './HeroPaperdoll';
 import { ItemArtSvg, ItemCard } from './ItemCard';
 import { ItemTooltipPanel } from './ItemTooltipModal';
 import { AutoEquipPreview } from './AutoEquipPreview';
+import { SellItemsScreen } from './SellItemsScreen';
 import { SetIcon, SetsModal } from './SetUi';
 
 export interface EquipSelection {
@@ -41,7 +41,8 @@ interface EquipmentInventoryScreenProps {
   onSellItem: (itemId: string) => void;
   /** Önizlemede onaylanan ekipman planını tek kayıt güncellemesiyle uygular */
   onApplyEquipPlan: (plan: EquipPlan) => void;
-  onDismantleLowRarity: () => void;
+  /** Toplu satış: seçili eşyaların kimlikleri (altın ve çanta tek güncellemede) */
+  onSellItems: (itemIds: string[]) => void;
 }
 
 const LEFT_SLOTS: EquipmentSlot[] = ['helmet', 'chest', 'gloves', 'pants', 'boots'];
@@ -58,7 +59,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   onDismantleItem,
   onSellItem,
   onApplyEquipPlan,
-  onDismantleLowRarity,
+  onSellItems,
 }) => {
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
@@ -67,6 +68,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   const equippedSets = useMemo(() => getEquippedSetProgress(hero.equipped), [hero.equipped]);
   const [showSets, setShowSets] = useState(false);
   const [equipPlan, setEquipPlan] = useState<EquipPlan | null>(null);
+  const [showSell, setShowSell] = useState(false);
 
   const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories'>('all');
   const [sortBy, setSortBy] = useState<'rarity' | 'level' | 'power'>('rarity');
@@ -398,12 +400,13 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                 </select>
                 <button
                   type="button"
-                  onClick={onDismantleLowRarity}
-                  className="flex items-center gap-1 rounded-lg border border-purple-500/40 bg-purple-950/50 px-2.5 py-1 text-[11px] font-bold text-purple-200 hover:bg-purple-900/60"
-                  title="Tüm Sıradan eşyaları Kristale parçala"
+                  onClick={() => setShowSell(true)}
+                  data-testid="open-sell"
+                  className="flex items-center gap-1 rounded-lg border border-amber-500/40 bg-amber-950/40 px-2.5 py-1 text-[11px] font-bold text-amber-200 hover:bg-amber-900/50"
+                  title="Itemleri tek tek ya da nadirliğe göre seçip sat"
                 >
-                  <Trash2 className="h-3 w-3" />
-                  Sıradanları Parçala
+                  <Coins className="h-3 w-3" />
+                  İtemleri Sat
                 </button>
               </div>
             </div>
@@ -511,6 +514,15 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
           </div>
         </div>
       </div>
+      {showSell && (
+        <SellItemsScreen
+          save={save}
+          onClose={() => setShowSell(false)}
+          onSell={(ids) => {
+            onSellItems(ids);
+          }}
+        />
+      )}
       {showSets && <SetsModal equipped={hero.equipped} onClose={() => setShowSets(false)} />}
       {equipPlan && (
         <AutoEquipPreview

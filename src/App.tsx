@@ -44,13 +44,13 @@ import {
 import { isQuestClaimed, markQuestClaimed, recordQuestActivity, refreshProgressPeriods } from './utils/questProgress';
 import {
   applyEquipPlan,
-  dismantleCommonItems,
   dismantleItem,
   enhanceItem,
   equipItem,
   resetSkills,
   selectHero,
   sellItem,
+  sellItems,
   unequipSlot,
   unlockHero,
   upgradeSkillNode,
@@ -228,7 +228,7 @@ export function App() {
   const handleDismantleItem = (itemId: string) => runAction((s) => dismantleItem(s, itemId));
   const handleSellItem = (itemId: string) => runAction((s) => sellItem(s, itemId));
   const handleApplyEquipPlan = (plan: EquipPlan) => runAction((s) => applyEquipPlan(s, plan));
-  const handleDismantleLowRarity = () => runAction(dismantleCommonItems);
+  const handleSellItems = (ids: string[]) => runAction((s) => sellItems(s, ids));
   const handleUpgradeSkillNode = (nodeId: string) => runAction((s) => upgradeSkillNode(s, nodeId));
   const handleResetSkills = () => runAction(resetSkills);
 
@@ -708,7 +708,7 @@ export function App() {
           onDismantleItem={handleDismantleItem}
           onSellItem={handleSellItem}
           onApplyEquipPlan={handleApplyEquipPlan}
-          onDismantleLowRarity={handleDismantleLowRarity}
+          onSellItems={handleSellItems}
         />
       )}
 

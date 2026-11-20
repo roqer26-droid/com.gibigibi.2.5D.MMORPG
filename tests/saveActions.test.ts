@@ -9,7 +9,9 @@ import {
   equipItem,
   resetSkills,
   selectHero,
+  isSellable,
   sellItem,
+  sellItems,
   unequipSlot,
   unlockHero,
   upgradeSkillNode,
@@ -159,5 +161,31 @@ describe('skill actions', () => {
     s.heroes[s.activeHeroClass] = { ...s.heroes[s.activeHeroClass], skillPoints: 0 };
     const cls = HERO_CLASS_LIST.find((c) => c.id === s.activeHeroClass)!;
     expect(upgradeSkillNode(s, cls.skillTree[0].id).save).toBe(s);
+  });
+});
+
+describe('sellItems (toplu satış)', () => {
+  const mk = (id: string, rarity: 'common' | 'uncommon' | 'rare', sellValue: number): EquipmentItem => ({ ...(createInitialSaveState().inventory[0] ?? generateEquipmentItem({ level: 1, rarity: 'common' })), id, rarity, sellValue });
+
+  it('sells the selected items and adds gold in one update; ignores unknown / equipped ids and double calls', () => {
+    const base = createInitialSaveState();
+    const hero = base.heroes[base.activeHeroClass];
+    const equipped = mk('eq', 'rare', 999);
+    const s0 = {
+      ...base,
+      gold: 100,
+      inventory: [mk('a', 'common', 10), mk('b', 'uncommon', 30), mk('c', 'rare', 100)],
+      heroes: { ...base.heroes, [base.activeHeroClass]: { ...hero, equipped: { ...hero.equipped, weapon: equipped } } },
+    };
+    const r = sellItems(s0, ['a', 'c', 'eq', 'nope', 'a']);
+    expect(r.save.gold).toBe(100 + 10 + 100);
+    expect(r.save.inventory.map((i) => i.id)).toEqual(['b']);
+    expect(r.save.heroes[base.activeHeroClass].equipped.weapon?.id).toBe('eq');
+    expect(r.toast).toContain('2 item');
+    const again = sellItems(r.save, ['a', 'c']);
+    expect(again.save).toBe(r.save);
+    expect(sellItems(s0, []).save).toBe(s0);
+    expect(isSellable(s0, equipped)).toBe(false);
+    expect(isSellable(s0, s0.inventory[0])).toBe(true);
   });
 });
