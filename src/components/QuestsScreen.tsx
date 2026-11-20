@@ -5,6 +5,7 @@ import { RARITY_META } from '../data/skills';
 import { GameSaveState, QuestCategory, QuestDef } from '../types/game';
 import { nextDayAt, nextWeekAt, remainingTime } from '../utils/calendar';
 import { isQuestClaimed } from '../utils/questProgress';
+import { orderQuests, questGroup, type QuestGroup } from '../utils/questOrder';
 import { getQuestCurrentValue } from '../utils/rpgLogic';
 
 interface QuestsScreenProps {
@@ -70,6 +71,11 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
   }, [save]);
 
   const quests = QUESTS_LIST.filter((quest) => quest.category === tab);
+  // Ekranda sıralama: ödülü hazır → devam eden → ödülü alınmış (grup içi sıra korunur); durum her render'da kayıttan okunur
+  const groups = orderQuests(quests, (q) =>
+    questGroup(isQuestClaimed(q, save), getQuestCurrentValue(q, save), q.targetCount)
+  );
+  const GROUP_LABEL: Record<QuestGroup, string> = { ready: 'Ödülü hazır', active: 'Devam eden', claimed: 'Ödülü alınmış' };
   const claimedCount = quests.filter((quest) => isQuestClaimed(quest, save)).length;
   const timerText = tab === 'daily'
     ? `${remainingTime(nextDayAt(now), now)} sonra yenilenir`
@@ -139,13 +145,16 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
           </div>
 
           <div className="space-y-2.5">
-            {quests.map((quest) => {
+            {groups.map(({ group, items }) => (
+              <section key={group} data-testid={`quest-group-${group}`} aria-label={GROUP_LABEL[group]} className="space-y-2.5">
+                <h4 className={`pt-2 text-[11px] font-extrabold uppercase tracking-[0.18em] ${group === 'ready' ? 'text-amber-300' : group === 'claimed' ? 'text-emerald-300/70' : 'text-slate-400'}`}>{GROUP_LABEL[group]} · {items.length}</h4>
+            {items.map((quest) => {
               const claimed = isQuestClaimed(quest, save);
               const value = Math.min(quest.targetCount, getQuestCurrentValue(quest, save));
               const ready = !claimed && value >= quest.targetCount;
               const percent = Math.min(100, value / quest.targetCount * 100);
               return (
-                <article key={quest.id} className={`quest-row rounded-xl border p-4 sm:p-5 ${ready ? 'border-amber-400/50' : 'border-slate-700/50'} ${claimed ? 'opacity-70' : ''}`}>
+                <article key={quest.id} data-testid={`quest-${quest.id}`} data-state={claimed ? 'claimed' : ready ? 'ready' : 'active'} className={`quest-row rounded-xl border p-4 sm:p-5 ${ready ? 'border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.25)]' : 'border-slate-700/50'} ${claimed ? 'opacity-70' : ''}`}>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <div className={`hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl border sm:flex ${claimed ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300' : ready ? 'border-amber-400/40 bg-amber-400/10 text-amber-300' : 'border-slate-700 bg-slate-900 text-slate-400'}`}>
                       {claimed ? <Check className="h-5 w-5" /> : tab === 'league' ? <Swords className="h-5 w-5" /> : <ScrollText className="h-5 w-5" />}
@@ -172,7 +181,7 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
                     {claimed ? (
                       <span className="inline-flex min-h-10 items-center justify-center gap-1.5 text-xs font-bold text-emerald-300 sm:w-28"><Check className="h-4 w-4" /> Tamamlandı</span>
                     ) : ready ? (
-                      <button type="button" onClick={() => onClaimQuest(quest)} className="gold-btn inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 text-xs font-extrabold text-slate-950 sm:w-32"><Gift className="h-4 w-4" /> Ödülü Al</button>
+                      <button type="button" onClick={() => onClaimQuest(quest)} data-testid={`claim-${quest.id}`} className="gold-btn inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold text-slate-950 shadow-[0_0_16px_rgba(251,191,36,0.45)] ring-2 ring-amber-200/60 sm:min-h-12 sm:w-36"><Gift className="h-5 w-5" /> Ödülü Al</button>
                     ) : (
                       <span className="inline-flex min-h-10 items-center justify-center text-xs font-semibold text-slate-500 sm:w-28">Devam ediyor</span>
                     )}
@@ -180,6 +189,8 @@ export function QuestsScreen({ save, onBack, onClaimQuest, onOpenLeague, initial
                 </article>
               );
             })}
+              </section>
+            ))}
           </div>
           {(tab === 'daily' || tab === 'weekly') && <p className="mt-5 text-xs leading-relaxed text-slate-500">{tab === 'daily' ? 'Günlük görevler her gün 00.00 UTC’de' : 'Haftalık görevler pazartesi 00.00 UTC’de'} yenilenir. Alınmamış dönemlik görev ödülleri yenilenmeden önce toplanmalıdır.</p>}
         </div>

@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.13.1 — Görevler sıralaması
+- Görevler/Başarımlar sekmelerinde görevler ödülü hazır → devam eden → ödülü alınmış sırasıyla gruplanır (grup içi sıra korunur).
+  Ödül alınınca görev anında "Ödülü alınmış" grubuna iner, tamamlanan görev listenin başına çıkar. "Ödülü Al" düğmesi büyük ve belirgin.
+
 ## v1.13.0 — Üç Yıldızlı Aşama Ustalığı
 - 53 bölge / 500 hikâye aşamasında üç yıldız: ★1 aşama zaferi, ★2 ve ★3 iki ayrı savaş hedefi. Hedefler farklı zaferlerde tamamlanabilir,
   yenilgide yıldız verilmez, kazanılmış yıldız tekrar verilmez. Hedef durumu aşama kimliğiyle kaydedilir (kayıt sürümü 9).
