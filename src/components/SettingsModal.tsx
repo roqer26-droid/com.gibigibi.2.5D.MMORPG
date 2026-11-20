@@ -160,7 +160,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             Taş Rehberi ve Kontroller
           </div>
           <p className="mb-2 text-[11px] text-slate-400">
-            Fareyle sürükle veya tıkla (mobilde kaydır veya dokun). 4’lü eşleşme çizgi lazer, L/T eşleşme Nova Bombası, 5’li eşleşme Prizmatik Yıldız oluşturur! Kısayollar: 1–6 Yetenekler.
+            Fareyle sürükle veya tıkla (mobilde kaydır veya dokun). 4’lü eşleşme çizgi lazer, L/T eşleşme Nova Bombası, 5’li eşleşme Prizmatik Yıldız oluşturur! Aynı türden 2×2 kare de geçerli eşleşmedir ve dört taşı birden patlatır. Kısayollar: 1–6 Yetenekler.
           </p>
           <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {(Object.keys(GEM_INFO) as GemType[]).map((gt) => (

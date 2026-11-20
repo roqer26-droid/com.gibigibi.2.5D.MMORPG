@@ -19,7 +19,15 @@ import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRe
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import { resolveHuntFireRule, type HuntDef } from '../data/hunts';
-import { findMatches, findPossibleMoves, type MatchGrid, type MatchResult, type Move } from '../game/match3';
+import {
+  createStartingBoard,
+  findMatches,
+  findPossibleMoves,
+  type MatchGrid,
+  type MatchResult,
+  type Move,
+  type Square,
+} from '../game/match3';
 
 /** Yukarıdaki `checkBossPhaseTransitions` içinde kendi faz mantığı olan bosslar */
 const BESPOKE_PHASE_BOSSES = new Set([
@@ -603,23 +611,12 @@ export class BattleScene extends Phaser.Scene {
     this.boardContainer.removeAll(true);
     this.grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
 
+    // Hazır 3'lü çizgi ya da 2×2 kare içermeyen, en az bir hamlesi olan başlangıç tahtası
+    const types = createStartingBoard(GRID_SIZE, () => this.randomGemType(), BASE_GEMS);
+
     for (let r = 0; r < GRID_SIZE; r++) {
       for (let c = 0; c < GRID_SIZE; c++) {
-        let type = this.randomGemType();
-        let tries = 0;
-        while (
-          tries < 20 &&
-          ((c >= 2 &&
-            this.grid[r][c - 1]?.tile.type === type &&
-            this.grid[r][c - 2]?.tile.type === type) ||
-            (r >= 2 &&
-              this.grid[r - 1][c]?.tile.type === type &&
-              this.grid[r - 2][c]?.tile.type === type))
-        ) {
-          type = this.randomGemType();
-          tries++;
-        }
-        const tv = this.createTileVisual(r, c, type, 'none');
+        const tv = this.createTileVisual(r, c, types[r][c], 'none');
         this.grid[r][c] = tv;
         // Intro drop pop
         tv.container.setScale(0.1);
@@ -1012,7 +1009,7 @@ export class BattleScene extends Phaser.Scene {
   ) {
     let firstPass = true;
     while (true) {
-      const { matchedSet, spawns } = this.findMatches();
+      const { matchedSet, spawns, squares } = this.findMatches();
       if (matchedSet.size === 0) break;
 
       this.comboCount += 1;
@@ -1035,9 +1032,9 @@ export class BattleScene extends Phaser.Scene {
             adjustedSpawns.set(k, val);
           }
         }
-        await this.destroyAndApplyEffect(matchedSet, adjustedSpawns);
+        await this.destroyAndApplyEffect(matchedSet, adjustedSpawns, squares);
       } else {
-        await this.destroyAndApplyEffect(matchedSet, spawns);
+        await this.destroyAndApplyEffect(matchedSet, spawns, squares);
       }
       firstPass = false;
 
@@ -1139,10 +1136,45 @@ export class BattleScene extends Phaser.Scene {
     return finalSet;
   }
 
+  /** Kare eşleşmesinin dört taşını çevreleyen, tür renginde kısa ışık çerçevesi. */
+  private async playSquareHighlight(squares: Square[]) {
+    const size = this.cellSize * 2;
+    for (const sq of squares) {
+      const tl = this.cellToWorld(sq.row, sq.col);
+      const cx = tl.x + this.cellSize / 2;
+      const cy = tl.y + this.cellSize / 2;
+      const color = GEM_COLOR_NUM[sq.type];
+      const half = size / 2 + 3;
+      const g = this.add.graphics();
+      g.setPosition(cx, cy);
+      g.fillStyle(color, 0.2);
+      g.fillRoundedRect(-half, -half, half * 2, half * 2, 12);
+      g.lineStyle(5, color, 0.95);
+      g.strokeRoundedRect(-half, -half, half * 2, half * 2, 12);
+      g.lineStyle(2, 0xffffff, 0.9);
+      g.strokeRoundedRect(-half + 3, -half + 3, half * 2 - 6, half * 2 - 6, 9);
+      this.vfxContainer.add(g);
+      this.tweens.add({
+        targets: g,
+        alpha: 0,
+        scale: 1.14,
+        duration: 380,
+        ease: 'Quad.easeIn',
+        onComplete: () => g.destroy(),
+      });
+      this.spawnFloatingText(cx, cy - half - 8, 'KARE!', '#fde68a', 14);
+    }
+    SoundEngine.playGemSelect();
+    await this.waitMs(150);
+  }
+
   private async destroyAndApplyEffect(
     rawMatched: Set<string>,
-    spawns: Map<string, { type: GemType; special: SpecialGemKind }>
+    spawns: Map<string, { type: GemType; special: SpecialGemKind }>,
+    squares: Square[] = []
   ) {
+    // 2×2 kare: dört taş kısa bir ışık çerçevesiyle vurgulanır, sonra patlar
+    if (squares.length > 0) await this.playSquareHighlight(squares);
     const allDestroyed = this.expandSpecialTriggers(rawMatched);
     const counts: Record<GemType, number> = {
       fire: 0,

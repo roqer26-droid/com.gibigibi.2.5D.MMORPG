@@ -19,9 +19,19 @@ export interface SpawnInfo {
   special: SpecialGemKind;
 }
 
+/** 2×2 kare eşleşmesi; (row, col) karenin sol üst hücresi. */
+export interface Square {
+  row: number;
+  col: number;
+  type: GemType;
+}
+
 export interface MatchResult {
+  /** Yatay, dikey ve kare eşleşmelerinin birleşimi. Bir hücre kaç eşleşmenin parçası olursa olsun tek kez yer alır. */
   matchedSet: Set<string>;
   spawns: Map<string, SpawnInfo>;
+  /** Bulunan 2×2 kareler (örtüşenler dahil); görsel vurgu için */
+  squares: Square[];
 }
 
 export interface Move {
@@ -34,7 +44,44 @@ export const cellKey = (row: number, col: number): string => `${row},${col}`;
 const typeAt = (grid: MatchGrid, r: number, c: number): GemType | undefined =>
   grid[r]?.[c]?.type;
 
-/** Tahtadaki 3+ eşleşmeleri ve oluşacak özel taşları (4'lü, 5'li, L/T) hesaplar. */
+/** Dört hücresi de aynı türde olan tüm 2×2 kareleri (örtüşenler dahil) bulur. */
+export function findSquares(grid: MatchGrid): Square[] {
+  const size = grid.length;
+  const out: Square[] = [];
+  for (let r = 0; r < size - 1; r++) {
+    for (let c = 0; c < size - 1; c++) {
+      const t = typeAt(grid, r, c);
+      if (t && typeAt(grid, r, c + 1) === t && typeAt(grid, r + 1, c) === t && typeAt(grid, r + 1, c + 1) === t) {
+        out.push({ row: r, col: c, type: t });
+      }
+    }
+  }
+  return out;
+}
+
+/** (r,c) hücresini içeren bir 2×2 kare var mı? */
+function hasSquareAt(grid: MatchGrid, r: number, c: number): boolean {
+  const t = typeAt(grid, r, c);
+  if (!t) return false;
+  for (const tr of [r - 1, r]) {
+    for (const tc of [c - 1, c]) {
+      if (
+        typeAt(grid, tr, tc) === t &&
+        typeAt(grid, tr, tc + 1) === t &&
+        typeAt(grid, tr + 1, tc) === t &&
+        typeAt(grid, tr + 1, tc + 1) === t
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Tahtadaki 3+ çizgi eşleşmelerini, 2×2 kareleri ve oluşacak özel taşları (4'lü, 5'li, L/T) hesaplar.
+ * Yatay, dikey ve kare eşleşmeleri aynı akışta toplanır.
+ */
 export function findMatches(grid: MatchGrid): MatchResult {
   const size = grid.length;
   const horizRuns: { row: number; cols: number[]; type: GemType }[] = [];
@@ -111,10 +158,19 @@ export function findMatches(grid: MatchGrid): MatchResult {
     }
   });
 
-  return { matchedSet, spawns };
+  // 2×2 kareler: hücreler aynı kümeye girer, kesişen taşlar yine tek kez sayılır
+  const squares = findSquares(grid);
+  for (const sq of squares) {
+    matchedSet.add(cellKey(sq.row, sq.col));
+    matchedSet.add(cellKey(sq.row, sq.col + 1));
+    matchedSet.add(cellKey(sq.row + 1, sq.col));
+    matchedSet.add(cellKey(sq.row + 1, sq.col + 1));
+  }
+
+  return { matchedSet, spawns, squares };
 }
 
-/** (r,c) hücresinden geçen yatay/dikey 3'lü var mı? */
+/** (r,c) hücresinden geçen yatay/dikey 3'lü ya da hücreyi içeren 2×2 kare var mı? */
 export function hasLocalMatchAt(grid: MatchGrid, r: number, c: number): boolean {
   const size = grid.length;
   const t = typeAt(grid, r, c);
@@ -127,7 +183,9 @@ export function hasLocalMatchAt(grid: MatchGrid, r: number, c: number): boolean 
   let v = 1;
   for (let k = r - 1; k >= 0 && typeAt(grid, k, c) === t; k--) v++;
   for (let k = r + 1; k < size && typeAt(grid, k, c) === t; k++) v++;
-  return v >= 3;
+  if (v >= 3) return true;
+
+  return hasSquareAt(grid, r, c);
 }
 
 /** Oynanabilir tüm hamleleri döndürür. Tahtayı değiştirmez. */
@@ -163,4 +221,40 @@ export function findPossibleMoves(grid: MatchGrid): Move[] {
     }
   }
   return moves;
+}
+
+/**
+ * Başlangıç tahtası: hazır 3'lü çizgi ya da 2×2 kare içermez ve en az bir oynanabilir hamle bırakır.
+ * `randomGem` ağırlıklı seçimi (ör. altın taş şansı) yapar; çakışma çıkarsa `alphabet`ten güvenli tür seçilir.
+ */
+export function createStartingBoard(
+  size: number,
+  randomGem: () => GemType,
+  alphabet: GemType[],
+  maxAttempts = 40
+): GemType[][] {
+  let last: GemType[][] = [];
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const board: GemType[][] = Array.from({ length: size }, () => Array<GemType>(size));
+    const conflicts = (r: number, c: number, t: GemType): boolean =>
+      (c >= 2 && board[r][c - 1] === t && board[r][c - 2] === t) ||
+      (r >= 2 && board[r - 1][c] === t && board[r - 2][c] === t) ||
+      (r >= 1 && c >= 1 && board[r - 1][c] === t && board[r][c - 1] === t && board[r - 1][c - 1] === t);
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        let t = randomGem();
+        for (let tries = 0; tries < 20 && conflicts(r, c, t); tries++) t = randomGem();
+        if (conflicts(r, c, t)) {
+          const safe = alphabet.filter((a) => !conflicts(r, c, a));
+          t = safe.length > 0 ? safe[Math.floor(Math.random() * safe.length)] : t;
+        }
+        board[r][c] = t;
+      }
+    }
+    last = board;
+    const asGrid: MatchGrid = board.map((row) => row.map((type) => ({ type, special: 'none' as const, frozen: 0 })));
+    if (findMatches(asGrid).matchedSet.size === 0 && findPossibleMoves(asGrid).length > 0) return board;
+  }
+  return last;
 }

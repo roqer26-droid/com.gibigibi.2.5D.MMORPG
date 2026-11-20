@@ -4,6 +4,19 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.6.0 — 2×2 kare eşleşmesi
+- Aynı türden dört taş 2×2 kare oluşturduğunda geçerli eşleşme sayılır. Dört taş patlar ve kendi türünün
+  mevcut etkisini dört taş üzerinden uygular (hasar, mana, iyileştirme, kalkan vb.).
+- Yatay, dikey ve kare eşleşmeleri aynı çözümleme akışında bulunur. Bir taş birden fazla eşleşmenin
+  (çizgi + kare, örtüşen kareler) parçası olsa da yalnızca bir kez patlar ve bir kez kazanç sağlar.
+- Kare oluşturan taş değişimi geçerli hamledir; eşleşme oluşturmayanlar eskisi gibi geri alınır.
+- Düşen ve yeniden dolan taşlarda oluşan kareler de algılanır ve kombo zincirine katılır.
+- Donmuş ve özel taşlar kare eşleşmelerinde mevcut kurallarıyla davranır.
+- Kare patlamasında dört taş tür renginde kısa bir ışık çerçevesi ve "KARE!" yazısıyla vurgulanır.
+- Hamle ipucu ve oynanabilir hamle kontrolü kareleri tanır. Başlangıç tahtası hazır çizgi ya da kare
+  içermeyecek şekilde üretilir (yeni `createStartingBoard`).
+- Ayarlardaki Taş Rehberi'ne kare eşleşmesi eklendi.
+
 ## v1.5.0 — Keşif Rotası (Dünya Haritası)
 - **Dünya Haritası yeniden tasarlandı:** Mobilde dikey kaydırılan, kıvrımlı noktalı bir rota. 28 bölgenin
   tamamı aşağıdan yukarıya dizilir; simgeler sağa/sola dağılır, bölge adı simgenin yanında durur ve rota
