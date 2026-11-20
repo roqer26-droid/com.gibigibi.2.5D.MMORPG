@@ -19,6 +19,7 @@ import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRe
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import { resolveHuntFireRule, type HuntDef } from '../data/hunts';
+import { describeIntent, phaseNoticeText, planEnemyAction, type EnemyAction } from '../game/enemyIntent';
 import {
   createStartingBoard,
   findMatches,
@@ -132,6 +133,10 @@ export class BattleScene extends Phaser.Scene {
   private enemyMaxHp = 500;
   private enemyShield = 0;
   private enemyTurnCounter = 2;
+  /** Düşmanın bir sonraki eylemi: bir kez seçilir, eylem gerçekleşene ya da faz değişene kadar sabit kalır */
+  private plannedAction: EnemyAction = { kind: 'attack', power: 1 };
+  private phaseNotice?: { seq: number; text: string };
+  private phaseNoticeSeq = 0;
   private enemyFrozenTurns = 0;
   private enemyBurnTurns = 0;
   private enemyPhase = 1;
@@ -181,6 +186,8 @@ export class BattleScene extends Phaser.Scene {
     this.enemyHp = this.enemyMaxHp;
     this.enemyShield = 0;
     this.enemyTurnCounter = this.enemy.attackInterval;
+    this.plannedAction = planEnemyAction(this.enemy);
+    this.phaseNotice = undefined;
     this.enemyFrozenTurns = 0;
     this.enemyBurnTurns = 0;
     this.enemyPhase = 1;
@@ -345,7 +352,25 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** Niyet göstergesini etkileyen durumların imzası: değişince anında yeni snapshot gönderilir. */
+  private intentSignature(): string {
+    return [
+      this.plannedAction.kind,
+      this.enemyTurnCounter,
+      this.enemyFrozenTurns,
+      this.enemyStaggerTurns,
+      this.enemyPhase,
+      this.enemyEnraged ? 1 : 0,
+    ].join('|');
+  }
+  private lastIntentSignature = '';
+
   public update(_time: number, delta: number) {
+    // Yetenek/dondurma/sersemletme gibi hangi yoldan olursa olsun niyet değiştiğinde gösterge hemen güncellenir
+    if (this.turnPhase !== 'victory' && this.turnPhase !== 'defeat') {
+      const sig = this.intentSignature();
+      if (sig !== this.lastIntentSignature) this.emitSnapshot();
+    }
     const dt = delta / 1000;
     // Ambient fantasy particles
     if (this.ambientGraphics) {
@@ -1500,11 +1525,7 @@ export class BattleScene extends Phaser.Scene {
       isCrit ? 22 : 17
     );
 
-    this.checkBossPhaseTransitions();
-    // Öfke fazına geçince sayaç güncel saldırı hızına iner (ekrandaki tur sayısı doğru kalır)
-    if (this.enemyEnraged) {
-      this.enemyTurnCounter = Math.min(this.enemyTurnCounter, this.effectiveAttackInterval());
-    }
+    this.handlePhaseChange();
 
     if (this.enemyHp <= 0) {
       this.handleVictory();
@@ -1544,6 +1565,32 @@ export class BattleScene extends Phaser.Scene {
       duration: 240,
       onComplete: () => g.destroy(),
     });
+  }
+
+  /**
+   * Boss fazı/öfke durumunu günceller. Faz ya da öfke değişirse: saldırı sayacı güncel hıza iner,
+   * eylem planı yeni faza göre yeniden yapılır ve kısa bir bildirim gösterilir.
+   */
+  private handlePhaseChange() {
+    const phaseBefore = this.enemyPhase;
+    const enragedBefore = this.enemyEnraged;
+    this.checkBossPhaseTransitions();
+    if (this.enemyEnraged) {
+      this.enemyTurnCounter = Math.min(this.enemyTurnCounter, this.effectiveAttackInterval());
+    }
+    const phaseChanged = this.enemyPhase !== phaseBefore;
+    const enragedNow = this.enemyEnraged && !enragedBefore;
+    if (!phaseChanged && !enragedNow) return;
+    this.plannedAction = planEnemyAction(this.enemy);
+    this.phaseNotice = {
+      seq: ++this.phaseNoticeSeq,
+      text: phaseNoticeText({
+        bossId: this.enemy.bossId,
+        phase: this.enemyPhase,
+        enragedOnly: !phaseChanged && enragedNow,
+        newWeaknessName: GEM_INFO[this.enemyWeakness].name.split(' ')[0],
+      }),
+    };
   }
 
   private checkBossPhaseTransitions() {
@@ -1813,6 +1860,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.enemyTurnCounter <= 0) {
         await this.executeEnemyAttack();
         this.enemyTurnCounter = this.effectiveAttackInterval();
+        this.plannedAction = planEnemyAction(this.enemy);
       }
     }
 
@@ -1879,19 +1927,17 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    let rawAtk = this.enemy.attack * (this.enemyEnraged ? 1.32 : 1.0);
-    // Boss special moves
-    if (this.enemy.isBoss && Math.random() < 0.45) {
-      rawAtk *= 1.25;
-      if (this.enemy.bossId === 'frost_queen') {
-        this.freezeRandomTiles(2);
-      } else if (this.enemy.bossId === 'shadow_demon') {
-        const heal = Math.round(rawAtk * 0.45);
-        this.enemyHp = Math.min(this.enemyMaxHp, this.enemyHp + heal);
-        this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 60, `+${heal} Can Çaldı`, '#c084fc');
-      } else if (this.enemy.bossId === 'infernal_dragon') {
-        this.spawnBannerText('EJDERHA NEFESİ!', '#f97316');
-      }
+    // Gerçekleşen eylem, ekranda gösterilen plandır (rastgelelik planlama anında bir kez çözülür)
+    const action = this.plannedAction;
+    let rawAtk = this.enemy.attack * (this.enemyEnraged ? 1.32 : 1.0) * action.power;
+    if (action.kind === 'freeze_tiles') {
+      this.freezeRandomTiles(2);
+    } else if (action.kind === 'drain') {
+      const heal = Math.round(rawAtk * 0.45);
+      this.enemyHp = Math.min(this.enemyMaxHp, this.enemyHp + heal);
+      this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 60, `+${heal} Can Çaldı`, '#c084fc');
+    } else if (action.kind === 'breath') {
+      this.spawnBannerText('EJDERHA NEFESİ!', '#f97316');
     }
 
     const mitigation = 100 / (100 + this.initData.build.stats.defense * 1.45);
@@ -3005,6 +3051,7 @@ export class BattleScene extends Phaser.Scene {
       : this.enemy.attackInterval;
   }
 
+  /** "DoT'lar • Zayıflık" biçiminde ek durum bilgisi; eylem bilgisi `enemyIntent`te taşınır. */
   private getEnemyWarningText(): string {
     const weakName = GEM_INFO[this.enemyWeakness].name.split(' ')[0];
     const dots: string[] = [];
@@ -3012,22 +3059,11 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemyPoisonTurns > 0) dots.push(`Zehir ${this.enemyPoisonTurns}`);
     if (this.enemyBleedTurns > 0) dots.push(`Kanama ${this.enemyBleedTurns}`);
     if (this.summonTurns > 0) dots.push(`İskelet ${this.summonTurns}`);
-    const dotText = dots.length > 0 ? ` • ${dots.join(', ')}` : '';
-
-    if (this.enemyFrozenTurns > 0) {
-      return `Donmuş (${this.enemyFrozenTurns} tur saldırı yok)${dotText} • Zayıflık: ${weakName}`;
-    }
-    if (this.enemyStaggerTurns > 0) {
-      return `Sersem (${this.enemyStaggerTurns} tur kaybetti)${dotText} • Zayıflık: ${weakName}`;
-    }
-    const turns = this.enemyTurnCounter;
-    if (turns <= 1) {
-      return `DİKKAT! Bu tur sonunda saldıracak! (${this.enemy.abilities[0]})${dotText} • Zayıflık: ${weakName}`;
-    }
-    return `${turns} tur sonra saldıracak${dotText} • Zayıflık: ${weakName}`;
+    return [...dots, `Zayıflık: ${weakName}`].join(' • ');
   }
 
   private emitSnapshot() {
+    this.lastIntentSignature = this.intentSignature();
     this.initData.onCombatUpdate({
       heroHp: this.heroHp,
       heroMaxHp: this.heroMaxHp,
@@ -3055,6 +3091,13 @@ export class BattleScene extends Phaser.Scene {
       enemyEnraged: this.enemyEnraged,
       enemyWeakness: this.enemyWeakness,
       enemyNextWarning: this.getEnemyWarningText(),
+      enemyIntent: describeIntent({
+        action: this.plannedAction,
+        turnsLeft: this.enemyTurnCounter,
+        frozenTurns: this.enemyFrozenTurns,
+        staggerTurns: this.enemyStaggerTurns,
+      }),
+      phaseNotice: this.phaseNotice,
       comboCount: this.comboCount,
       turnPhase: this.turnPhase,
       skillCooldowns: { ...this.skillCooldowns },

@@ -4,6 +4,21 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.7.0 — Düşman niyeti göstergesi
+- Düşmanın yaklaşan eylemi ve kalan tur, can çubuğunun altında simgeyle gösterilir:
+  "Saldırı · 2 tur sonra", "Ağır saldırı · 1 tur sonra", "Taş dondurma · 2 tur sonra",
+  "Can çalma", "Ejderha nefesi", "Donmuş · 1 tur", "Sersem · 2 tur".
+- Gösterge savaş motorunun gerçek eylem planına bağlı: eylem bir kez planlanır (boss'lar mevcut %45
+  olasılıkla ağır saldırı seçer), turlar arasında sabit kalır ve gerçekleştiğinde gösterilen eylem
+  uygulanır (ağır saldırı %25 daha sert, Buz Kraliçesi 2 taş dondurur, Gölge İblisi can çalar).
+- Dondurma, sersemletme, yetenekle saldırıyı geciktirme, öfke ve faz değişimi göstergeyi anında günceller.
+- Boss can eşiğinde faz değişince kısa bir bildirim görünür ("Faz 2 · Buz Bariyeri"); ardından yeni
+  fazın planı gösterilir (plan faz değişiminde yeniden yapılır).
+- Saldırı 1 tur kala niyet alanı hafifçe parlar (hareket azaltma tercihine saygılı).
+- HUD ızgaraya çevrildi: niyet, merkez + düşman sütunlarını kapsayan ikinci satırda. HUD 61 → 56 px oldu,
+  taş tahtası hiçbir ekranda daralmadı. Zayıflık artık gem renginde küçük bir noktayla gösteriliyor.
+- `src/game/enemyIntent.ts` + 11 birim testi.
+
 ## v1.6.0 — 2×2 kare eşleşmesi
 - Aynı türden dört taş 2×2 kare oluşturduğunda geçerli eşleşme sayılır. Dört taş patlar ve kendi türünün
   mevcut etkisini dört taş üzerinden uygular (hasar, mana, iyileştirme, kalkan vb.).

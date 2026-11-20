@@ -550,6 +550,8 @@ export interface GameSaveState {
   lastSavedAt: number;
 }
 
+import type { IntentView } from '../game/enemyIntent';
+
 export interface BattleCombatSnapshot {
   heroHp: number;
   heroMaxHp: number;
@@ -577,6 +579,10 @@ export interface BattleCombatSnapshot {
   enemyEnraged: boolean;
   enemyWeakness: GemType;
   enemyNextWarning: string;
+  /** Düşmanın gerçek eylem planından üretilen niyet (simge + metin + kalan tur) */
+  enemyIntent: IntentView;
+  /** Boss fazı değişince kısa bildirim; `seq` her yeni bildirimde artar */
+  phaseNotice?: { seq: number; text: string };
   comboCount: number;
   turnPhase: 'player' | 'resolving' | 'enemy' | 'victory' | 'defeat';
   skillCooldowns: Record<string, number>;

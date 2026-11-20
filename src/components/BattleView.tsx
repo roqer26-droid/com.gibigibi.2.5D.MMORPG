@@ -9,7 +9,6 @@ import {
   Crown,
   Pause,
   Shield,
-  AlertTriangle,
   RotateCcw,
   Map,
   Coins,
@@ -19,10 +18,16 @@ import {
   Lock,
   X,
   Swords,
+  Sword,
+  Axe,
+  Droplets,
+  Grid2x2,
+  Hourglass,
 } from 'lucide-react';
 import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
 import { ARENA_IMAGES } from '../data/huntArt';
+import { describeIntent, type IntentIcon } from '../game/enemyIntent';
 import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
 import { GEM_INFO, RARITY_META, getFullSkillCodex, getSkillLoadout } from '../data/skills';
@@ -38,6 +43,17 @@ import {
 import { getNextStageAfter } from '../data/world';
 import { computeHeroBuild } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
+
+const INTENT_ICONS: Record<IntentIcon, { Icon: typeof Sword; cls: string }> = {
+  attack: { Icon: Sword, cls: 'text-rose-300' },
+  heavy: { Icon: Axe, cls: 'text-orange-300' },
+  freeze_tiles: { Icon: Grid2x2, cls: 'text-sky-300' },
+  drain: { Icon: Droplets, cls: 'text-fuchsia-300' },
+  breath: { Icon: Flame, cls: 'text-orange-400' },
+  frozen: { Icon: Snowflake, cls: 'text-sky-200' },
+  stagger: { Icon: Hourglass, cls: 'text-slate-300' },
+  shield: { Icon: Shield, cls: 'text-emerald-300' },
+};
 
 interface BattleViewProps {
   save: GameSaveState;
@@ -115,12 +131,30 @@ export const BattleView: React.FC<BattleViewProps> = ({
     enemyPhase: 1,
     enemyEnraged: false,
     enemyWeakness: stage.enemy.weakness,
-    enemyNextWarning: `${stage.enemy.attackInterval} tur sonra saldıracak`,
+    enemyNextWarning: `Zayıflık: ${GEM_INFO[stage.enemy.weakness].name.split(' ')[0]}`,
+    enemyIntent: describeIntent({
+      action: { kind: 'attack', power: 1 },
+      turnsLeft: stage.enemy.attackInterval,
+      frozenTurns: 0,
+      staggerTurns: 0,
+    }),
     comboCount: 0,
     turnPhase: 'player',
     skillCooldowns: {},
     turnNumber: 1,
   });
+
+  // Boss faz değişimi: kısa bildirim niyet alanının yerine geçer, sonra yeni planı gösterir
+  const [phaseNotice, setPhaseNotice] = useState<string | null>(null);
+  const lastNoticeSeq = useRef(0);
+  useEffect(() => {
+    const n = snapshot.phaseNotice;
+    if (!n || n.seq === lastNoticeSeq.current) return;
+    lastNoticeSeq.current = n.seq;
+    setPhaseNotice(n.text);
+    const t = window.setTimeout(() => setPhaseNotice(null), 2200);
+    return () => window.clearTimeout(t);
+  }, [snapshot.phaseNotice]);
 
   const [paused, setPaused] = useState(false);
   const [showSkillBook, setShowSkillBook] = useState(false);
@@ -303,10 +337,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
   return (
     <div className="game-no-scroll flex h-full w-full flex-col bg-[#080b14] overflow-hidden">
       {/* TOP COMBAT HUD */}
-      <div className="z-20 border-b border-amber-500/25 bg-slate-950/95 px-2.5 py-2 sm:px-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+      <div className="z-20 border-b border-amber-500/25 bg-slate-950/95 px-2.5 py-1 sm:px-4">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-[3px]">
           {/* Hero Bars */}
-          <div className="min-w-0 flex-1 max-w-[260px]">
+          <div className="row-span-2 min-w-0 max-w-[260px] self-center">
             <div className="flex items-center justify-between text-[11px] font-bold">
               <span className="truncate text-amber-200">
                 {cls.title} <span className="text-slate-400">Sv.{hero.level}</span>
@@ -355,7 +389,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
           </div>
 
           {/* Center Turn / Combo / Pause */}
-          <div className="flex flex-col items-center justify-center shrink-0">
+          <div className="flex shrink-0 items-center justify-center">
             <div className="flex items-center gap-1.5">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide border ${
@@ -375,17 +409,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 <Pause className="h-3.5 w-3.5" />
               </button>
             </div>
-            {snapshot.comboCount >= 2 ? (
-              <span className="mt-0.5 text-[11px] font-black text-amber-300 animate-pulse">
-                KOMBO x{snapshot.comboCount}!
-              </span>
-            ) : (
-              <span className="mt-0.5 text-[10px] text-slate-400">Tur {snapshot.turnNumber}</span>
-            )}
           </div>
 
           {/* Enemy / Boss Bars */}
-          <div className="min-w-0 flex-1 max-w-[270px] text-right">
+          <div className="min-w-0 max-w-[270px] text-right">
             <div className="flex items-center justify-end gap-1.5 text-[11px] font-bold">
               {snapshot.enemyShield > 0 && (
                 <span className="flex items-center gap-0.5 rounded bg-sky-500/25 px-1.5 text-[10px] text-sky-200">
@@ -398,7 +425,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
               </span>
             </div>
             <div
-              className={`relative mt-0.5 h-3.5 w-full overflow-hidden rounded-full bg-slate-800 border ${
+              className={`relative mt-0.5 h-3 w-full overflow-hidden rounded-full bg-slate-800 border ${
                 stage.enemy.isBoss ? 'border-rose-500/60' : 'border-slate-700'
               }`}
             >
@@ -415,19 +442,57 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 {snapshot.enemyMaxHp.toLocaleString('tr-TR')}
               </span>
             </div>
-            {/* Enemy Attack Warning */}
-            <div
-              className={`mt-1 flex items-center justify-end gap-1 truncate text-[10px] font-semibold ${
-                snapshot.enemyTurnCounter <= 1 && snapshot.enemyFrozenTurns === 0
-                  ? 'text-rose-300 animate-pulse'
-                  : 'text-slate-300'
-              }`}
-            >
-              {snapshot.enemyTurnCounter <= 1 && snapshot.enemyFrozenTurns === 0 && (
-                <AlertTriangle className="h-3 w-3 shrink-0 text-rose-400" />
-              )}
-              <span className="truncate">{snapshot.enemyNextWarning}</span>
-            </div>
+          </div>
+
+          {/* 2. satır (merkez + düşman sütunları): tur/kombo ve düşman niyeti — HUD'ı uzatmadan geniş alan */}
+          <div className="col-span-2 col-start-2 flex min-w-0 items-center justify-between gap-2">
+            {snapshot.comboCount >= 2 ? (
+              <span className="shrink-0 text-[11px] font-black text-amber-300 animate-pulse">
+                KOMBO x{snapshot.comboCount}!
+              </span>
+            ) : (
+              <span className="shrink-0 text-[10px] text-slate-400">Tur {snapshot.turnNumber}</span>
+            )}
+            {(() => {
+              const it = snapshot.enemyIntent;
+              const { Icon, cls } = INTENT_ICONS[it.icon];
+              const weak = GEM_INFO[snapshot.enemyWeakness];
+              return (
+                <div
+                  className="flex min-w-0 items-center justify-end gap-1.5"
+                  data-testid="enemy-intent"
+                  data-intent-kind={it.icon}
+                  data-intent-turns={it.turns}
+                >
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/50"
+                    style={{ background: weak.colorHex }}
+                    title={snapshot.enemyNextWarning}
+                    aria-label={snapshot.enemyNextWarning}
+                    data-testid="weakness-dot"
+                  />
+                  {phaseNotice ? (
+                    <div
+                      className="intent-notice flex h-[18px] min-w-0 items-center gap-1 rounded-md border border-amber-400/60 bg-amber-950/60 px-1.5 text-[11px] font-extrabold text-amber-200"
+                      data-testid="phase-notice"
+                    >
+                      <Crown className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{phaseNotice}</span>
+                    </div>
+                  ) : (
+                    <div
+                      className={`flex h-[18px] min-w-0 items-center gap-1 rounded-md border px-1.5 text-[11px] font-extrabold ${
+                        it.urgent ? 'intent-urgent border-rose-400/70 bg-rose-950/60 text-rose-100' : 'border-slate-700 bg-slate-900/70 text-slate-100'
+                      }`}
+                      data-testid="intent-text"
+                    >
+                      <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} />
+                      <span className="truncate">{it.text}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
