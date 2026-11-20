@@ -23,6 +23,7 @@ import {
   Droplets,
   Grid2x2,
   Hourglass,
+  Star,
 } from 'lucide-react';
 import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
@@ -45,6 +46,7 @@ import {
   StageDef,
 } from '../types/game';
 import { getNextStageAfter } from '../data/world';
+import { getStageObjectives, objectiveText, stageStars } from '../data/mastery';
 import { computeHeroBuild } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
 
@@ -63,7 +65,7 @@ interface BattleViewProps {
   save: GameSaveState;
   stage: StageDef;
   onMatchStats: (gemsMatched: Partial<Record<GemType, number>>, combo: number, skillUsed: boolean) => void;
-  onCompleteVictory: (stage: StageDef) => BattleRewardSummary;
+  onCompleteVictory: (stage: StageDef, masteryDone?: [boolean, boolean]) => BattleRewardSummary;
   isLeague?: boolean;
   onLeagueDefeat?: () => BattleRewardSummary;
   onLeagueForfeit?: () => void;
@@ -170,6 +172,12 @@ export const BattleView: React.FC<BattleViewProps> = ({
   }, [snapshot.phaseNotice]);
 
   const [paused, setPaused] = useState(false);
+  const [masteryOpen, setMasteryOpen] = useState(false);
+  // Ustalık yalnızca hikâye aşamalarında (lig, av ve zindan savaşlarında yok)
+  const masteryObjectives = useMemo(
+    () => (isLeague || hunt || dungeon ? undefined : getStageObjectives(stage.id)),
+    [isLeague, hunt, dungeon, stage.id]
+  );
   const [showSkillBook, setShowSkillBook] = useState(false);
   const [confirmForfeit, setConfirmForfeit] = useState(false);
   const [battleKey, setBattleKey] = useState(0);
@@ -185,6 +193,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
     turns?: number;
     hunt?: HuntOutcome;
     dungeon?: { completed: boolean; healed: number };
+    mastery?: BattleRewardSummary['mastery'];
   } | null>(null);
   const isHunt = !!hunt;
   const exitLabel = dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
@@ -218,6 +227,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       onMatchStats: (gems, combo, skillUsed) =>
         callbacksRef.current.onMatchStats(gems, combo, skillUsed),
       hunt,
+      mastery: masteryObjectives,
       arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
       startHeroHp: dungeon?.startHp,
       onBattleEnd: (victory, turns, heroHp) => {
@@ -238,9 +248,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
           return;
         }
         if (victory) {
-          const res = callbacksRef.current.onCompleteVictory(stage);
+          const res = callbacksRef.current.onCompleteVictory(stage, masteryObjectives ? battleScene.getMasteryDone() : undefined);
           setOutcome({
             victory: true,
+            mastery: res.mastery,
             xpGained: res.xpGained,
             goldGained: res.goldGained,
             crystalsGained: res.crystalsGained,
@@ -589,7 +600,49 @@ export const BattleView: React.FC<BattleViewProps> = ({
       })()}
 
       {/* PHASER 3 ARENA + BOARD CANVAS */}
-      <div ref={mountRef} className="game-no-scroll relative flex-1 min-h-0 w-full overflow-hidden" />
+      <div className="relative flex min-h-0 w-full flex-1">
+        <div ref={mountRef} className="game-no-scroll relative h-full min-h-0 w-full flex-1 overflow-hidden" />
+        {masteryObjectives && (
+          <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
+            <button
+              type="button"
+              onClick={() => setMasteryOpen((v) => !v)}
+              aria-expanded={masteryOpen}
+              data-testid="mastery-button"
+              className="pointer-events-auto flex h-8 items-center gap-1 rounded-full border border-amber-400/50 bg-slate-950/85 px-2.5 text-[11px] font-extrabold text-amber-300"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-300" /> Ustalık
+            </button>
+            {masteryOpen && (
+              <div
+                data-testid="mastery-panel"
+                className="pointer-events-auto w-[236px] rounded-xl border border-amber-400/40 bg-slate-950/95 p-2.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.6)]"
+              >
+                {(() => {
+                  const owned = stageStars(save, stage.id);
+                  const have = [owned.o1, owned.o2];
+                  return masteryObjectives.map((o, i) => {
+                    const pr = snapshot.mastery?.[i];
+                    const done = have[i] || !!pr?.done;
+                    return (
+                      <div key={i} className="flex items-start gap-2 py-1" data-testid={`mastery-obj-${i}`} data-done={done ? '1' : '0'}>
+                        <Star className={`mt-0.5 h-4 w-4 shrink-0 ${done ? 'fill-amber-300 text-amber-300' : 'text-slate-500'}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-[12px] font-bold leading-snug ${done ? 'text-amber-200' : 'text-slate-200'}`}>{objectiveText(o)}</p>
+                          <p className="text-[10px] font-semibold text-slate-400">
+                            {have[i] ? 'Daha önce kazanıldı' : pr?.done ? 'Tamamlandı! Zaferde yıldız kazanılır' : `${pr?.current ?? 0}/${o.count}`}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+                <p className="mt-1 border-t border-slate-800 pt-1 text-[10px] text-slate-500">Yıldızlar yalnızca zaferde verilir.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* AKTİF ETKİ ŞERİDİ + YETENEK BARı */}
       <div className="z-20 border-t border-amber-500/25 bg-slate-950/95 px-2 py-1.5 sm:px-4">
@@ -1048,6 +1101,49 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {outcome.mastery && (
+                  <div className="mt-3 rounded-2xl border border-amber-400/30 bg-slate-950/70 p-3 text-left" data-testid="mastery-result">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {[outcome.mastery.stars.victory, outcome.mastery.stars.o1, outcome.mastery.stars.o2].map((on, i) => {
+                        const isNew = [outcome.mastery!.earned.victory, outcome.mastery!.earned.o1, outcome.mastery!.earned.o2][i];
+                        return (
+                          <Star
+                            key={i}
+                            data-testid={`result-star-${i}`}
+                            data-state={on ? (isNew ? 'new' : 'had') : 'empty'}
+                            className={`h-9 w-9 ${on ? (isNew ? 'fill-amber-300 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.9)]' : 'fill-amber-500/70 text-amber-500/70') : 'text-slate-600'}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <ul className="mt-2 space-y-1 text-[12px]">
+                      <li className="flex items-start gap-1.5">
+                        <span className={outcome.mastery.earned.victory ? 'text-amber-300' : 'text-slate-500'}>★</span>
+                        <span className="text-slate-300">Aşama zaferi{outcome.mastery.earned.victory ? ' — yeni yıldız!' : ' — kazanılmıştı'}</span>
+                      </li>
+                      {outcome.mastery.objectives.map((o, i) => {
+                        const got = i === 0 ? outcome.mastery!.stars.o1 : outcome.mastery!.stars.o2;
+                        const isNew = i === 0 ? outcome.mastery!.earned.o1 : outcome.mastery!.earned.o2;
+                        return (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className={got ? 'text-amber-300' : 'text-slate-500'}>{got ? '★' : '☆'}</span>
+                            <span className={got ? 'text-slate-200' : 'text-slate-400'}>
+                              {objectiveText(o)}
+                              {isNew ? ' — yeni yıldız!' : got ? ' — kazanılmıştı' : ''}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="mt-2 border-t border-slate-800 pt-2 text-center text-[12px] font-bold text-amber-200" data-testid="mastery-chest-line">
+                      {outcome.mastery.toNextChest !== null
+                        ? `Bölge ${outcome.mastery.regionStars}/${outcome.mastery.regionMax} ★ · Sıradaki sandığa ${outcome.mastery.toNextChest} yıldız kaldı`
+                        : `Bölge ${outcome.mastery.regionStars}/${outcome.mastery.regionMax} ★ · Tüm sandıklar açılabilir`}
+                      {outcome.mastery.claimableChests > 0 ? ` · ${outcome.mastery.claimableChests} sandık hazır` : ''}
+                    </p>
+                  </div>
+                )}
 
                 {outcome.droppedItem && (
                   <div

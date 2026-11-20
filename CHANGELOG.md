@@ -4,6 +4,19 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.13.0 — Üç Yıldızlı Aşama Ustalığı
+- 53 bölge / 500 hikâye aşamasında üç yıldız: ★1 aşama zaferi, ★2 ve ★3 iki ayrı savaş hedefi. Hedefler farklı zaferlerde tamamlanabilir,
+  yenilgide yıldız verilmez, kazanılmış yıldız tekrar verilmez. Hedef durumu aşama kimliğiyle kaydedilir (kayıt sürümü 9).
+  Eski kayıtlarda tamamlanmış aşamalar zafer yıldızını taşır; diğer iki hedef tekrar oynayarak alınır.
+- Hedefler bölgenin taş temasına ve düşman davranışına göre (`src/data/mastery.ts`): 2×2 kare, ayrı turlarda taş eşleştirme, tek turda taş
+  patlatma, tek hamlede zincir, ağır saldırıyı engelleme (iptal/sıyrılma ya da kalkanın hasarı tamamen karşılaması; geciktirme sayılmaz),
+  donmuş taş temizleme (yalnızca Buz Kraliçesi aşamasında). Ağır saldırı hedefleri boss aşamalarında; diğerlerinde taş/kombo hedefi.
+  Sayaçlar gerçek savaş olaylarından beslenir (`src/game/masteryTracker.ts`).
+- Bölge sandıkları: bölgedeki toplam yıldızın %50 / %75 / %100'ünde (10 savaşlık bölgede 15/23/30). Bölge başına bir kez; ödül (altın, kristal,
+  ekipman) bölge bossunun ödül eğrisine bağlıdır ve "alındı" bilgisiyle aynı kayıt güncellemesinde yazılır.
+- Arayüz: aşama düğümünde yıldızlar, aşama detayında iki hedef, bölge detayında yıldız toplamı ve üç sandık; savaşta küçük "Ustalık" düğmesi
+  (tahtayı daraltmayan açılır panel); zafer ekranında yeni yıldızlar ve sıradaki sandığa kalan yıldız.
+
 ## v1.12.0 — Dünya Haritası sayfaları
 - Bölgeler sırayla 10'arlı sayfalara bölünür (şu an 1–10 … 51–53, 6 sayfa; sayfa sayısı bölge sayısından türetilir).
   Alt panelde "Önceki", "1 / 6", "Sonraki" ve "Genel ilerleme x/500" (tüm haritadan hesaplanır).

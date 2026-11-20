@@ -1,6 +1,7 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
+import { emptyMastery, sanitizeMastery } from '../data/mastery';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
 import { isSetSlot, SET_IDS } from '../data/sets';
 import { createLeagueSave } from '../data/league';
@@ -17,7 +18,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 type RawSave = Record<string, unknown>;
 
@@ -38,6 +39,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   6: (raw) => raw,
   // v8: zindan denemesine kahraman/seviye ve kayıtlı düşman değerleri eklendi (eksikler sanitizeDungeonSaves'te tamamlanır)
   7: (raw) => raw,
+  // v8 -> v9: aşama ustalığı (`mastery`) eklendi. Tamamlanmış aşamalar zafer yıldızını zaten taşır; hedefler boş başlar.
+  8: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -125,6 +128,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     bossVictories: stringArray(save.bossVictories) as GameSaveState['bossVictories'],
     huntRecords: sanitizeHuntRecords(save.huntRecords),
     dungeons: sanitizeDungeonSaves(save.dungeons),
+    mastery: sanitizeMastery(save.mastery),
   };
 }
 
@@ -170,6 +174,7 @@ export function createInitialSaveState(): GameSaveState {
     league: createLeagueSave(),
     huntRecords: createHuntRecords(),
     dungeons: createDungeonSaves(),
+    mastery: emptyMastery(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

@@ -624,6 +624,19 @@ export interface DungeonSave {
   last: DungeonResult | null;
 }
 
+/** Aşama ustalığı: iki hedefin tamamlanma durumu (zafer yıldızı tamamlanan aşamalardan türetilir) */
+export interface StageMastery {
+  o1: boolean;
+  o2: boolean;
+}
+
+export interface MasterySave {
+  /** Aşama kimliği → hedef durumu */
+  objectives: Record<string, StageMastery>;
+  /** Alınmış bölge sandıkları: "<bölgeKimliği>:<0|1|2>" */
+  chests: string[];
+}
+
 export interface GameSaveState {
   version: number;
   activeHeroClass: HeroClassId;
@@ -641,6 +654,8 @@ export interface GameSaveState {
   league: LeagueSave;
   huntRecords: Record<HuntId, HuntRecord>;
   dungeons: Record<DungeonId, DungeonSave>;
+  /** Üç Yıldızlı Aşama Ustalığı */
+  mastery: MasterySave;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
@@ -657,6 +672,8 @@ export interface GameSaveState {
 import type { IntentView } from '../game/enemyIntent';
 
 export interface BattleCombatSnapshot {
+  /** Ustalık hedeflerinin savaş içi ilerlemesi (hikâye aşamalarında) */
+  mastery?: { current: number; target: number; done: boolean }[];
   heroHp: number;
   heroMaxHp: number;
   heroShield: number;
@@ -703,6 +720,8 @@ export interface BattleRewardSummary {
   newLevel: number;
   leaguePointsChange?: number;
   leaguePoints?: number;
+  /** Hikâye aşaması ustalığı: bu zaferde kazanılan yıldızlar ve sandık yakınlığı */
+  mastery?: import('../data/mastery').MasteryOutcome;
 }
 
 export type ScreenRoute =

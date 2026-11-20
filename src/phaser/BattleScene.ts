@@ -20,6 +20,17 @@ import { computeEnchantAura } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
+import type { ObjectiveDef } from '../data/mastery';
+import {
+  createMasteryState,
+  onEnemyAction,
+  onFrozenCleared,
+  onResolve,
+  progressOf,
+  setMoveKind,
+  startTurn,
+  type MasteryState,
+} from '../game/masteryTracker';
 import { resolveHuntFireRule, type HuntDef } from '../data/hunts';
 import { describeIntent, phaseNoticeText, planEnemyAction, type EnemyAction } from '../game/enemyIntent';
 import {
@@ -72,6 +83,8 @@ export interface BattleSceneInitData {
   onBattleEnd: (victory: boolean, turns: number, heroHp: number) => void;
   /** Zindan savaşı: kahramanın savaşa başladığı can (varsayılan tam can) */
   startHeroHp?: number;
+  /** Hikâye aşaması ustalık hedefleri (hikâye dışı savaşlarda yok) */
+  mastery?: [ObjectiveDef, ObjectiveDef];
   /** Boss Avı modu: özel kural ve arena görseli */
   hunt?: HuntDef;
   arenaImage?: string;
@@ -170,6 +183,8 @@ export class BattleScene extends Phaser.Scene {
   private setShieldPool = 0;
   /** Zindan geçici güçleri: tur eşleşmesi (her tur) ve ilk kare (savaş boyunca) kullanım bilgisi */
   private relicFlags: RelicBattleFlags = freshRelicFlags();
+  /** Ustalık sayaçları: gerçek savaş olaylarından beslenir */
+  private mastery: MasteryState = createMasteryState();
   private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
@@ -190,6 +205,7 @@ export class BattleScene extends Phaser.Scene {
       resolved.build.passives.startShield +
       (resolved.build.relicEffects ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp) : 0);
     this.relicFlags = freshRelicFlags();
+    this.mastery = createMasteryState();
     this.heroMaxMana = resolved.build.stats.mana;
     this.heroMana = Math.round(this.heroMaxMana * 0.25);
     this.heroUlti = 0;
@@ -857,6 +873,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.inputLocked = true;
     this.turnPhase = 'resolving';
+    this.mastery = setMoveKind(this.mastery, true);
     this.emitSnapshot();
 
     SoundEngine.playGemSwap();
@@ -1273,6 +1290,12 @@ export class BattleScene extends Phaser.Scene {
     // 2×2 kare: dört taş kısa bir ışık çerçevesiyle vurgulanır, sonra patlar
     if (squares.length > 0) await this.playSquareHighlight(squares);
     const allDestroyed = this.expandSpecialTriggers(rawMatched);
+    // Ustalık: yok edilen donmuş taşlar (ateş çözülmesinden önce sayılır)
+    let frozenCleared = 0;
+    for (const k of allDestroyed) {
+      const [fr, fc] = k.split(',').map(Number);
+      if ((this.grid[fr]?.[fc]?.tile.frozen ?? 0) > 0) frozenCleared += 1;
+    }
     const counts: Record<GemType, number> = {
       fire: 0,
       frost: 0,
@@ -1311,6 +1334,7 @@ export class BattleScene extends Phaser.Scene {
           const adj = this.grid[r + dr]?.[c + dc];
           if (adj && adj.tile.frozen > 0) {
             adj.tile.frozen = 0;
+            frozenCleared += 1;
             this.syncTileOverlay(adj);
           }
         }
@@ -1336,6 +1360,8 @@ export class BattleScene extends Phaser.Scene {
         this.grid[r][c] = null;
       }
     }
+
+    this.mastery = onFrozenCleared(onResolve(this.mastery, counts, squares.length), frozenCleared);
 
     // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
     this.applyHuntFireRule(counts);
@@ -1954,6 +1980,7 @@ export class BattleScene extends Phaser.Scene {
     this.huntRuleUsed = false;
     this.setFlags = freshSetFlags();
     this.relicFlags = { ...this.relicFlags, turnMatchUsed: false };
+    this.mastery = startTurn(this.mastery);
     SoundEngine.setIntensity(1);
     this.turnPhase = 'player';
     this.inputLocked = false;
@@ -1982,6 +2009,8 @@ export class BattleScene extends Phaser.Scene {
         this.heroDodgeBuffTurns > 0 ? '#f0abfc' : '#38bdf8',
         19
       );
+      // Ustalık: ağır saldırı sıyrılmayla gerçekten iptal edildi
+      this.mastery = onEnemyAction(this.mastery, this.plannedAction, { cancelled: true, hpDamage: 0 });
       // Karşı Saldırı pasifi: sıyrılınca hasar yansıt
       if (this.initData.build.passives.dodgeCounterPct > 0) {
         const counter = Math.max(
@@ -2040,6 +2069,9 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    // Ustalık: kalkan ağır saldırının hasarını tamamen karşıladıysa engellenmiş sayılır
+    this.mastery = onEnemyAction(this.mastery, action, { cancelled: false, hpDamage: dmg });
+
     if (dmg > 0) {
       this.heroHp = Math.max(0, this.heroHp - dmg);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 8);
@@ -2088,6 +2120,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inputLocked = true;
+    this.mastery = setMoveKind(this.mastery, false);
     this.initData.onMatchStats({}, 0, true);
     // Yetenekle patlatılan taşlar da en az x1 kombo çarpanından faydalanır
     this.comboCount = Math.max(1, this.comboCount);
@@ -3144,9 +3177,17 @@ export class BattleScene extends Phaser.Scene {
     return [...dots, `Zayıflık: ${weakName}`].join(' • ');
   }
 
+  /** Savaşta tamamlanan iki ustalık hedefi (zafer anında okunur). */
+  public getMasteryDone(): [boolean, boolean] {
+    const o = this.initData.mastery;
+    if (!o) return [false, false];
+    return [progressOf(this.mastery, o[0]).done, progressOf(this.mastery, o[1]).done];
+  }
+
   private emitSnapshot() {
     this.lastIntentSignature = this.intentSignature();
     this.initData.onCombatUpdate({
+      mastery: this.initData.mastery ? this.initData.mastery.map((o) => progressOf(this.mastery, o)) : undefined,
       heroHp: this.heroHp,
       heroMaxHp: this.heroMaxHp,
       heroShield: this.heroShield,

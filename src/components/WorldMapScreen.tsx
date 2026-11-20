@@ -9,10 +9,13 @@ import {
   Swords,
   Coins,
   ShieldAlert,
+  Star,
+  Gift,
 } from 'lucide-react';
 import { GEM_INFO, RARITY_META } from '../data/skills';
 import { WORLD_REGIONS } from '../data/world';
-import { GameSaveState, StageDef } from '../types/game';
+import { GameSaveState, RegionId, StageDef } from '../types/game';
+import { getStageObjectives, objectiveText, regionMastery, stageStars } from '../data/mastery';
 import { focusRegionIndex, getRegionStatuses, isStageUnlocked } from '../utils/worldProgress';
 import { pageOf } from '../utils/mapPages';
 import { ExplorationMap } from './ExplorationMap';
@@ -31,6 +34,8 @@ interface WorldMapScreenProps {
   /** Ana menüye dön */
   onBack: () => void;
   onStartStage: (stage: StageDef) => void;
+  /** Bölge ustalık sandığını aç (ödül ve alındı bilgisi tek kayıt güncellemesinde yazılır) */
+  onClaimChest: (regionId: RegionId, tier: 0 | 1 | 2) => void;
   view: WorldView;
   onViewChange: (view: WorldView) => void;
   nav: React.MutableRefObject<WorldNav | null>;
@@ -40,6 +45,7 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({
   save,
   onBack,
   onStartStage,
+  onClaimChest,
   view,
   onViewChange,
   nav,
@@ -101,6 +107,7 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({
           initialStageId={nav.current?.stageId ?? null}
           onStageChange={(id) => patchNav({ stageId: id })}
           onStartStage={onStartStage}
+          onClaimChest={onClaimChest}
         />
       )}
     </div>
@@ -114,7 +121,8 @@ const StageScreen: React.FC<{
   initialStageId: string | null;
   onStageChange: (stageId: string) => void;
   onStartStage: (stage: StageDef) => void;
-}> = ({ save, regionIndex, initialStageId, onStageChange, onStartStage }) => {
+  onClaimChest: (regionId: RegionId, tier: 0 | 1 | 2) => void;
+}> = ({ save, regionIndex, initialStageId, onStageChange, onStartStage, onClaimChest }) => {
   const activeRegion = WORLD_REGIONS[regionIndex];
   const [selectedStage, setSelectedStageState] = useState<StageDef>(
     () =>
@@ -129,6 +137,9 @@ const StageScreen: React.FC<{
   const isUnlocked = (stageId: string) => isStageUnlocked(save, stageId);
   const unlocked = isUnlocked(selectedStage.id);
   const completed = save.completedStages.includes(selectedStage.id);
+  const rm = regionMastery(save, activeRegion);
+  const selStars = stageStars(save, selectedStage.id);
+  const selObjectives = getStageObjectives(selectedStage.id);
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
@@ -147,6 +158,43 @@ const StageScreen: React.FC<{
                   {activeRegion.name}
                 </h2>
                 <p className="mt-1 text-xs text-slate-300">{activeRegion.description}</p>
+                <div className="mt-3 rounded-xl border border-amber-400/30 bg-slate-950/70 p-3" data-testid="region-mastery">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 font-display text-[15px] font-bold text-amber-300">
+                      <Star className="h-4 w-4 fill-amber-300" /> Ustalık
+                    </span>
+                    <span className="text-[15px] font-bold text-white" data-testid="region-stars">
+                      {rm.stars}/{rm.max} ★
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {rm.chests.map((c) => (
+                      <button
+                        key={c.tier}
+                        type="button"
+                        disabled={!c.claimable}
+                        onClick={() => onClaimChest(activeRegion.id, c.tier)}
+                        data-testid={`chest-${c.tier}`}
+                        data-state={c.claimed ? 'claimed' : c.claimable ? 'ready' : 'locked'}
+                        aria-label={`Sandık ${c.tier + 1}: ${c.threshold} yıldız, ${c.claimed ? 'alındı' : c.claimable ? 'alınabilir' : 'kilitli'}`}
+                        className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-1 py-1.5 text-center ${
+                          c.claimed
+                            ? 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300'
+                            : c.claimable
+                              ? 'animate-pulse border-amber-300 bg-amber-500/20 text-amber-200'
+                              : 'border-slate-700 bg-slate-900/70 text-slate-500'
+                        }`}
+                      >
+                        {c.claimed ? <Check className="h-5 w-5" /> : c.claimable ? <Gift className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
+                        <span className="text-[12px] font-bold">{c.threshold} ★</span>
+                        <span className="text-[10px] font-semibold">{c.claimed ? 'Alındı' : c.claimable ? 'Aç' : 'Kilitli'}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-center text-[11px] font-semibold text-slate-400" data-testid="next-chest">
+                    {rm.toNextChest !== null ? `Sıradaki sandığa ${rm.toNextChest} yıldız kaldı` : 'Tüm sandık eşiklerine ulaşıldı'}
+                  </p>
+                </div>
               </div>
 
               {/* Connected Nodes */}
@@ -224,6 +272,14 @@ const StageScreen: React.FC<{
                           <div className="text-xs text-slate-400">
                             Düşman: {st.enemy.name} ({st.enemy.maxHp.toLocaleString('tr-TR')} Can)
                           </div>
+                          <div className="mt-0.5 flex items-center gap-0.5" data-testid={`stage-stars-${st.id}`} aria-label={`${stageStars(save, st.id).count} / 3 yıldız`}>
+                            {(() => {
+                              const ss = stageStars(save, st.id);
+                              return [ss.victory, ss.o1, ss.o2].map((on, i) => (
+                                <Star key={i} data-on={on ? '1' : '0'} className={`h-4 w-4 ${on ? 'fill-amber-300 text-amber-300' : 'text-slate-600'}`} />
+                              ));
+                            })()}
+                          </div>
                         </div>
                       </button>
                     </div>
@@ -252,6 +308,33 @@ const StageScreen: React.FC<{
                 <p className="mt-1 text-xs leading-relaxed text-slate-300">
                   {selectedStage.description}
                 </p>
+
+                <div className="mt-3 rounded-xl border border-amber-400/25 bg-slate-950/70 p-3" data-testid="stage-objectives">
+                  <div className="mb-1 flex items-center gap-1 text-[12px] font-bold text-amber-300">
+                    {[selStars.victory, selStars.o1, selStars.o2].map((on, i) => (
+                      <Star key={i} className={`h-4 w-4 ${on ? 'fill-amber-300 text-amber-300' : 'text-slate-600'}`} />
+                    ))}
+                    <span className="ml-1">Ustalık hedefleri</span>
+                  </div>
+                  <ul className="space-y-1.5 text-[12px]">
+                    <li className="flex items-start gap-1.5" data-done={selStars.victory ? '1' : '0'}>
+                      <Star className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${selStars.victory ? 'fill-amber-300 text-amber-300' : 'text-slate-600'}`} />
+                      <span className={selStars.victory ? 'text-slate-200' : 'text-slate-400'}>Aşamayı kazan</span>
+                    </li>
+                    {selObjectives.map((o, i) => {
+                      const got = i === 0 ? selStars.o1 : selStars.o2;
+                      return (
+                        <li key={i} className="flex items-start gap-1.5" data-testid={`stage-obj-${i}`} data-done={got ? '1' : '0'}>
+                          <Star className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${got ? 'fill-amber-300 text-amber-300' : 'text-slate-600'}`} />
+                          <span className={got ? 'text-slate-200' : 'text-slate-400'}>
+                            {objectiveText(o)}
+                            {got ? ' ✓' : ''}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
 
                 {/* Enemy Info Box */}
                 <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/75 p-4 space-y-2.5">

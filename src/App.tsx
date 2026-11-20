@@ -13,9 +13,10 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import { HERO_CLASSES } from './data/classes';
+import { applyStageMastery, claimMasteryChest } from './data/mastery';
 import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
-import type { DungeonId, RelicId } from './types/game';
+import type { DungeonId, RegionId, RelicId } from './types/game';
 import { generateEquipmentItem } from './data/items';
 import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
@@ -364,7 +365,7 @@ export function App() {
   };
 
   const handleCompleteVictory = useCallback(
-    (stage: StageDef): BattleRewardSummary => {
+    (stage: StageDef, masteryDone?: [boolean, boolean]): BattleRewardSummary => {
       if (activeLeagueOpponent) return handleLeagueResult(true);
       const xpGained = stage.rewards.xp;
       const goldGained = stage.rewards.gold;
@@ -392,6 +393,8 @@ export function App() {
       let leveledUp = false;
       let levelsGained = 0;
       let newLevel = save.heroes[save.activeHeroClass].level;
+      // Ustalık: zafer yıldızı + savaşta tamamlanan hedefler (aynı kayıt güncellemesinde yazılır)
+      const masteryOutcome = applyStageMastery(saveRef.current, stage, masteryDone).outcome;
 
       setSave((prev) => {
         const hero = prev.heroes[prev.activeHeroClass];
@@ -400,9 +403,8 @@ export function App() {
         levelsGained = xpRes.levelsGained;
         newLevel = xpRes.newLevel;
 
-        const completedStages = prev.completedStages.includes(stage.id)
-          ? prev.completedStages
-          : [...prev.completedStages, stage.id];
+        const withMastery = applyStageMastery(prev, stage, masteryDone).save;
+        const completedStages = withMastery.completedStages;
 
         const bossVictories =
           stage.enemy.bossId && !prev.bossVictories.includes(stage.enemy.bossId)
@@ -411,6 +413,7 @@ export function App() {
 
         return recordQuestActivity({
           ...prev,
+          mastery: withMastery.mastery,
           gold: prev.gold + goldGained,
           crystals: prev.crystals + crystalsGained,
           completedStages,
@@ -438,7 +441,7 @@ export function App() {
         }, 550);
       }
 
-      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel };
+      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome };
     },
     [save.activeHeroClass, save.heroes, activeLeagueOpponent, activeStage, setSave]
   );
@@ -487,6 +490,18 @@ export function App() {
       setLevelUpPopup(lvPop);
     }
     pushToast(`${realQuest.title} ödülleri alındı!`);
+  };
+
+  /** Bölge ustalık sandığı: ödül ve "alındı" bilgisi aynı kayıt güncellemesinde yazılır. */
+  const handleClaimChest = (regionId: RegionId, tier: 0 | 1 | 2) => {
+    const res = claimMasteryChest(saveRef.current, regionId, tier);
+    if (!res.ok) {
+      if (res.toast) pushToast(res.toast);
+      return;
+    }
+    setSave(res.save);
+    SoundEngine.playLootReveal(tier === 2);
+    if (res.toast) pushToast(res.toast);
   };
 
   const handleStartStage = (stage: StageDef) => {
@@ -724,6 +739,7 @@ export function App() {
             save={save}
             onBack={() => setRoute('menu')}
             onStartStage={handleStartStage}
+            onClaimChest={handleClaimChest}
             view={worldView}
             onViewChange={setWorldView}
             nav={worldNavRef}
