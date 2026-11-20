@@ -137,7 +137,7 @@ export function RegionIcon({ id, size, dimmed = false, glow, className }: Region
   };
   return (
     <span className={className} style={{ ...style, display: 'inline-block' }} data-region-art={id}>
-      {Svg ? <Svg /> : src ? <img src={src} alt="" draggable={false} className="h-full w-full object-contain" /> : null}
+      {Svg ? <Svg /> : src ? <img src={src} alt="" width={size} height={size} decoding="async" draggable={false} className="h-full w-full object-contain" /> : null}
     </span>
   );
 }

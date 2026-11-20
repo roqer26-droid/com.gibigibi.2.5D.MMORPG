@@ -14,6 +14,7 @@ import { GEM_INFO, RARITY_META } from '../data/skills';
 import { WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
 import { focusRegionIndex, getRegionStatuses, isStageUnlocked } from '../utils/worldProgress';
+import { pageOf } from '../utils/mapPages';
 import { ExplorationMap } from './ExplorationMap';
 
 /** Harita/aşama ekranı arasında gidip gelirken (ve savaştan dönünce) korunan gezinti durumu. */
@@ -52,8 +53,9 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({
     nav.current = { regionIndex, scrollTop: null, stageId: null, ...(nav.current ?? {}), ...patch };
   };
   const selectRegion = (i: number) => {
+    const pageChanged = pageOf(i) !== pageOf(regionIndex);
     setRegionIndexState(i);
-    patchNav({ regionIndex: i, stageId: null });
+    patchNav({ regionIndex: i, stageId: null, ...(pageChanged ? { scrollTop: null } : {}) });
   };
 
   const region = WORLD_REGIONS[regionIndex];

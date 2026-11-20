@@ -42,10 +42,16 @@ export function getRegionStatuses(save: ProgressSave): RegionStatus[] {
   });
 }
 
-/** Haritanın ilk açılışta odaklanacağı bölge: açık ve tamamlanmamış ilk bölge; hepsi bittiyse sonuncu. */
+/** Haritanın açılışta odaklanacağı bölge: erişilebilir (açık) son bölge; hiçbiri değilse ilk bölge. */
 export function focusRegionIndex(statuses: RegionStatus[]): number {
-  const open = statuses.find((s) => s.unlocked && !s.cleared);
-  return open ? open.index : statuses.length - 1;
+  let last = 0;
+  for (const st of statuses) if (st.unlocked) last = st.index;
+  return last;
+}
+
+/** Tüm haritadan toplam aşama ilerlemesi (hangi sayfada olunursa olunsun aynı). */
+export function overallProgress(statuses: RegionStatus[]): { done: number; total: number } {
+  return statuses.reduce((acc, st) => ({ done: acc.done + st.done, total: acc.total + st.total }), { done: 0, total: 0 });
 }
 
 /** Kilitli bölgenin açılma koşulu metni. */

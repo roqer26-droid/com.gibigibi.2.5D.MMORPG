@@ -1,11 +1,12 @@
-import { Check, ChevronsUp, Lock } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ChevronsUp, Lock } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GameSaveState } from '../types/game';
+import { pageCount, pageOf, pageRange } from '../utils/mapPages';
 import { ICON_R, ICON_SIZE, computeRouteLayout, nodeBox } from '../utils/routeLayout';
 import {
-  focusRegionIndex,
   formatLevelRange,
   getRegionStatuses,
+  overallProgress,
   unlockHint,
   type RegionStatus,
 } from '../utils/worldProgress';
@@ -64,9 +65,14 @@ export function ExplorationMap({
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
   const [panelH, setPanelH] = useState(DEFAULT_PANEL_H);
-  const didInitialScroll = useRef(false);
 
-  const layout = useMemo(() => computeRouteLayout(statuses.length, width || 360), [statuses.length, width]);
+  // Sayfalama: yalnızca aktif sayfanın (≤10) düğümü, simgesi ve rota çizgisi oluşturulur. Sayfa, seçili bölgeden türetilir.
+  const pages = pageCount(statuses.length);
+  const page = pageOf(selectedIndex);
+  const [start, end] = pageRange(page, statuses.length);
+  const pageStatuses = useMemo(() => statuses.slice(start, end), [statuses, start, end]);
+  const progress = useMemo(() => overallProgress(statuses), [statuses]);
+  const layout = useMemo(() => computeRouteLayout(pageStatuses.length, width || 360), [pageStatuses.length, width]);
   const terrain = useTerrain(layout.width, layout.height);
 
   // Ekran genişliği ve alt panel yüksekliğini izle
@@ -85,20 +91,35 @@ export function ExplorationMap({
     return () => ro.disconnect();
   }, []);
 
-  // İlk açılış: kayıtlı konuma dön ya da ilk tamamlanmamış bölgeye odaklan
+  // Kaydırma: ilk açılışta kayıtlı konum, sayfa değişince hedef bölge (yoksa seçili bölge)
+  const lastPage = useRef<number | null>(null);
+  const pendingFocus = useRef<number | null>(null);
+  const scrollToRegion = useCallback(
+    (regionIndex: number, smooth: boolean) => {
+      const scroller = scrollerRef.current;
+      const node = layout.nodes[regionIndex - start];
+      if (!scroller || !node) return;
+      const visibleH = scroller.clientHeight - panelH;
+      scroller.scrollTo({ top: Math.max(0, node.y - visibleH * 0.45), behavior: smooth ? 'smooth' : 'auto' });
+    },
+    [layout, start, panelH]
+  );
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
-    if (!scroller || didInitialScroll.current || !width) return;
-    didInitialScroll.current = true;
-    if (initialScrollTop !== null) {
+    if (!scroller || !width) return;
+    const first = lastPage.current === null;
+    if (first && initialScrollTop !== null) {
       scroller.scrollTop = initialScrollTop;
+      lastPage.current = page;
       return;
     }
-    const focus = layout.nodes[focusRegionIndex(statuses)];
-    const visibleH = scroller.clientHeight - panelH;
-    scroller.scrollTop = Math.max(0, focus.y - visibleH * 0.45);
+    if (!first && lastPage.current === page && pendingFocus.current === null) return;
+    lastPage.current = page;
+    const target = pendingFocus.current ?? selectedIndex;
+    pendingFocus.current = null;
+    scrollToRegion(target, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, panelH]);
+  }, [page, width, panelH]);
 
   const rafRef = useRef(0);
   const handleScroll = useCallback(() => {
@@ -113,14 +134,22 @@ export function ExplorationMap({
 
   /** Erişilebilir son bölge: açık olan en ileri bölge. Hızlı odak düğmesi buraya götürür. */
   const latestIndex = useMemo(() => statuses.reduce((acc, st) => (st.unlocked ? st.index : acc), 0), [statuses]);
-  const focusLatest = useCallback(() => {
-    const scroller = scrollerRef.current;
-    const node = layout.nodes[latestIndex];
-    if (!scroller || !node) return;
-    onSelect(latestIndex);
-    const visibleH = scroller.clientHeight - panelH;
-    scroller.scrollTo({ top: Math.max(0, node.y - visibleH * 0.45), behavior: 'smooth' });
-  }, [layout, latestIndex, panelH, onSelect]);
+  /** Başka sayfadaki bölgeye: sayfa değişir ve hedefe anında odaklanır; aynı sayfada yumuşak kayar. */
+  const goTo = useCallback(
+    (index: number) => {
+      if (pageOf(index) === page) {
+        onSelect(index);
+        scrollToRegion(index, true);
+      } else {
+        pendingFocus.current = index;
+        onSelect(index);
+      }
+    },
+    [page, onSelect, scrollToRegion]
+  );
+  const focusLatest = useCallback(() => goTo(latestIndex), [goTo, latestIndex]);
+  const goPrev = () => page > 0 && goTo(pageRange(page - 1, statuses.length)[1] - 1);
+  const goNext = () => page < pages - 1 && goTo(pageRange(page + 1, statuses.length)[0]);
 
   return (
     <div className="relative min-h-0 flex-1 bg-[#070b17]">
@@ -142,7 +171,7 @@ export function ExplorationMap({
               <polygon key={i} points={t.pts} fill={TERRAIN_FILL[t.kind]} opacity={t.opacity} />
             ))}
             {layout.segments.map((d, i) => {
-              const done = statuses[i].cleared;
+              const done = pageStatuses[i].cleared;
               return (
                 <path
                   key={i}
@@ -158,11 +187,11 @@ export function ExplorationMap({
             })}
           </svg>
 
-          {statuses.map((st) => (
+          {pageStatuses.map((st) => (
             <RouteNode
               key={st.region.id}
               status={st}
-              layoutNode={layout.nodes[st.index]}
+              layoutNode={layout.nodes[st.index - start]}
               selected={st.index === selectedIndex}
               onSelect={onSelect}
             />
@@ -182,6 +211,11 @@ export function ExplorationMap({
           onOpenStages={onOpenStages}
           latestName={statuses[latestIndex].region.name}
           onJumpLatest={focusLatest}
+          page={page}
+          pages={pages}
+          onPrev={goPrev}
+          onNext={goNext}
+          progress={progress}
         />
       </div>
     </div>
@@ -267,16 +301,54 @@ function RegionPanel({
   onOpenStages,
   latestName,
   onJumpLatest,
+  page,
+  pages,
+  onPrev,
+  onNext,
+  progress,
 }: {
   status: RegionStatus;
   statuses: RegionStatus[];
   onOpenStages: (i: number) => void;
   latestName: string;
   onJumpLatest: () => void;
+  page: number;
+  pages: number;
+  onPrev: () => void;
+  onNext: () => void;
+  progress: { done: number; total: number };
 }) {
   const { region, unlocked, done, total, index } = status;
   return (
     <div className="mx-auto w-full max-w-xl">
+      <div className="mb-2 flex items-center gap-2" data-testid="map-pager">
+        <button
+          type="button"
+          onClick={onPrev}
+          disabled={page <= 0}
+          data-testid="page-prev"
+          className="flex h-11 min-w-[96px] items-center justify-center gap-1 rounded-xl border border-slate-600 bg-slate-900 px-3 text-[15px] font-bold text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ChevronLeft className="h-4 w-4" /> Önceki
+        </button>
+        <div className="min-w-0 flex-1 text-center leading-tight">
+          <div className="text-[16px] font-bold text-amber-300" data-testid="page-indicator">
+            {page + 1} / {pages}
+          </div>
+          <div className="text-[11px] font-semibold text-slate-400" data-testid="overall-progress">
+            Genel ilerleme {progress.done}/{progress.total}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={page >= pages - 1}
+          data-testid="page-next"
+          className="flex h-11 min-w-[96px] items-center justify-center gap-1 rounded-xl border border-slate-600 bg-slate-900 px-3 text-[15px] font-bold text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Sonraki <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
       <div className="flex items-center gap-3">
         <RegionIcon id={region.id} size={64} dimmed={!unlocked} className="shrink-0" />
         <span className="h-14 w-px shrink-0 bg-slate-700" aria-hidden="true" />
@@ -310,7 +382,7 @@ function RegionPanel({
         type="button"
         disabled={!unlocked}
         onClick={() => onOpenStages(index)}
-        className="gold-btn mt-3 flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl font-display text-[19px] font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+        className="gold-btn mt-2 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl font-display text-[18px] font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {unlocked ? (
           'Aşamaları Gör'

@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.12.0 — Dünya Haritası sayfaları
+- Bölgeler sırayla 10'arlı sayfalara bölünür (şu an 1–10 … 51–53, 6 sayfa; sayfa sayısı bölge sayısından türetilir).
+  Alt panelde "Önceki", "1 / 6", "Sonraki" ve "Genel ilerleme x/500" (tüm haritadan hesaplanır).
+- Yalnızca aktif sayfanın (≤10) düğüm, simge ve rota çizgisi oluşturulur; diğer sayfaların simgeleri sayfa açılınca istenir
+  (yüklenenler tarayıcı önbelleğinden gelir). Simge boyutları baştan ayrılır, rota kaymaz.
+- Harita erişilebilir son bölgenin sayfasında açılır; "Son" düğmesi gerekirse sayfa değiştirip oraya götürür.
+  Bölge detayından/savaştan dönünce sayfa, seçili bölge ve kaydırma konumu korunur.
+
 ## v1.11.0 — Sonsuzluğun Ötesi: 25 yeni bölge, 250 yeni aşama
 - Sonsuzluk Tahtı'ndan sonra 25 bölge / 250 aşama (toplam 53 bölge / 500 aşama). Bölge, aşama ve boss kimlikleri ile düşman türleri,
   boss zayıflık/dirençleri `src/data/expansionRegions.json` dosyasından gelir (Cam Ormanı → Şafağın Çekirdeği).
