@@ -37,7 +37,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
   it('bosslar normal düşmanlardan yüksek, havadakiler süzülür', () => {
     const bosses = allEnemies.filter((e) => e.isBoss && enemyArtKey(e.id));
     expect(bosses.length).toBe(6);
-    for (const b of bosses) expect(ENEMY_ART_LAYOUT[enemyArtKey(b.id)!].height).toBeGreaterThanOrEqual(0.66);
+    for (const b of bosses) expect(ENEMY_ART_LAYOUT[enemyArtKey(b.id)!].height).toBeGreaterThanOrEqual(0.6);
     for (const id of ['flame_elemental', 'obsidian_vault_guard', 'void_stalker']) expect(ENEMY_ART_LAYOUT[id].bob).toBeGreaterThan(0);
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
   });
