@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.19.1 — Kahramanlar sekmesi: tüm çizimler açılışta görünür
+- Kahramanlar sekmesindeki kartlar artık kilitli/açık ayrımı olmadan 22 kahramanın tam boy çizimini gösterir (yüz portresi kaldırıldı).
+  Görseller yüklenmeden çizilen kartlar boş kalıyor, dokununca görünüyordu; görsel yüklenince kart yeniden çizilir.
+- Kilitli kartlarda çizim karartılmaz; kilit simgesi küçük bir rozet olarak köşede durur. Kart görseli 64 → 72 px.
+
 ## v1.19.0 — Dört düşmanın yeni savaş çizimleri
 - Goblin Yağmacısı (`goblin_raider`), Elit Dikenli Ağaç (`elder_treant`), Buz Kraliçesi (`boss_frost_queen`) ve Gölge İblisi (`boss_shadow_demon`)
   için şeffaf, köşeli kristal tarzı çizimler savaşta ve boss kartlarında kullanılır. Çizim düşman KİMLİĞİNE bağlıdır: normal ağaç, kaya muhafızı,

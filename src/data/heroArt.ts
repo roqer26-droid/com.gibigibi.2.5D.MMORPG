@@ -59,13 +59,6 @@ export const HERO_ART_LAYOUT: Partial<Record<HeroClassId, HeroArtLayout>> = {
   seraph: { above: 212, float: 24, maxWidth: 250, bob: 4 },
 };
 
-/** Küçük kartlar için yüz kadrajı (128 px, şeffaf WebP). Tam boy görsel yüklenmeden kartlarda kullanılır. */
-const PORTRAITS = import.meta.glob('../art/heroes/portraits/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
-export const HERO_PORTRAIT_URL: Partial<Record<HeroClassId, string>> = {};
-for (const [path, url] of Object.entries(PORTRAITS)) {
-  HERO_PORTRAIT_URL[path.split('/').pop()!.replace(/\.webp$/, '') as HeroClassId] = url;
-}
-
 /** Nefes döngüsü: yaklaşık 3 saniye, gövde en fazla %1,5 esner; ayaklar sabit kalır. */
 export const HERO_BREATH = { periodSec: 3, stretch: 0.015 } as const;
 

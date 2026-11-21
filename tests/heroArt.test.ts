@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HERO_ART_LAYOUT, HERO_ART_META, HERO_ART_URL, HERO_PORTRAIT_URL, hasHeroArt } from '../src/data/heroArt';
+import { HERO_ART_LAYOUT, HERO_ART_META, HERO_ART_URL, hasHeroArt } from '../src/data/heroArt';
 import { HERO_CLASS_LIST } from '../src/data/classes';
 
 describe('kahraman görselleri', () => {
@@ -21,10 +21,5 @@ describe('kahraman görselleri', () => {
       expect(HERO_ART_LAYOUT[id]!.bob).toBeGreaterThan(0);
     }
     for (const id of ['minotaur', 'golem', 'naga', 'kitsune', 'siren', 'demon'] as const) expect(HERO_ART_LAYOUT[id]!.bob).toBe(0);
-  });
-  it('yeni 10 kahramanın küçük portresi var', () => {
-    for (const id of ['fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn', 'demon', 'seraph'] as const) {
-      expect(HERO_PORTRAIT_URL[id], id).toBeTruthy();
-    }
   });
 });
