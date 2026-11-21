@@ -406,14 +406,18 @@ const StageScreen: React.FC<{
                       <Gem className="h-3.5 w-3.5" />+{selectedStage.rewards.crystals} Kristal
                     </span>
                   </div>
-                  {selectedStage.rewards.guaranteedRarity && (
-                    <p className="mt-1.5 text-xs font-bold">
-                      Garanti Ganimet:{' '}
-                      <span className={RARITY_META[selectedStage.rewards.guaranteedRarity].textClass}>
-                        {RARITY_META[selectedStage.rewards.guaranteedRarity].label} Ekipman!
-                      </span>
-                    </p>
-                  )}
+                  {selectedStage.rewards.guaranteedRarity && (() => {
+                    const g = selectedStage.rewards.guaranteedRarity!;
+                    const high = g === 'legendary' || g === 'mythic';
+                    const shown = high ? 'epic' : g;
+                    return (
+                      <p className="mt-1.5 text-xs font-bold">
+                        Garanti Ganimet:{' '}
+                        <span className={RARITY_META[shown].textClass}>{RARITY_META[shown].label}+ Ekipman</span>
+                        {high && <span className="ml-1 font-semibold text-slate-400">(nadir şansı: {RARITY_META[g].label})</span>}
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
 

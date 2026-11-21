@@ -435,8 +435,166 @@ export function drawOffhand(
 /*  AURA KATMANLARI — ekipman + seviyesi arttıkça kat kat güçlenir      */
 /* ================================================================== */
 
-function drawEnchantAura(ctx: CanvasRenderingContext2D, aura: EnchantAura, time: number) {
+const hexA = (a: number) => Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+
+/**
+ * Çizimli kahramanlar için aura. Merkez gövdenin ortasındadır; ölçekler çizimin boyuna bağlıdır. Kare doku sınırında kesilmesin diye
+ * radyal ışık en fazla dokunun yarısı kadar büyür. `front` katmanı çizimin ÖNÜNDE kalır (ön yarı zerreler, ön rune yayı, hafif ışıma);
+ * böylece parlama yalnızca arkada gizli kalmaz.
+ */
+function drawEnchantAuraArt(ctx: CanvasRenderingContext2D, aura: EnchantAura, time: number, geo: AuraGeometry, layer: 'back' | 'front') {
+  const t = aura.tier;
+  const pulse = 0.72 + 0.28 * Math.sin(time * 2.1);
+  const col = aura.color;
+  const ground = 74 - geo.float;
+  const cy = ground - geo.h * 0.5;
+  // Yatay yarıçap: genişliğe göre, dikey: boya göre
+  const rx = Math.max(geo.w * 0.5 + 10, 60) + t * 7;
+  const ry = geo.h * 0.5 + 8 + t * 5;
+
+  ctx.save();
+  if (layer === 'back') {
+    // 1) Arkadaki radyal büyü ışığı (gövde ortasında, çizimden taşar)
+    const R = Math.min(Math.max(rx, ry) * 1.12, 148);
+    const rg = ctx.createRadialGradient(0, cy, R * 0.12, 0, cy, R);
+    rg.addColorStop(0, `${col}${hexA((0.2 + 0.08 * t) * pulse)}`);
+    rg.addColorStop(0.6, `${col}${hexA(0.08 + 0.03 * t)}`);
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(0, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3) Gökten inen ışık sütunu (kademe 3+): çizimin tüm boyunu kaplar
+    if (t >= 3) {
+      const beamW = Math.min(geo.w * 0.5 + t * 6, 110);
+      const top = ground - geo.h - 14;
+      const bg = ctx.createLinearGradient(0, top, 0, ground + 4);
+      bg.addColorStop(0, 'rgba(255,255,255,0)');
+      bg.addColorStop(0.4, `${col}${hexA(0.12 * pulse)}`);
+      bg.addColorStop(1, `${col}${hexA(0.34 * pulse)}`);
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.moveTo(-beamW * 0.35, top);
+      ctx.lineTo(beamW * 0.35, top);
+      ctx.lineTo(beamW, ground + 4);
+      ctx.lineTo(-beamW, ground + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // 2) Yer rune halkası (kademe 2+): arka yarı arkada, ön yarı çizimin önünde
+  if (t >= 2) {
+    const rrx = Math.min(Math.max(geo.w * 0.5, 52) + t * 6, 138);
+    const rry = rrx * 0.29;
+    ctx.save();
+    ctx.translate(0, ground + 2);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([9, 7]);
+    ctx.lineDashOffset = -time * 14;
+    ctx.globalAlpha = (layer === 'front' ? 0.5 : 0.32) + 0.25 * pulse;
+    ctx.beginPath();
+    if (layer === 'front') ctx.ellipse(0, 0, rrx, rry, 0, 0, Math.PI);
+    else ctx.ellipse(0, 0, rrx, rry, 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = (layer === 'front' ? 0.55 : 0.35) + 0.25 * pulse;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    if (layer === 'front') ctx.ellipse(0, 0, rrx * 0.72, rry * 0.72, 0, 0, Math.PI);
+    else ctx.ellipse(0, 0, rrx * 0.72, rry * 0.72, 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 4) Dönen büyü zerreleri (kademe 4+): ön yarı çizimin önünde
+  if (aura.motes > 0) {
+    for (let i = 0; i < aura.motes; i++) {
+      const a = time * 1.35 + (i / aura.motes) * Math.PI * 2;
+      const isFront = Math.sin(a) > 0;
+      if ((layer === 'front') !== isFront) continue;
+      const mx = Math.cos(a) * Math.min(rx, 140);
+      const my = cy + Math.sin(a) * Math.min(ry * 0.38, 56);
+      const size = 2.2 + 1.1 * Math.sin(time * 3 + i);
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.6 + 0.4 * Math.abs(Math.sin(a));
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(mx, my, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  if (layer === 'front') {
+    // Çizimin üstünde hafif, sınıf rengi ışıma: parlama yalnızca arkada kalmasın
+    ctx.globalCompositeOperation = 'lighter';
+    const sr = Math.min(Math.max(rx, ry) * 0.9, 130);
+    const sg = ctx.createRadialGradient(0, cy, 0, 0, cy, sr);
+    sg.addColorStop(0, `${col}${hexA(0.05 * t * pulse)}`);
+    sg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(0, cy, sr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // 5) Baş üstü altın hale + yıldız kıvılcımları (kademe 5)
+  if (t >= 5 && layer === 'back') {
+    const haloY = Math.max(ground - geo.h - 12, -164);
+    ctx.save();
+    ctx.translate(0, haloY);
+    ctx.rotate(Math.sin(time * 0.9) * 0.12);
+    ctx.strokeStyle = '#fde047';
+    ctx.lineWidth = 3.4;
+    ctx.globalAlpha = 0.7 + 0.3 * pulse;
+    ctx.shadowColor = '#fde047';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, Math.min(30 * geo.k * 0.9, 44), 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    for (let i = 0; i < 5; i++) {
+      const a = time * 1.8 + (i / 5) * Math.PI * 2;
+      const sx = Math.cos(a) * Math.min(rx, 130);
+      const sy = cy + Math.sin(a * 1.6) * (geo.h * 0.36);
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.4 + 0.5 * Math.abs(Math.sin(a * 2));
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 4);
+      ctx.lineTo(sx + 1.6, sy - 1.4);
+      ctx.lineTo(sx + 4.4, sy);
+      ctx.lineTo(sx + 1.6, sy + 1.4);
+      ctx.lineTo(sx, sy + 4);
+      ctx.lineTo(sx - 1.6, sy + 1.4);
+      ctx.lineTo(sx - 4.4, sy);
+      ctx.lineTo(sx - 1.6, sy - 1.4);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+function drawEnchantAura(
+  ctx: CanvasRenderingContext2D,
+  aura: EnchantAura,
+  time: number,
+  geo: AuraGeometry | null = null,
+  layer: 'back' | 'front' = 'back'
+) {
   if (aura.tier <= 0) return;
+  if (geo) {
+    drawEnchantAuraArt(ctx, aura, time, geo, layer);
+    return;
+  }
+  if (layer === 'front') return;
   const t = aura.tier;
   const pulse = 0.72 + 0.28 * Math.sin(time * 2.1);
   const col = aura.color;
@@ -585,6 +743,41 @@ function drawClassGlow(ctx: CanvasRenderingContext2D, color: string, time: numbe
  * süzülür. Saldırı pozunda hafifçe öne eğilir (hasar/ bekleme animasyonları kapsayıcı katmanda aynen çalışır).
  * Silah ve zırh çizimin üzerindedir; ek ekipman katmanı çizilmez.
  */
+/** Çizimin kahraman dokusu birimindeki boyutu (en-boy oranı korunur, genişlik sınırı uygulanır). */
+export function heroArtSize(id: HeroClassId, aspectOverride?: number): { w: number; h: number } {
+  const L = HERO_ART_LAYOUT[id]!;
+  const m = HERO_ART_META[id];
+  const aspect = aspectOverride ?? m.aspect;
+  // Ayak çizgisinden tepeye `above` birim; silah uçları ayak çizgisinin altına uzanıyorsa kırpılmadan çizilir
+  let h = L.above / m.footFrac;
+  let w = h * aspect;
+  if (w > L.maxWidth) {
+    w = L.maxWidth;
+    h = w / aspect;
+  }
+  return { w, h };
+}
+
+/**
+ * Ekipman büyü aurasının yeni çizimlere göre ölçeği: aura eski (≈146 birim boylu) vektör kahramana göre tasarlanmıştı;
+ * çizimli kahramanlarda boy/genişlik/havada duruş değerlerinden hesaplanır. Eski çizimli kahramanlar için null.
+ */
+export interface AuraGeometry {
+  /** Tüm şekil ölçeği (çizim boyu / 146) */
+  k: number;
+  /** Çizimin boyu ve genişliği (doku birimi) */
+  h: number;
+  w: number;
+  /** Yerden yükseklik */
+  float: number;
+}
+
+export function heroAuraGeometry(classId: HeroClassId): AuraGeometry | null {
+  if (!hasHeroArt(classId)) return null;
+  const { w, h } = heroArtSize(classId);
+  return { k: h / 146, h, w, float: HERO_ART_LAYOUT[classId]!.float };
+}
+
 function drawHeroArt(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -595,14 +788,7 @@ function drawHeroArt(
 ) {
   const L = HERO_ART_LAYOUT[id]!;
   const m = HERO_ART_META[id];
-  const aspect = img.naturalWidth / img.naturalHeight;
-  // Ayak çizgisinden tepeye `above` birim; silah uçları ayak çizgisinin altına uzanıyorsa kırpılmadan çizilir
-  let h = L.above / m.footFrac;
-  let w = h * aspect;
-  if (w > L.maxWidth) {
-    w = L.maxWidth;
-    h = w / aspect;
-  }
+  const { w, h } = heroArtSize(id, img.naturalWidth / img.naturalHeight);
   const ground = 74;
   const bob = L.bob ? Math.sin(time * 2.1) * L.bob : 0;
   if (!noGlow) drawClassGlow(ctx, HERO_CLASSES[id].themeColor, time, ground - L.float - h * 0.5, Math.max(w, h) * 0.62);
@@ -654,8 +840,10 @@ export function drawHeroToCanvas(
   ctx.fill();
   ctx.restore();
 
-  // Aura katmanları (karakterin arkasında)
-  drawEnchantAura(ctx, aura, time);
+  // Aura katmanları (karakterin arkasında); çizimli kahramanlarda çizimin boyuna göre ölçeklenir, ön katman çizimin önüne biner
+  const auraGeo = !proceduralOnly ? heroAuraGeometry(hero.classId) : null;
+  // noGlow (savaş dokusu): çizimli kahramanlarda aura sahnede canlı çizilir, dokuya gömülmez
+  if (!(auraGeo && noGlow)) drawEnchantAura(ctx, aura, time, auraGeo, 'back');
 
   // NEFES ALMA — 20 kahramanın hepsi: gövde ayak tabanından hafifçe yükselip genişler
   const usesArt = !proceduralOnly && hasHeroArt(hero.classId);
@@ -671,6 +859,7 @@ export function drawHeroToCanvas(
   const art = !proceduralOnly && hasHeroArt(hero.classId) ? heroImage(hero.classId) : null;
   if (art) {
     drawHeroArt(ctx, art, hero.classId, pose, time, noGlow);
+    if (auraGeo && !noGlow) drawEnchantAura(ctx, aura, time, auraGeo, 'front');
   } else if (usesArt) {
     // Çizim henüz yüklenmedi (yalnızca gösterilen kahramanın görseli istenir): eski çizim yanıp sönmesin
   } else if (creature) {

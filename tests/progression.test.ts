@@ -45,7 +45,7 @@ describe('progression, league, quests and legacy save migration', () => {
     assert.equal(firstEndgame.type, 'normal');
     assert.equal(finalBoss.type, 'boss');
     assert.equal(finalBoss.enemy.bossId, 'eternity_emperor');
-    assert.ok(firstEndgame.enemy.maxHp > 55_000 && firstEndgame.enemy.maxHp < 85_000, `first endgame hp ${firstEndgame.enemy.maxHp}`);
+    assert.ok(firstEndgame.enemy.maxHp > 90_000 && firstEndgame.enemy.maxHp < 140_000, `first endgame hp ${firstEndgame.enemy.maxHp}`);
     assert.ok(finalBoss.enemy.maxHp > 250_000 && finalBoss.enemy.maxHp < 450_000, `final boss hp ${finalBoss.enemy.maxHp}`);
     assert.ok(finalBoss.enemy.attack > firstEndgame.enemy.attack);
     assert.ok(finalBoss.rewards.gold > 10_000 && finalBoss.rewards.crystals > 100);

@@ -6,7 +6,7 @@
  * kahramanın can kaybı. Beceriler ve drop ekipmanlar dahil değildir, yani gerçek oyun biraz daha kolaydır.
  */
 import { HERO_CLASSES } from "../../src/data/classes";
-import { capGemShield } from "../../src/data/difficulty";
+import { capGemShield, enemyHitDamage } from "../../src/data/difficulty";
 import { WORLD_REGIONS } from "../../src/data/world";
 import { findMatches, findPossibleMoves, type MatchGrid } from "../../src/game/match3";
 import type { ElementType, GemType, HeroClassId, StageDef } from "../../src/types/game";
@@ -15,6 +15,8 @@ import { computeRelicEffects, relicStartShield } from "../../src/data/dungeons";
 import type { ActiveSkillDef, RelicId } from "../../src/types/game";
 import { computeHeroBuild } from "../../src/utils/rpgLogic";
 import { createInitialSaveState } from "../../src/utils/storage";
+import { generateEquipmentItem } from "../../src/data/items";
+import type { EquipmentSlot, Rarity } from "../../src/types/game";
 
 const BASE: GemType[] = ["fire", "frost", "nature", "lightning", "arcane"];
 const SIZE = 8;
@@ -52,6 +54,8 @@ export interface FightOptions {
   tweakBuild?: (b: ReturnType<typeof computeHeroBuild>) => ReturnType<typeof computeHeroBuild>;
   /** Savaş başında kalkan */
   startShield?: number;
+  /** Tam set ekipman: tüm yuvalara bu nadirlikte (aşama seviyesinde) eşya takılır */
+  gear?: Rarity;
   /** Yetenekleri (ve Ulti'yi) kullan: sınıfın seviyesine açık yetenekleri, basit ama sabit bir oyuncu politikasıyla */
   skills?: boolean;
   /** Zindan güçleri: savaş içi etkileri (Ulti Kıvılcımı, Kare Siper, Hazır Muhafız) simülasyona eklenir */
@@ -60,7 +64,12 @@ export interface FightOptions {
 
 export function fight(stage: StageDef, classId: HeroClassId, smart: boolean, opts: FightOptions = {}): Result {
   const maxMoves = opts.maxMoves ?? 80;
-  const hero = { ...createInitialSaveState().heroes[classId], level: opts.level ?? stage.recommendedLevel };
+  const hero = { ...createInitialSaveState().heroes[classId], level: opts.level ?? Math.min(50, stage.recommendedLevel) };
+  if (opts.gear) {
+    const slots: EquipmentSlot[] = ["helmet", "chest", "gloves", "pants", "boots", "weapon", "offhand", "necklace", "ring1", "ring2"];
+    hero.equipped = { ...hero.equipped };
+    for (const sl of slots) hero.equipped[sl] = generateEquipmentItem({ level: Math.min(50, hero.level), rarity: opts.gear, slot: sl, preferredClass: classId });
+  }
   const build = opts.tweakBuild ? opts.tweakBuild(computeHeroBuild(hero)) : computeHeroBuild(hero);
   const e = stage.enemy;
   const maxHp = build.stats.health;
@@ -207,7 +216,7 @@ export function fight(stage: StageDef, classId: HeroClassId, smart: boolean, opt
       if (Math.random() * 100 >= build.stats.dodge) {
         let raw = e.attack * (enraged ? 1.32 : 1);
         if (e.isBoss && Math.random() < 0.45) raw *= 1.25;
-        let d = Math.max(8, Math.round(raw * 100 / (100 + build.stats.defense * 1.45)));
+        let d = enemyHitDamage({ rawAtk: raw, enemyAttack: e.attack, defense: build.stats.defense, enemyLevel: e.level, isBoss: e.isBoss, heroMaxHp: maxHp });
         const ab = Math.min(shield, d); shield -= ab; d -= ab;
         hp = Math.max(0, hp - d);
         minHp = Math.min(minHp, hp);

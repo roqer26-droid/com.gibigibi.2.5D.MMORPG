@@ -23,6 +23,7 @@ import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
 import type { DungeonId, RegionId, RelicId } from './types/game';
 import { generateEquipmentItem } from './data/items';
+import { rollDropRarity } from './data/loot';
 import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
 import { QUESTS_LIST } from './data/quests';
@@ -296,42 +297,7 @@ export function App() {
     [setSave]
   );
 
-  const rollStageRarity = (stage: StageDef): Rarity => {
-    if (stage.rewards.guaranteedRarity) return stage.rewards.guaranteedRarity;
-    const r = Math.random();
-    if (stage.recommendedLevel >= 42) {
-      if (r < 0.2) return 'mythic';
-      if (r < 0.62) return 'legendary';
-      return 'epic';
-    }
-    if (stage.recommendedLevel >= 30) {
-      if (r < 0.1) return 'mythic';
-      if (r < 0.44) return 'legendary';
-      if (r < 0.8) return 'epic';
-      return 'rare';
-    }
-    if (stage.recommendedLevel >= 22) {
-      if (r < 0.08) return 'mythic';
-      if (r < 0.35) return 'legendary';
-      if (r < 0.7) return 'epic';
-      return 'rare';
-    }
-    if (stage.recommendedLevel >= 12) {
-      if (r < 0.14) return 'legendary';
-      if (r < 0.45) return 'epic';
-      if (r < 0.78) return 'rare';
-      return 'uncommon';
-    }
-    if (stage.recommendedLevel >= 5) {
-      if (r < 0.15) return 'epic';
-      if (r < 0.48) return 'rare';
-      if (r < 0.8) return 'uncommon';
-      return 'common';
-    }
-    if (r < 0.18) return 'rare';
-    if (r < 0.58) return 'uncommon';
-    return 'common';
-  };
+  const rollStageRarity = (stage: StageDef): Rarity => rollDropRarity(stage, Math.random());
 
   const handleLeagueResult = (victory: boolean, forfeited = false): BattleRewardSummary => {
     const current = refreshProgressPeriods(saveRef.current);

@@ -1,7 +1,7 @@
 {
   "name": "react-vite-tailwind",
   "private": true,
-  "version": "1.19.1",
+  "version": "1.20.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,7 @@
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "sim": "vite-node scripts/simulate-battle.ts",
+    "sim:gear": "vite-node scripts/simulate-gear.ts",
     "sim:dungeon": "vite-node scripts/simulate-dungeon.ts"
   },
   "dependencies": {

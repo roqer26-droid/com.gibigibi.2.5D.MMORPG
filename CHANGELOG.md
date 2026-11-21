@@ -4,6 +4,20 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.20.0 — Zorluk: nadir eşyalar zor düşer, düşmanlar geç oyunda sert vurur; + parlaması yeni çizimlere göre
+- **Eşya düşüşü** (`src/data/loot.ts`): Efsanevi/Mitik çok daha nadir. Seviye 30–41 aşamalarında Efsanevi %34 → %7,5, Mitik %10 → %0,5;
+  seviye 22–29'da Efsanevi %27 → %5, Mitik kalktı; 12–21'de %14 → %3. Boss/elit "garanti" artık Destansı+ tabandır; bildirilen Efsanevi %12,
+  Mitik %3 (Efsanevi %15) şansla düşer. Haritadaki "Garanti Ganimet" yazısı buna göre güncellendi.
+- **Görevler:** Boss görevlerinin eşya ödülü bir kademe düştü. Kolay sayaç görevleri Destansı'ya indi; Efsanevi/Mitik ödül yalnızca uzun hedeflerde kaldı
+  (500 savaş kazan, 200/400 aşama temizle, 40 boss, 300 yetenek, 150 geliştirme, 25 Destansı+ eşya, 22 kahraman). Daha önce alınmış ödüller etkilenmez.
+- **Düşman gücü** (`src/data/difficulty.ts`): Geç oyunda düşman canı tabanı tam efsanevi setli kahramanın hasarına bağlandı (seviye 8'den itibaren
+  kademeli); saldırı ×3'e kadar artar; ve her vuruş savunma ne olursa olsun kahramanın en yüksek canının en az %9'unu (boss %14) götürür
+  (seviye 10–30 arası kademeli). `npm run sim:gear` tam setli kahramanı ölçer: seviye 36'da efsanevi sette boss 3–5 hamle → ~10–12 hamle,
+  destansıda ~20, nadirde ~28; ekipmansız kahraman 25+ seviyede boss'ta kaybeder.
+- **+ parlaması:** Ekipman aura'sı çizimli 22 kahramanın boyuna/genişliğine göre ölçeklenir ve gövdenin ortasında durur (eski çizimin ölçüsüne göre
+  küçük kalıp çizimin arkasında kalıyordu). Ön yarı zerreler, ön rune yayı ve hafif ışıma çizimin ÖNÜNDE çizilir; rune halkası yere yassı çizilir, ışık sütunu
+  tüm boyu kaplar, altın hale başın üstüne oturur. Ejder Formu eski vektör çizim ve eski aurasını korur.
+
 ## v1.19.1 — Kahramanlar sekmesi: tüm çizimler açılışta görünür
 - Kahramanlar sekmesindeki kartlar artık kilitli/açık ayrımı olmadan 22 kahramanın tam boy çizimini gösterir (yüz portresi kaldırıldı).
   Görseller yüklenmeden çizilen kartlar boş kalıyor, dokununca görünüyordu; görsel yüklenince kart yeniden çizilir.

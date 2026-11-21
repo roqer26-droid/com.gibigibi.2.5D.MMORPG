@@ -16,10 +16,10 @@ import {
   StageDef,
 } from '../types/game';
 import { ComputedHeroBuild } from '../utils/rpgLogic';
-import { computeEnchantAura, HERO_TEX_SIZE } from './HeroRenderer';
+import { computeEnchantAura, HERO_TEX_SIZE, heroAuraGeometry } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
-import { capGemShield } from '../data/difficulty';
+import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
 import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
@@ -198,6 +198,8 @@ export class BattleScene extends Phaser.Scene {
 
   /** Ekipman + seviyesinden gelen canlı büyü aurası */
   private heroAuraGraphics!: Phaser.GameObjects.Graphics;
+  /** Çizimli kahramanlarda aura'nın çizimin ÖNÜNDE kalan katmanı (ön yarı zerreler, ön rune yayı, ışıma) */
+  private heroAuraFrontGraphics!: Phaser.GameObjects.Graphics;
   private heroAura = { tier: 0, color: 0xfde047, intensity: 0, motes: 0 };
 
   private comboCount = 0;
@@ -368,6 +370,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroContainer = this.add.container(0, 0);
     this.heroSprite = this.add.image(0, 0, this.heroIdleKey);
     this.heroContainer.add(this.heroSprite);
+    this.heroAuraFrontGraphics = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
     // Görsel tabanlı kahramanlar: görsel henüz yüklenmediyse hazır olunca dokular yenilenir
     const artHero = hasHeroArt(this.initData.hero.classId);
     if (artHero) {
@@ -598,7 +601,12 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Kahramanın canlı büyü aurası — ekipman + seviyesi arttıkça kat kat güçlenir
-    if (this.heroAuraGraphics && this.heroAura.tier > 0) {
+    if (this.heroAuraFrontGraphics) this.heroAuraFrontGraphics.clear();
+    const auraGeo = heroAuraGeometry(this.initData.hero.classId);
+    const inDragonForm = this.dragonFormTurns > 0 && this.initData.hero.classId === 'dragonheart';
+    if (this.heroAuraGraphics && this.heroAura.tier > 0 && auraGeo && !inDragonForm) {
+      this.drawArtAura(auraGeo, _time / 1000);
+    } else if (this.heroAuraGraphics && this.heroAura.tier > 0) {
       const g = this.heroAuraGraphics;
       g.clear();
       const t = this.heroAura.tier;
@@ -2264,8 +2272,14 @@ export class BattleScene extends Phaser.Scene {
       this.spawnBannerText('EJDERHA NEFESİ!', '#f97316');
     }
 
-    const mitigation = 100 / (100 + this.initData.build.stats.defense * 1.45);
-    let dmg = Math.max(8, Math.round(rawAtk * mitigation));
+    let dmg = enemyHitDamage({
+      rawAtk,
+      enemyAttack: this.enemy.attack,
+      defense: this.initData.build.stats.defense,
+      enemyLevel: this.enemy.level,
+      isBoss: this.enemy.isBoss,
+      heroMaxHp: this.heroMaxHp,
+    });
     if (this.initData.companion === 'ice_fox') {
       const fx = foxResolve(this.companionState, action.kind, dmg);
       this.companionState = fx.state;
@@ -3442,6 +3456,95 @@ export class BattleScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+  }
+
+  /**
+   * Çizimli kahramanların canlı ekipman aurası: merkez gövdenin ortası, ölçek çizimin boyuna bağlı (HeroRenderer'daki doku sürümüyle aynı oranlar).
+   * Arka katman çizimin arkasında, ön katman (ön yarı zerreler, ön rune yayı, hafif ışıma) çizimin önünde çizilir.
+   */
+  private drawArtAura(geo: NonNullable<ReturnType<typeof heroAuraGeometry>>, time: number) {
+    const g = this.heroAuraGraphics;
+    const f = this.heroAuraFrontGraphics;
+    g.clear();
+    const t = this.heroAura.tier;
+    const col = this.heroAura.color;
+    const s = this.heroContainer.scaleX;
+    const pulse = 0.72 + 0.28 * Math.sin(time * 2.1);
+    const hx = this.heroContainer.x;
+    // Çizim başlangıcı doku merkezinin 24 birim altındadır; yer çizgisi +74 daha aşağıda
+    const ground = this.heroContainer.y + s * (24 + 74 - geo.float);
+    const cy = ground - s * geo.h * 0.5;
+    const rx = s * (Math.max(geo.w * 0.5 + 10, 60) + t * 7);
+    const ry = s * (geo.h * 0.5 + 8 + t * 5);
+
+    // Radyal ışık
+    const R = Math.max(rx, ry) * 1.1;
+    for (let i = 8; i >= 1; i--) g.fillStyle(col, (0.03 + 0.02 * t) * pulse * (1 - i / 10)), g.fillCircle(hx, cy, (R * i) / 8);
+
+    const ellipsePath = (gr: Phaser.GameObjects.Graphics, ex: number, ey: number, erx: number, ery: number, a0: number, a1: number) => {
+      gr.beginPath();
+      const n = 20;
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + ((a1 - a0) * i) / n;
+        const px = ex + Math.cos(a) * erx;
+        const py = ey + Math.sin(a) * ery;
+        if (i === 0) gr.moveTo(px, py);
+        else gr.lineTo(px, py);
+      }
+      gr.strokePath();
+    };
+
+    // Yer rune halkası (kademe 2+): arka yarı arkada, ön yarı çizimin önünde; kesikli çizgi döner
+    if (t >= 2) {
+      const rrx = s * Math.min(Math.max(geo.w * 0.5, 52) + t * 6, 138);
+      const rry = rrx * 0.29;
+      const dash = (gr: Phaser.GameObjects.Graphics, base: number, alpha: number, k: number, front: boolean) => {
+        gr.lineStyle(2, col, alpha);
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 9) {
+          const a0 = a + time * 0.55;
+          const mid = Math.sin(a0 + Math.PI / 28);
+          if ((mid > 0) !== front) continue;
+          ellipsePath(gr, hx, base, rrx * k, rry * k, a0, a0 + Math.PI / 14);
+        }
+      };
+      dash(g, ground + s * 2, 0.3 + 0.25 * pulse, 1, false);
+      dash(f, ground + s * 2, 0.5 + 0.3 * pulse, 1, true);
+      dash(g, ground + s * 2, 0.3 + 0.2 * pulse, 0.72, false);
+      dash(f, ground + s * 2, 0.45 + 0.25 * pulse, 0.72, true);
+    }
+
+    // Işık sütunu (kademe 3+): çizimin tüm boyunu kaplar
+    if (t >= 3) {
+      const bw = s * Math.min(geo.w * 0.5 + t * 6, 110) * 0.8;
+      const top = ground - s * (geo.h + 14);
+      for (let i = 0; i < 5; i++) {
+        g.fillStyle(col, Math.max(0.006, (0.05 - i * 0.008) * pulse));
+        g.fillRect(hx - bw + i * 2, top, (bw - i * 2) * 2, ground - top);
+      }
+    }
+
+    // Dönen zerreler (kademe 4+): ön yarı çizimin önünde
+    if (this.heroAura.motes > 0) {
+      for (let i = 0; i < this.heroAura.motes; i++) {
+        const a = time * 1.35 + (i / this.heroAura.motes) * Math.PI * 2;
+        const front = Math.sin(a) > 0;
+        const gr = front ? f : g;
+        const mx = hx + Math.cos(a) * Math.min(rx, s * 140);
+        const my = cy + Math.sin(a) * Math.min(ry * 0.38, s * 56);
+        gr.fillStyle(col, 0.55 + 0.4 * Math.abs(Math.sin(a)));
+        gr.fillCircle(mx, my, s * (2.4 + Math.sin(time * 3 + i) * 0.9));
+      }
+    }
+
+    // Çizimin üstünde hafif ışıma
+    f.fillStyle(col, 0.025 * t * pulse);
+    f.fillCircle(hx, cy, Math.min(Math.max(rx, ry) * 0.7, s * 120));
+
+    // Altın hale (kademe 5)
+    if (t >= 5) {
+      g.lineStyle(3, 0xfde047, 0.65 + 0.3 * pulse);
+      g.strokeEllipse(hx, ground - s * (geo.h + 12), s * Math.min(30 * geo.k * 0.9, 44) * 2, s * 20);
+    }
   }
 
   /** Görsel kahramanın bekleme nefesi: pivot ayak çizgisinde, bu yüzden ayaklar kaymaz. */

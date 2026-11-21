@@ -1,6 +1,6 @@
 import { QuestDef } from '../types/game';
 
-export const QUESTS_LIST: QuestDef[] = [
+const RAW_QUESTS: QuestDef[] = [
   // MAIN QUESTS
   {
     id: 'main_1_first_win',
@@ -455,7 +455,7 @@ export const QUESTS_LIST: QuestDef[] = [
 ];
 
 // Each objective is connected to saved combat, collection, or league progress.
-QUESTS_LIST.push(
+RAW_QUESTS.push(
   {
     id: 'main_forest_lord', title: 'Ormanın Gerçek Efendisi',
     description: 'Yaban Kalbi Ordun ile yüzleş ve Orman Lordu aşamasını tamamla.',
@@ -685,3 +685,48 @@ QUESTS_LIST.push(
     rewards: { xp: 15000, gold: 30000, crystals: 1500, itemRarity: 'mythic' },
   }
 );
+
+/**
+ * v1.20.0 zorluk ayarı: Efsanevi/Mitik eşya ödülleri emek ister.
+ *  - Boss görevleri ödülü bir kademe düşer (tek boss yenmek yeterince emek değil).
+ *  - Kolay sayaç görevlerinde ödül Destansı'ya iner ya da hedef büyür ve ödül yalnızca uzun soluklu hedefte kalır.
+ * Tamamlanmış/alınmış görevler kayıtta kalır; hedefi büyüyen görevlerin ilerlemesi yeni hedefe göre gösterilir.
+ */
+const QUEST_TUNING: Record<string, { targetCount?: number; rarity?: QuestDef['rewards']['itemRarity']; description?: string }> = {
+  ach_win_20: { rarity: 'epic' },
+  side_win_30: { rarity: 'epic' },
+  ach_win_60: { targetCount: 500, rarity: 'legendary', description: 'Toplam 500 düşman yen.' },
+  ach_stages_25: { rarity: 'epic' },
+  ach_stages_60: { targetCount: 200, rarity: 'legendary', description: 'Dünya haritasında toplam 200 aşama temizle.' },
+  ach_stages_120: { targetCount: 400, rarity: 'mythic', description: 'Dünya haritasında toplam 400 aşama temizleyerek efsane ol!' },
+  ach_bosses_6: { rarity: 'epic' },
+  ach_bosses_16: { targetCount: 40, rarity: 'legendary', description: 'Toplam 40 boss savaşı kazan.' },
+  ach_combo_8: { rarity: 'epic' },
+  ach_skills_50: { targetCount: 300, rarity: 'legendary', description: 'Savaşlarda toplam 300 yetenek veya Ulti kullan.' },
+  ach_epic_10: { targetCount: 25, rarity: 'legendary', description: 'Envanter ve ekipmanında 25 adet Destansı+ eşya bulundur.' },
+  ach_upgrade_25: { targetCount: 150, rarity: 'legendary', description: 'Toplam 150 kez ekipman geliştir.' },
+  side_level_12: { rarity: 'epic' },
+  side_level_20: { rarity: 'epic' },
+  side_level_35: { rarity: 'legendary' },
+  side_heroes_8: { rarity: 'epic' },
+  ach_heroes_12: { rarity: 'epic' },
+  ach_heroes_20: { targetCount: 22, rarity: 'mythic', description: '22 kahramanın tamamının kilidini aç.' },
+};
+
+const stepDown = (r: QuestDef['rewards']['itemRarity']) => (r === 'mythic' ? 'legendary' : r === 'legendary' ? 'epic' : r);
+
+export const QUESTS_LIST: QuestDef[] = RAW_QUESTS.map((q) => {
+  const t = QUEST_TUNING[q.id];
+  if (t) {
+    return {
+      ...q,
+      targetCount: t.targetCount ?? q.targetCount,
+      description: t.description ?? q.description,
+      rewards: { ...q.rewards, itemRarity: t.rarity ?? q.rewards.itemRarity },
+    };
+  }
+  if (q.objectiveType === 'defeat_boss' && q.rewards.itemRarity) {
+    return { ...q, rewards: { ...q.rewards, itemRarity: stepDown(q.rewards.itemRarity) } };
+  }
+  return q;
+});
