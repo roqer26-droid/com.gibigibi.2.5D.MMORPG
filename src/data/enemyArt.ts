@@ -196,6 +196,19 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   amber_dunes_10_enemy: 'altin_kabuklu_mahrak',
   sunken_archive_10_enemy: 'derinliklerin_arsivcisi',
   salt_bastion_10_enemy: 'surlarin_beyaz_muhafizi',
+  // v1.29.0: paket 2 — 12 bölge bossu (aşama 10)
+  obsidian_harbor_10_enemy: 'obsidyen_amiral',
+  black_tide_10_enemy: 'kara_gelgitin_leviathani',
+  echo_terrace_10_enemy: 'bin_sesli_velora',
+  mercury_foundry_10_enemy: 'civa_ustasi_rhodin',
+  cinder_garden_10_enemy: 'kullerin_bahcivani',
+  prism_labyrinth_10_enemy: 'spektrum_muhafizi',
+  iron_orbit_10_enemy: 'demir_gezegenin_kalbi',
+  aurora_vault_10_enemy: 'aurora_anahtarcisi',
+  dream_marsh_10_enemy: 'ruya_dokuyucusu',
+  mirror_court_10_enemy: 'cift_suretli_hukumdar',
+  midnight_observatory_10_enemy: 'yildiz_avcisi_neros',
+  hollow_sun_10_enemy: 'solgun_gunesin_yutucusu',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -320,6 +333,19 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   altin_kabuklu_mahrak: { height: 0.56, maxWidth: 0.98, glow: '#fbbf24', breathSec: 3.8 },
   derinliklerin_arsivcisi: { height: 0.74, maxWidth: 0.9, glow: '#2dd4bf', breathSec: 3.6 },
   surlarin_beyaz_muhafizi: { height: 0.68, maxWidth: 0.98, glow: '#a7f3d0', breathSec: 3.8 },
+  // v1.29.0 paket 2 bölge bossları (300'lük doku; boy ≤ 0.74, uzun mızrak/anahtar/yay uçları için daha düşük)
+  obsidyen_amiral: { height: 0.64, maxWidth: 0.96, glow: '#fbbf24', breathSec: 3.8 },
+  kara_gelgitin_leviathani: { height: 0.68, maxWidth: 0.92, glow: '#2dd4bf', breathSec: 3.6 },
+  bin_sesli_velora: { height: 0.66, maxWidth: 0.9, glow: '#f0abfc', breathSec: 3.6 },
+  civa_ustasi_rhodin: { height: 0.62, maxWidth: 0.98, glow: '#fb923c', breathSec: 3.8 },
+  kullerin_bahcivani: { height: 0.64, maxWidth: 0.94, glow: '#ef4444', breathSec: 3.6 },
+  spektrum_muhafizi: { height: 0.64, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.6 },
+  demir_gezegenin_kalbi: { height: 0.6, maxWidth: 0.9, glow: '#ef4444', breathSec: 3.8, float: 0.03, bob: 0.012 },
+  aurora_anahtarcisi: { height: 0.64, maxWidth: 0.96, glow: '#a7f3d0', breathSec: 3.6 },
+  ruya_dokuyucusu: { height: 0.56, maxWidth: 0.98, glow: '#c084fc', breathSec: 3.6 },
+  cift_suretli_hukumdar: { height: 0.66, maxWidth: 0.9, glow: '#e9d5ff', breathSec: 3.6 },
+  yildiz_avcisi_neros: { height: 0.64, maxWidth: 0.96, glow: '#818cf8', breathSec: 3.6 },
+  solgun_gunesin_yutucusu: { height: 0.6, maxWidth: 0.98, glow: '#f59e0b', breathSec: 3.8, float: 0.03, bob: 0.012 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */

@@ -330,5 +330,53 @@
  "surlarin_beyaz_muhafizi": {
   "aspect": 1.039,
   "footFrac": 0.9968
+ },
+ "obsidyen_amiral": {
+  "aspect": 1.0407,
+  "footFrac": 0.9951
+ },
+ "kara_gelgitin_leviathani": {
+  "aspect": 0.9078,
+  "footFrac": 0.9969
+ },
+ "bin_sesli_velora": {
+  "aspect": 0.7578,
+  "footFrac": 0.9688
+ },
+ "civa_ustasi_rhodin": {
+  "aspect": 1.1287,
+  "footFrac": 0.9982
+ },
+ "kullerin_bahcivani": {
+  "aspect": 0.9234,
+  "footFrac": 0.9875
+ },
+ "spektrum_muhafizi": {
+  "aspect": 0.7781,
+  "footFrac": 0.9969
+ },
+ "demir_gezegenin_kalbi": {
+  "aspect": 0.8922,
+  "footFrac": 1.0
+ },
+ "aurora_anahtarcisi": {
+  "aspect": 0.9766,
+  "footFrac": 0.9969
+ },
+ "ruya_dokuyucusu": {
+  "aspect": 1.2698,
+  "footFrac": 0.9762
+ },
+ "cift_suretli_hukumdar": {
+  "aspect": 0.7937,
+  "footFrac": 0.9797
+ },
+ "yildiz_avcisi_neros": {
+  "aspect": 0.9484,
+  "footFrac": 0.9609
+ },
+ "solgun_gunesin_yutucusu": {
+  "aspect": 1.0866,
+  "footFrac": 1.0
  }
 }

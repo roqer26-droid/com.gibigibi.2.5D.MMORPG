@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.29.0 — Paket 2: 12 bölge bossu
+- Obsidyen Amiral, Kara Gelgitin Leviathanı, Bin Sesli Velora, Cıva Ustası Rhodin, Küllerin Bahçıvanı, Spektrum Muhafızı, Demir Gezegenin Kalbi (süzülür),
+  Aurora Kasasının Anahtarcısı, Bataklığın Rüya Dokuyucusu, Çift Suretli Hükümdar, Yıldız Avcısı Neros ve Solgun Güneşin Yutucusu (süzülür) çizimleri;
+  her biri kendi bölgesinin `<bölge>_10_enemy` boss karşılaşmasına bağlı. Paket 1 ile birlikte 25 görsel, 45 karşılaşma (toplam 95 çizim, 207 düşman kimliği).
+- Uzun mızrak/anahtar/kılıç/yay uçlarının sahne üst kenarında kesilmemesi için boss boyları 0,62–0,68'e ayarlandı.
+
 ## v1.28.0 — 13 görsel, 33 karşılaşma (5 normal düşman + 8 bölge bossu)
 - Normal (bölge başına 5 karşılaşma: aşama 1, 2, 4, 6, 8): Kuyruklu Buz Golemi (`comet_bridge`), Rün Yağmacı (`rune_necropolis`), Kırık Boşluk Avcısı (`shattered_sky`),
   Sıfır Boşluk Avcısı (`zero_threshold`), Şafak Ateş Ruhu (`dawn_core`, süzülür).
