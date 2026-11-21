@@ -218,5 +218,25 @@
  "cam_agac_ruhu": {
   "aspect": 0.6094,
   "footFrac": 0.9891
+ },
+ "tuz_tas_nobetci": {
+  "aspect": 1.0884,
+  "footFrac": 0.9966
+ },
+ "obsidyen_yagmaci": {
+  "aspect": 0.9141,
+  "footFrac": 0.9984
+ },
+ "batik_yagmaci": {
+  "aspect": 0.8969,
+  "footFrac": 0.9969
+ },
+ "kara_bosluk_avcisi": {
+  "aspect": 1.1636,
+  "footFrac": 0.9618
+ },
+ "kehribar_semender": {
+  "aspect": 2.0126,
+  "footFrac": 0.9654
  }
 }

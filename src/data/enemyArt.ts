@@ -84,6 +84,32 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   thorn_citadel_4_enemy: 'diken_kurt',
   thorn_citadel_6_enemy: 'diken_kurt',
   thorn_citadel_8_enemy: 'diken_kurt',
+  // v1.25.0: sıradaki beş bölge düşmanı (bölge başına 5 normal karşılaşma: aşama 1, 2, 4, 6, 8)
+  amber_dunes_1_enemy: 'kehribar_semender',
+  amber_dunes_2_enemy: 'kehribar_semender',
+  amber_dunes_4_enemy: 'kehribar_semender',
+  amber_dunes_6_enemy: 'kehribar_semender',
+  amber_dunes_8_enemy: 'kehribar_semender',
+  sunken_archive_1_enemy: 'batik_yagmaci',
+  sunken_archive_2_enemy: 'batik_yagmaci',
+  sunken_archive_4_enemy: 'batik_yagmaci',
+  sunken_archive_6_enemy: 'batik_yagmaci',
+  sunken_archive_8_enemy: 'batik_yagmaci',
+  salt_bastion_1_enemy: 'tuz_tas_nobetci',
+  salt_bastion_2_enemy: 'tuz_tas_nobetci',
+  salt_bastion_4_enemy: 'tuz_tas_nobetci',
+  salt_bastion_6_enemy: 'tuz_tas_nobetci',
+  salt_bastion_8_enemy: 'tuz_tas_nobetci',
+  obsidian_harbor_1_enemy: 'obsidyen_yagmaci',
+  obsidian_harbor_2_enemy: 'obsidyen_yagmaci',
+  obsidian_harbor_4_enemy: 'obsidyen_yagmaci',
+  obsidian_harbor_6_enemy: 'obsidyen_yagmaci',
+  obsidian_harbor_8_enemy: 'obsidyen_yagmaci',
+  black_tide_1_enemy: 'kara_bosluk_avcisi',
+  black_tide_2_enemy: 'kara_bosluk_avcisi',
+  black_tide_4_enemy: 'kara_bosluk_avcisi',
+  black_tide_6_enemy: 'kara_bosluk_avcisi',
+  black_tide_8_enemy: 'kara_bosluk_avcisi',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -175,6 +201,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   bakir_yagmaci: { height: 0.62, maxWidth: 0.86, glow: '#fb923c', breathSec: 3.0 },
   sis_bosluk_avcisi: { height: 0.7, maxWidth: 0.94, glow: '#99f6e4', breathSec: 3.0 },
   diken_kurt: { height: 0.5, maxWidth: 0.96, glow: '#84cc16', breathSec: 2.8 },
+  // v1.25.0 (240'lık doku)
+  kehribar_semender: { height: 0.44, maxWidth: 0.96, glow: '#f59e0b', breathSec: 2.8 },
+  batik_yagmaci: { height: 0.64, maxWidth: 0.86, glow: '#5eead4', breathSec: 2.8 },
+  tuz_tas_nobetci: { height: 0.66, maxWidth: 0.9, glow: '#fde68a', breathSec: 3.4 },
+  obsidyen_yagmaci: { height: 0.64, maxWidth: 0.86, glow: '#c084fc', breathSec: 2.8 },
+  kara_bosluk_avcisi: { height: 0.66, maxWidth: 0.96, glow: '#38bdf8', breathSec: 3.0 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */

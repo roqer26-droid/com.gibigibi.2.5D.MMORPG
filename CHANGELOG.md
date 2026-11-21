@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.25.0 — Sıradaki beş genişleme düşmanı (25 karşılaşma)
+- Kehribar Semender (`amber_dunes`), Batık Yağmacı (`sunken_archive`), Tuz Taş Nöbetçi (`salt_bastion`), Obsidyen Yağmacı (`obsidian_harbor`) ve
+  Kara Boşluk Avcısı (`black_tide`) çizimleri. Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır:
+  toplam 25 kimlik, 5 dosya (şimdiye kadar 60 çizim, 112 düşman kimliği). Aynı bölgenin hazine/elit/boss düşmanları kendi görsellerini korur.
+- Ortak bekleme nefesi (v1.24.0) bu düşmanlarda da çalışır; ayak/pençe sabit, saldırı/hasar sonrası döngüye dönüş 1× ve 2×'te doğrulandı.
+
 ## v1.24.0 — Beş yeni bölge düşmanı (25 karşılaşma) + tüm düşmanlara ortak nefes
 - **Yeni çizimler:** Cam Ağaç Ruhu (`glass_forest`), Sessiz Yağmacı (`silent_shore`), Bakır Yağmacı (`copper_mines`), Sis Boşluk Avcısı (`mist_aqueduct`) ve
   Diken Kurt (`thorn_citadel`). Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır: toplam 25 kimlik, 5 dosya.
