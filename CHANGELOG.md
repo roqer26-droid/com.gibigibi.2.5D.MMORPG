@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.21.2 — Savaş sonu ekranında "Ana Menüye Dön"
+- Dünya haritasındaki bir aşamayı kazandığında ya da kaybettiğinde sonuç ekranında "Haritaya Dön" yanında "Ana Menüye Dön" düğmesi çıkar.
+  Zindan, boss avı ve lig savaşlarında sonuç ekranı değişmedi (onların kendi dönüş akışı var).
+
 ## v1.21.1 — Düşman arkasındaki dairesel renk lekeleri kaldırıldı
 - Çizimli düşmanların arkasındaki dairesel boss aurası (zayıflık rengi/öfkede kırmızı dolu daire) ve dairesel kristal ışıması kaldırıldı.
 - Yerine çizimin SİLÜETİNİ izleyen yumuşak ışıma geldi (`createEnemyGlowTexture`): ışık yalnızca konturdan taşar, çizimle birlikte nefes alır/süzülür.

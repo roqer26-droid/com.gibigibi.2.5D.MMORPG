@@ -24,6 +24,7 @@ import {
   Grid2x2,
   Hourglass,
   Star,
+  Home,
 } from 'lucide-react';
 import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
@@ -81,6 +82,8 @@ interface BattleViewProps {
   dungeon?: { battleNo: number; total: number; relics: RelicId[]; startHp: number };
   onDungeonBattleEnd?: (victory: boolean, turns: number, heroHp: number) => { completed: boolean; healed: number };
   onExitToMap: () => void;
+  /** Savaş sonu ekranından doğrudan ana menüye dön */
+  onExitToMenu?: () => void;
   onNextStage: (stage: StageDef) => void;
   onEquipItem: (item: EquipmentItem) => void;
   onOpenSettings: () => void;
@@ -100,6 +103,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
   dungeon,
   onDungeonBattleEnd,
   onExitToMap,
+  onExitToMenu,
   onNextStage,
   onEquipItem,
   onOpenSettings,
@@ -1317,6 +1321,17 @@ export const BattleView: React.FC<BattleViewProps> = ({
                       {exitLabel}
                     </button>
                   </div>
+                  {onExitToMenu && (
+                    <button
+                      type="button"
+                      onClick={onExitToMenu}
+                      data-testid="battle-exit-menu"
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800"
+                    >
+                      <Home className="h-4 w-4" />
+                      Ana Menüye Dön
+                    </button>
+                  )}
                 </div>
               </>
             ) : (
@@ -1351,6 +1366,17 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     {exitLabel}
                   </button>
                 </div>
+                {onExitToMenu && (
+                  <button
+                    type="button"
+                    onClick={onExitToMenu}
+                    data-testid="battle-exit-menu"
+                    className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800"
+                  >
+                    <Home className="h-4 w-4" />
+                    Ana Menüye Dön
+                  </button>
+                )}
               </>
             )}
           </div>

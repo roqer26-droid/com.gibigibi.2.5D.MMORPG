@@ -832,6 +832,7 @@ export function App() {
             if (activeHunt) { setSelectedHuntId(null); setRoute('hunts'); return; }
             setRoute(activeLeagueOpponent ? 'league' : 'world');
           }}
+          onExitToMenu={dungeonBattle || activeHunt || activeLeagueOpponent ? undefined : () => setRoute('menu')}
           onNextStage={handleStartStage}
           onEquipItem={(itm) => handleEquipItem(itm)}
           onOpenSettings={() => setShowSettings(true)}
