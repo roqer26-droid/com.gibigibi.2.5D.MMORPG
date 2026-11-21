@@ -45,7 +45,26 @@ export const HERO_ART_LAYOUT: Partial<Record<HeroClassId, HeroArtLayout>> = {
   vampire: { above: 218, float: 0, maxWidth: 230, bob: 0 },
   bigfoot: { above: 204, float: 0, maxWidth: 240, bob: 0 },
   night_screecher: { above: 156, float: 30, maxWidth: 236, bob: 5 },
+  // Yaratık kahramanlar. Havada duranlarda (Peri, Anka, Cin, Serafim) `float` + `bob` hafif süzülme verir; ayaklı olanların ayağı sabittir.
+  // `above` ve `maxWidth` kahraman başına ayarlanır: kanatlar/kuyruklar/mızrak kesilmesin diye maxWidth geniş, iri kahramanlar tahtaya taşmasın diye above sınırlı.
+  fairy: { above: 212, float: 26, maxWidth: 250, bob: 5 },
+  kitsune: { above: 172, float: 0, maxWidth: 250, bob: 0 },
+  naga: { above: 226, float: 0, maxWidth: 250, bob: 0 },
+  siren: { above: 224, float: 0, maxWidth: 250, bob: 0 },
+  minotaur: { above: 240, float: 0, maxWidth: 250, bob: 0 },
+  golem: { above: 236, float: 0, maxWidth: 250, bob: 0 },
+  phoenix: { above: 196, float: 30, maxWidth: 250, bob: 6 },
+  djinn: { above: 204, float: 30, maxWidth: 250, bob: 5 },
+  demon: { above: 228, float: 0, maxWidth: 250, bob: 0 },
+  seraph: { above: 212, float: 24, maxWidth: 250, bob: 4 },
 };
+
+/** Küçük kartlar için yüz kadrajı (128 px, şeffaf WebP). Tam boy görsel yüklenmeden kartlarda kullanılır. */
+const PORTRAITS = import.meta.glob('../art/heroes/portraits/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
+export const HERO_PORTRAIT_URL: Partial<Record<HeroClassId, string>> = {};
+for (const [path, url] of Object.entries(PORTRAITS)) {
+  HERO_PORTRAIT_URL[path.split('/').pop()!.replace(/\.webp$/, '') as HeroClassId] = url;
+}
 
 /** Nefes döngüsü: yaklaşık 3 saniye, gövde en fazla %1,5 esner; ayaklar sabit kalır. */
 export const HERO_BREATH = { periodSec: 3, stretch: 0.015 } as const;
@@ -81,5 +100,3 @@ export function heroImageReady(id: string): Promise<void> {
   });
 }
 
-// Görseller ilk yüklemede arka planda isteklenir (küçük dosyalar; ekran açılınca hazırdır)
-Object.keys(HERO_ART_URL).forEach((id) => load(id));

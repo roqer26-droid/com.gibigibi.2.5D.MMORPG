@@ -390,6 +390,19 @@ export class BattleScene extends Phaser.Scene {
     // Nefes alma: eski kahramanlarda hafif yükselme + göğüs genişlemesi; görsel kahramanlarda ayaklar sabit, ~3 sn'lik %1,5 esneme
     if (artHero) {
       this.startHeroBreath();
+      // Havada duran kahramanlar (Peri, Anka, Cin, Serafim, Gecenin Çığırtkanı): hafif süzülme; ayaklı kahramanlarda bob = 0
+      const bob = HERO_ART_LAYOUT[this.initData.hero.classId]?.bob ?? 0;
+      if (bob > 0) {
+        const baseY = this.heroSprite.y;
+        this.tweens.add({
+          targets: this.heroSprite,
+          y: { from: baseY + bob, to: baseY - bob },
+          duration: 1500,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
     } else {
       this.tweens.add({
         targets: this.heroSprite,

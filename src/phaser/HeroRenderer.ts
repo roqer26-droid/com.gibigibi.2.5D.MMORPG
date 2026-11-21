@@ -671,6 +671,8 @@ export function drawHeroToCanvas(
   const art = !proceduralOnly && hasHeroArt(hero.classId) ? heroImage(hero.classId) : null;
   if (art) {
     drawHeroArt(ctx, art, hero.classId, pose, time, noGlow);
+  } else if (usesArt) {
+    // Çizim henüz yüklenmedi (yalnızca gösterilen kahramanın görseli istenir): eski çizim yanıp sönmesin
   } else if (creature) {
     drawCreature(ctx, hero, pose, time, aura, creature);
   } else {

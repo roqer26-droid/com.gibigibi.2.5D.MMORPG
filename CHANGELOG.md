@@ -4,6 +4,15 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.18.0 — On yaratık kahramanın yeni çizimleri
+- Peri (`fairy`), Ruh Tilkisi (`kitsune`), Naga (`naga`), Siren (`siren`), Minotor (`minotaur`), Kristal Golem (`golem`), Anka (`phoenix`),
+  Cin (`djinn`), İblis (`demon`) ve Serafim (`seraph`) için şeffaf çizimler seçim ekranı, menü ve savaşta kullanılır. Kimlik, yetenek, istatistik,
+  açılma koşulu, ekipman ve kayıtlar değişmedi. Yoldaş Buz Tilkisi kendi görselini kullanmaya devam eder.
+- Peri çiziminin gömülü gri sisi temizlendi. Ayaklı kahramanların ayakları sabit, havadakiler (Peri, Anka, Cin, Serafim) hafif süzülür;
+  mevcut nefes, parlama, saldırı ve hasar efektleri aynen çalışır. Ölçek/hizalama kahraman başına `src/data/heroArt.ts` içinde ayarlanır.
+- Savaşta ve menüde yalnızca gösterilen kahramanın tam boy görseli yüklenir (önceden hepsi açılışta istenirdi). Kahraman sınıfları listesindeki küçük
+  kartlar yeni 10 kahraman için yüz kadrajlı 128 px portre kullanır.
+
 ## v1.17.0 — Sekiz kahramanın yeni çizimleri
 - Savaşçı, Şövalye, Korucu, Büyücü, Nekromant, Suikastçı, Fırtına Çağıran ve Ejder Kalbi (Rhogar) için şeffaf PNG çizimler
   seçim ekranında, menüde ve savaşta kullanılır. Sınıf kimlikleri aynı olduğundan seviye, ekipman, yetenek, yoldaş ve açılma durumu eski kayıtlardan aynen gelir.

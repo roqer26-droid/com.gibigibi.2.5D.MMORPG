@@ -19,6 +19,7 @@ import { CLASS_SKILLS } from '../data/skills';
 import { heroConditionMet } from '../data/heroUnlocks';
 import { computeHeroBuild, xpRequiredForLevel } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
+import { HERO_PORTRAIT_URL } from '../data/heroArt';
 
 interface HeroesScreenProps {
   save: GameSaveState;
@@ -395,7 +396,19 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
 
                   <div className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left">
                     <div className="relative shrink-0">
-                      <HeroPaperdoll hero={prog} size={64} staticRender={!selected && !open} />
+                      {HERO_PORTRAIT_URL[c.id] ? (
+                        <img
+                          src={HERO_PORTRAIT_URL[c.id]}
+                          alt=""
+                          width={64}
+                          height={64}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-16 w-16 object-contain"
+                        />
+                      ) : (
+                        <HeroPaperdoll hero={prog} size={64} staticRender={!selected && !open} />
+                      )}
                       {locked && (
                         <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-950/70">
                           <Lock className="h-5 w-5 text-slate-300" />

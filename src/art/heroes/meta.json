@@ -46,5 +46,45 @@
  "night_screecher": {
   "aspect": 1.0442,
   "footFrac": 1.0
+ },
+ "fairy": {
+  "aspect": 0.7804,
+  "footFrac": 1.0
+ },
+ "kitsune": {
+  "aspect": 1.1642,
+  "footFrac": 0.9834
+ },
+ "naga": {
+  "aspect": 0.7714,
+  "footFrac": 0.9982
+ },
+ "siren": {
+  "aspect": 0.6768,
+  "footFrac": 0.9839
+ },
+ "minotaur": {
+  "aspect": 0.7286,
+  "footFrac": 0.9964
+ },
+ "golem": {
+  "aspect": 0.8589,
+  "footFrac": 0.9964
+ },
+ "phoenix": {
+  "aspect": 0.875,
+  "footFrac": 0.9946
+ },
+ "djinn": {
+  "aspect": 0.6411,
+  "footFrac": 1.0
+ },
+ "demon": {
+  "aspect": 0.7214,
+  "footFrac": 0.9768
+ },
+ "seraph": {
+  "aspect": 0.9446,
+  "footFrac": 1.0
  }
 }
