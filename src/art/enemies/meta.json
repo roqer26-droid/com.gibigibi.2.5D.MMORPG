@@ -238,5 +238,25 @@
  "kehribar_semender": {
   "aspect": 2.0126,
   "footFrac": 0.9654
+ },
+ "civa_ates_ruhu": {
+  "aspect": 0.9328,
+  "footFrac": 1.0
+ },
+ "yanki_bosluk_avcisi": {
+  "aspect": 0.9359,
+  "footFrac": 0.9688
+ },
+ "prizma_tas_nobetci": {
+  "aspect": 1.094,
+  "footFrac": 0.9983
+ },
+ "kor_semender": {
+  "aspect": 1.8286,
+  "footFrac": 0.9829
+ },
+ "demir_yagmaci": {
+  "aspect": 0.9938,
+  "footFrac": 0.9969
  }
 }

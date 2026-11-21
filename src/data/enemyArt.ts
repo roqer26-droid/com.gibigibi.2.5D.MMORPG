@@ -110,6 +110,32 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   black_tide_4_enemy: 'kara_bosluk_avcisi',
   black_tide_6_enemy: 'kara_bosluk_avcisi',
   black_tide_8_enemy: 'kara_bosluk_avcisi',
+  // v1.26.0: üçüncü beşli paket (bölge başına 5 normal karşılaşma: aşama 1, 2, 4, 6, 8)
+  echo_terrace_1_enemy: 'yanki_bosluk_avcisi',
+  echo_terrace_2_enemy: 'yanki_bosluk_avcisi',
+  echo_terrace_4_enemy: 'yanki_bosluk_avcisi',
+  echo_terrace_6_enemy: 'yanki_bosluk_avcisi',
+  echo_terrace_8_enemy: 'yanki_bosluk_avcisi',
+  mercury_foundry_1_enemy: 'civa_ates_ruhu',
+  mercury_foundry_2_enemy: 'civa_ates_ruhu',
+  mercury_foundry_4_enemy: 'civa_ates_ruhu',
+  mercury_foundry_6_enemy: 'civa_ates_ruhu',
+  mercury_foundry_8_enemy: 'civa_ates_ruhu',
+  cinder_garden_1_enemy: 'kor_semender',
+  cinder_garden_2_enemy: 'kor_semender',
+  cinder_garden_4_enemy: 'kor_semender',
+  cinder_garden_6_enemy: 'kor_semender',
+  cinder_garden_8_enemy: 'kor_semender',
+  prism_labyrinth_1_enemy: 'prizma_tas_nobetci',
+  prism_labyrinth_2_enemy: 'prizma_tas_nobetci',
+  prism_labyrinth_4_enemy: 'prizma_tas_nobetci',
+  prism_labyrinth_6_enemy: 'prizma_tas_nobetci',
+  prism_labyrinth_8_enemy: 'prizma_tas_nobetci',
+  iron_orbit_1_enemy: 'demir_yagmaci',
+  iron_orbit_2_enemy: 'demir_yagmaci',
+  iron_orbit_4_enemy: 'demir_yagmaci',
+  iron_orbit_6_enemy: 'demir_yagmaci',
+  iron_orbit_8_enemy: 'demir_yagmaci',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -207,6 +233,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   tuz_tas_nobetci: { height: 0.66, maxWidth: 0.9, glow: '#fde68a', breathSec: 3.4 },
   obsidyen_yagmaci: { height: 0.64, maxWidth: 0.86, glow: '#c084fc', breathSec: 2.8 },
   kara_bosluk_avcisi: { height: 0.66, maxWidth: 0.96, glow: '#38bdf8', breathSec: 3.0 },
+  // v1.26.0 (240'lık doku)
+  yanki_bosluk_avcisi: { height: 0.72, maxWidth: 0.9, glow: '#c4b5fd', breathSec: 2.8 },
+  civa_ates_ruhu: { height: 0.66, maxWidth: 0.9, glow: '#fb923c', breathSec: 2.8, float: 0.06, bob: 0.014 },
+  kor_semender: { height: 0.44, maxWidth: 0.96, glow: '#f87171', breathSec: 2.8 },
+  prizma_tas_nobetci: { height: 0.66, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.4 },
+  demir_yagmaci: { height: 0.64, maxWidth: 0.86, glow: '#f87171', breathSec: 2.8 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */

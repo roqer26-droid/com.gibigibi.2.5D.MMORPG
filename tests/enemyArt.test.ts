@@ -105,11 +105,11 @@ describe('v1.23.0: beş bölge bossu', () => {
     }
     expect(ENEMY_ART_LAYOUT['abyss_empress'].bob).toBeGreaterThan(0);
   });
-  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 60 çizim, 112 düşman kimliği', () => {
+  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 65 çizim, 137 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(112);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(60);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(137);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(65);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -198,5 +198,40 @@ describe('v1.25.0: sıradaki beş genişleme düşmanı', () => {
     for (const id of ['amber_dunes_3_enemy', 'amber_dunes_5_enemy', 'amber_dunes_10_enemy', 'sunken_archive_5_enemy', 'salt_bastion_7_enemy', 'obsidian_harbor_3_enemy', 'black_tide_10_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('thorn_citadel_8_enemy')).toBe('diken_kurt');
+  });
+});
+
+describe('v1.26.0: üçüncü beşli düşman paketi', () => {
+  const GROUPS: [string, string][] = [
+    ['echo_terrace', 'yanki_bosluk_avcisi'],
+    ['mercury_foundry', 'civa_ates_ruhu'],
+    ['cinder_garden', 'kor_semender'],
+    ['prism_labyrinth', 'prizma_tas_nobetci'],
+    ['iron_orbit', 'demir_yagmaci'],
+  ];
+  it('25 kimlik, 5 ayrı çizime bağlı; hepsi bölgenin aynı adlı normal aşamasında', () => {
+    let total = 0;
+    for (const [region, key] of GROUPS) {
+      const names = new Set<string>();
+      for (const n of [1, 2, 4, 6, 8]) {
+        const id = `${region}_${n}_enemy`;
+        const e = allEnemies.find((x) => x.id === id)!;
+        expect(e, id).toBeTruthy();
+        expect(enemyArtKey(id), id).toBe(key);
+        names.add(e.name);
+        total++;
+      }
+      expect(names.size, key).toBe(1);
+      expect(ENEMY_ART_META[key]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[key]).toBeTruthy();
+    }
+    expect(total).toBe(25);
+    expect(ENEMY_ART_LAYOUT['civa_ates_ruhu'].bob).toBeGreaterThan(0);
+    for (const k of ['yanki_bosluk_avcisi', 'kor_semender', 'prizma_tas_nobetci', 'demir_yagmaci']) expect(ENEMY_ART_LAYOUT[k].bob ?? 0, k).toBe(0);
+  });
+  it('aynı bölgenin hazine/elit/boss düşmanları ve önceki paketler etkilenmez', () => {
+    for (const id of ['echo_terrace_3_enemy', 'echo_terrace_5_enemy', 'echo_terrace_10_enemy', 'mercury_foundry_7_enemy', 'cinder_garden_3_enemy', 'prism_labyrinth_5_enemy', 'iron_orbit_10_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    expect(enemyArtKey('amber_dunes_1_enemy')).toBe('kehribar_semender');
+    expect(enemyArtKey('glass_forest_8_enemy')).toBe('cam_agac_ruhu');
   });
 });

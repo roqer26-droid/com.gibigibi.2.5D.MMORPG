@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.26.0 — Üçüncü beşli düşman paketi (25 karşılaşma)
+- Yankı Boşluk Avcısı (`echo_terrace`), Cıva Ateş Ruhu (`mercury_foundry`), Kor Semender (`cinder_garden`), Prizma Taş Nöbetçi (`prism_labyrinth`) ve
+  Demir Yağmacı (`iron_orbit`) çizimleri. Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır:
+  toplam 25 kimlik, 5 dosya (şimdiye kadar 65 çizim, 137 düşman kimliği). Aynı bölgenin hazine/elit/boss düşmanları kendi görsellerini korur.
+- Ortak bekleme nefesi bu düşmanlarda da çalışır; Cıva Ateş Ruhu süzülür, diğer dördünün ayak/pençe noktası sabit. Saldırı/hasar sonrası döngüye dönüş 1× ve 2×'te doğrulandı.
+
 ## v1.25.0 — Sıradaki beş genişleme düşmanı (25 karşılaşma)
 - Kehribar Semender (`amber_dunes`), Batık Yağmacı (`sunken_archive`), Tuz Taş Nöbetçi (`salt_bastion`), Obsidyen Yağmacı (`obsidian_harbor`) ve
   Kara Boşluk Avcısı (`black_tide`) çizimleri. Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır:
