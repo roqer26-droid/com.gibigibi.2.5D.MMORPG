@@ -4,6 +4,16 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.24.0 — Beş yeni bölge düşmanı (25 karşılaşma) + tüm düşmanlara ortak nefes
+- **Yeni çizimler:** Cam Ağaç Ruhu (`glass_forest`), Sessiz Yağmacı (`silent_shore`), Bakır Yağmacı (`copper_mines`), Sis Boşluk Avcısı (`mist_aqueduct`) ve
+  Diken Kurt (`thorn_citadel`). Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır: toplam 25 kimlik, 5 dosya.
+  Aynı bölgenin hazine/elit/boss düşmanları (aynı türü paylaşsalar da) kendi görsellerini korur.
+- **Ortak bekleme nefesi** (`startEnemyIdle`): normal, elit, hazine ve boss; özel çizimli ve eski vektör çizimli (yedek) tüm düşmanlar. Esneme %1,5, döngü
+  2,5–4 sn (özel `breathSec` varsa o, yoksa 3,0 / boss 3,6 sn). Temas noktası (ayak/kök/pençe) sabit; havada duran düşmanlarda süzülme nefese eşlik eder
+  (eski çizimlerde gök/hiçlik/ateş ruhu türleri). Aynı düşmanda tek döngü çalışır.
+- Hasar alma, düşman saldırısı ve faz geçişinde nefes durur, ardından düşman hayattaysa yumuşakça devam eder; zafer ve sahne kapanışında temizlenir.
+  Dünya Haritası ve Seçimli Zindanlar'da aynı davranış; 1×/2× zamanlaması ve tahta/HUD yerleşimi değişmedi.
+
 ## v1.23.0 — Beş bölge bossunun yeni çizimleri
 - Yaban Kalbi Ordun (`forest_lord`, `forest_8_enemy`), Buz Devi Kralı Skrymir (`frost_giant_king`, `mountains_8_enemy`), Magma İmparatoriçesi Vhara
   (`magma_empress`, `volcano_8_enemy`), Rün İmparatoru Kaelos (`rune_emperor`, `ruins_8_enemy`) ve Uçurum İmparatoriçesi Nirvaya (`abyss_empress`, `abyss_8_enemy`)

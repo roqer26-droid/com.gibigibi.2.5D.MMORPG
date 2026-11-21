@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMY_ART_BY_ID, ENEMY_ART_LAYOUT, ENEMY_ART_META, enemyArtKey } from '../src/data/enemyArt';
+import { ENEMY_ART_BY_ID, ENEMY_ART_LAYOUT, ENEMY_ART_META, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtKey } from '../src/data/enemyArt';
 import { WORLD_REGIONS } from '../src/data/world';
 
 const allEnemies = WORLD_REGIONS.flatMap((r) => r.stages.map((s) => s.enemy));
@@ -105,16 +105,65 @@ describe('v1.23.0: beş bölge bossu', () => {
     }
     expect(ENEMY_ART_LAYOUT['abyss_empress'].bob).toBeGreaterThan(0);
   });
-  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 50 çizim, 62 düşman kimliği', () => {
+  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 55 çizim, 87 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(62);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(50);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(87);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(55);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
     expect(enemyArtKey('volcano_4_enemy') ?? enemyArtKey('magma_lord')).toBe('magma_lord');
     expect(enemyArtKey('mountains_6_enemy')).toBe('buzul_dev_avcisi');
     expect(enemyArtKey('boss_abyssal_king')).toBe('boss_abyssal_king');
+  });
+});
+
+describe('v1.24.0: beş yeni bölge düşmanı + ortak nefes', () => {
+  const GROUPS: [string, string, number[]][] = [
+    ['glass_forest', 'cam_agac_ruhu', [1, 2, 4, 6, 8]],
+    ['silent_shore', 'sessiz_yagmaci', [1, 2, 4, 6, 8]],
+    ['copper_mines', 'bakir_yagmaci', [1, 2, 4, 6, 8]],
+    ['mist_aqueduct', 'sis_bosluk_avcisi', [1, 2, 4, 6, 8]],
+    ['thorn_citadel', 'diken_kurt', [1, 2, 4, 6, 8]],
+  ];
+  it('25 kimlik, 5 ayrı çizime bağlı; hepsi bölgenin NORMAL aşamasında ve aynı adlı', () => {
+    let total = 0;
+    for (const [region, key, nums] of GROUPS) {
+      const names = new Set<string>();
+      for (const n of nums) {
+        const id = `${region}_${n}_enemy`;
+        const e = allEnemies.find((x) => x.id === id)!;
+        expect(e, id).toBeTruthy();
+        expect(enemyArtKey(id), id).toBe(key);
+        names.add(e.name);
+        total++;
+      }
+      expect(names.size, key).toBe(1);
+      expect(ENEMY_ART_META[key]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[key]).toBeTruthy();
+    }
+    expect(total).toBe(25);
+    expect(new Set(GROUPS.map((g) => g[1])).size).toBe(5);
+  });
+  it('aynı bölgenin hazine/elit/boss düşmanları kendi görseline sahip değildir (aynı türü paylaşsalar da)', () => {
+    for (const id of ['glass_forest_3_enemy', 'glass_forest_5_enemy', 'glass_forest_10_enemy', 'silent_shore_3_enemy', 'copper_mines_10_enemy', 'mist_aqueduct_5_enemy', 'thorn_citadel_10_enemy']) {
+      expect(enemyArtKey(id), id).toBeNull();
+    }
+  });
+  it('ortak nefes varsayılanları: %1–2 esneme, 2,5–4 sn', () => {
+    expect(ENEMY_BREATH_DEFAULT.stretch).toBeGreaterThanOrEqual(0.01);
+    expect(ENEMY_BREATH_DEFAULT.stretch).toBeLessThanOrEqual(0.02);
+    for (const sec of [ENEMY_BREATH_DEFAULT.normalSec, ENEMY_BREATH_DEFAULT.bossSec]) {
+      expect(sec).toBeGreaterThanOrEqual(2.5);
+      expect(sec).toBeLessThanOrEqual(4);
+    }
+    for (const l of Object.values(ENEMY_ART_LAYOUT)) {
+      expect(clampBreathSec(l.breathSec)).toBeGreaterThanOrEqual(2.5);
+      expect(clampBreathSec(l.breathSec)).toBeLessThanOrEqual(4);
+    }
+    expect(clampBreathSec(2.2)).toBe(2.5);
+    expect(clampBreathSec(9)).toBe(4);
+    expect(ENEMY_FLOATING_ARCHETYPES.has('celestial')).toBe(true);
   });
 });

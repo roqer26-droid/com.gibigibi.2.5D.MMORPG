@@ -198,5 +198,25 @@
  "frost_giant_king": {
   "aspect": 0.9953,
   "footFrac": 0.9969
+ },
+ "sessiz_yagmaci": {
+  "aspect": 1.1228,
+  "footFrac": 0.9965
+ },
+ "diken_kurt": {
+  "aspect": 1.3196,
+  "footFrac": 0.9794
+ },
+ "bakir_yagmaci": {
+  "aspect": 1.0289,
+  "footFrac": 0.9984
+ },
+ "sis_bosluk_avcisi": {
+  "aspect": 1.094,
+  "footFrac": 0.9556
+ },
+ "cam_agac_ruhu": {
+  "aspect": 0.6094,
+  "footFrac": 0.9891
  }
 }

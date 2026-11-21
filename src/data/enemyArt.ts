@@ -58,6 +58,32 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   volcano_8_enemy: 'magma_empress',
   ruins_8_enemy: 'rune_emperor',
   abyss_8_enemy: 'abyss_empress',
+  // v1.24.0: beş yeni bölge düşmanı, bölge başına 5 normal karşılaşma (aşama 1, 2, 4, 6, 8); hazine/elit/boss aşamaları kendi çizimlerini korur
+  glass_forest_1_enemy: 'cam_agac_ruhu',
+  glass_forest_2_enemy: 'cam_agac_ruhu',
+  glass_forest_4_enemy: 'cam_agac_ruhu',
+  glass_forest_6_enemy: 'cam_agac_ruhu',
+  glass_forest_8_enemy: 'cam_agac_ruhu',
+  silent_shore_1_enemy: 'sessiz_yagmaci',
+  silent_shore_2_enemy: 'sessiz_yagmaci',
+  silent_shore_4_enemy: 'sessiz_yagmaci',
+  silent_shore_6_enemy: 'sessiz_yagmaci',
+  silent_shore_8_enemy: 'sessiz_yagmaci',
+  copper_mines_1_enemy: 'bakir_yagmaci',
+  copper_mines_2_enemy: 'bakir_yagmaci',
+  copper_mines_4_enemy: 'bakir_yagmaci',
+  copper_mines_6_enemy: 'bakir_yagmaci',
+  copper_mines_8_enemy: 'bakir_yagmaci',
+  mist_aqueduct_1_enemy: 'sis_bosluk_avcisi',
+  mist_aqueduct_2_enemy: 'sis_bosluk_avcisi',
+  mist_aqueduct_4_enemy: 'sis_bosluk_avcisi',
+  mist_aqueduct_6_enemy: 'sis_bosluk_avcisi',
+  mist_aqueduct_8_enemy: 'sis_bosluk_avcisi',
+  thorn_citadel_1_enemy: 'diken_kurt',
+  thorn_citadel_2_enemy: 'diken_kurt',
+  thorn_citadel_4_enemy: 'diken_kurt',
+  thorn_citadel_6_enemy: 'diken_kurt',
+  thorn_citadel_8_enemy: 'diken_kurt',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -143,6 +169,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   magma_empress: { height: 0.76, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.6 },
   rune_emperor: { height: 0.74, maxWidth: 0.96, glow: '#22d3ee', breathSec: 3.8 },
   abyss_empress: { height: 0.72, maxWidth: 0.96, glow: '#a855f7', breathSec: 3.4, float: 0.03, bob: 0.012 },
+  // v1.24.0 yeni bölge düşmanları (240'lık doku)
+  cam_agac_ruhu: { height: 0.72, maxWidth: 0.74, glow: '#6ee7b7', breathSec: 3.2 },
+  sessiz_yagmaci: { height: 0.58, maxWidth: 0.9, glow: '#5eead4', breathSec: 2.8 },
+  bakir_yagmaci: { height: 0.62, maxWidth: 0.86, glow: '#fb923c', breathSec: 3.0 },
+  sis_bosluk_avcisi: { height: 0.7, maxWidth: 0.94, glow: '#99f6e4', breathSec: 3.0 },
+  diken_kurt: { height: 0.5, maxWidth: 0.96, glow: '#84cc16', breathSec: 2.8 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */
@@ -153,6 +185,17 @@ export function enemyArtScale(key: EnemyArtKey, enemyName: string): number {
 }
 
 export const ENEMY_ART_META = meta as Record<string, { aspect: number; footFrac: number }>;
+
+/**
+ * Ortak bekleme nefesi (tüm düşmanlar: çizimli ve eski vektör çizimli). Çizime özel `breathSec` yoksa varsayılan kullanılır.
+ * Esneme yaklaşık %1,5; döngü 2,5–4 sn; temas noktası (ayak/kök/pençe) sabit kalır.
+ */
+export const ENEMY_BREATH_DEFAULT = { normalSec: 3.0, bossSec: 3.6, stretch: 0.015 } as const;
+/** Çizime özel `breathSec` ne olursa olsun döngü 2,5–4 sn aralığında tutulur (hızlı/sinirli görünmesin). */
+export const clampBreathSec = (sec: number): number => Math.min(4, Math.max(2.5, sec));
+
+/** Eski vektör çizimli düşmanlarda havada duran türler: nefese hafif süzülme eşlik eder. */
+export const ENEMY_FLOATING_ARCHETYPES = new Set(['celestial', 'void_stalker', 'fire_elemental']);
 
 export const enemyArtKey = (enemyId: string): EnemyArtKey | null => ENEMY_ART_BY_ID[enemyId] ?? null;
 

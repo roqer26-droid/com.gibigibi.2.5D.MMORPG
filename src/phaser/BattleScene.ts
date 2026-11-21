@@ -22,7 +22,7 @@ import { createGemTextures } from './GemTextures';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
-import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
+import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
 import {
   bigfootSkillShield,
@@ -424,27 +424,17 @@ export class BattleScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
     }
+    // Ortak düşman bekleme nefesi: çizimli ve eski vektör çizimli tüm düşmanlar için tek yol (ayak/kök noktası sabit)
     const eKey = enemyArtKey(this.enemy.id);
     if (eKey && enemyImage(eKey)) {
       this.applyEnemyArt();
     } else {
-      // Düşmana özel çizim yüklenene kadar (ya da hiç yoksa) mevcut çizim ve nefes davranışı
-      this.enemyBreath = this.tweens.add({
-        targets: this.enemySprite,
-        y: this.enemy.isBoss ? -8 : -5,
-        scaleX: 1.03,
-        scaleY: 0.98,
-        duration: this.enemy.isBoss ? 1800 : 1400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
+      // Düşmana özel çizim yüklenene kadar (ya da hiç yoksa) mevcut çizim + ortak nefes
+      this.setupFallbackEnemyIdle();
       if (eKey) {
         void enemyImageReady(eKey).then(() => {
-          if (!this.enemySprite || !this.enemySprite.active || !enemyImage(eKey)) return;
-          this.enemyBreath?.stop();
-          this.enemySprite.setScale(1);
-          this.enemySprite.y = 0;
+          if (!this.enemySprite || !this.enemySprite.active || !enemyImage(eKey) || this.turnPhase === 'victory') return;
+          this.stopEnemyIdle();
           this.enemySprite.setTexture(createEnemyPhaserTexture(this, this.enemy));
           this.applyEnemyArt();
         });
@@ -478,6 +468,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   public shutdown() {
+    this.stopEnemyIdle();
     this.scale.off('resize', this.handleResize, this);
     this.input.off('pointerdown', this.handlePointerDown, this);
     this.input.off('pointermove', this.handlePointerMove, this);
@@ -1802,6 +1793,7 @@ export class BattleScene extends Phaser.Scene {
     this.playHeroAttackAnim(isCrit, GEM_COLOR_NUM[element]);
 
     // Enemy hit flash + knockback
+    this.holdEnemyIdle(380);
     SoundEngine.playWeaponHit(isCrit);
     this.enemySprite.setTintFill(0xffffff);
     this.time.delayedCall(95, () => {
@@ -1889,6 +1881,7 @@ export class BattleScene extends Phaser.Scene {
     const phaseChanged = this.enemyPhase !== phaseBefore;
     const enragedNow = this.enemyEnraged && !enragedBefore;
     if (!phaseChanged && !enragedNow) return;
+    this.holdEnemyIdle(850);
     this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
     if (this.plannedAction.kind === 'attack') this.companionState = foxDisarm(this.companionState); // plan normal saldırıya döndü
     this.phaseNotice = {
@@ -2207,6 +2200,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async executeEnemyAttack() {
+    this.holdEnemyIdle(620);
     const startX = this.enemyContainer.x;
     this.tweens.add({
       targets: this.enemyContainer,
@@ -3144,6 +3138,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.turnPhase === 'victory' || this.turnPhase === 'defeat') return;
     this.turnPhase = 'victory';
     this.inputLocked = true;
+    this.stopEnemyIdle();
     SoundEngine.playVictory();
     this.tweens.add({
       targets: this.enemyContainer,
@@ -3454,30 +3449,84 @@ export class BattleScene extends Phaser.Scene {
       this.enemyContainer.addAt(this.enemyGlowSprite, 0);
     }
     const motionTargets = this.enemyGlowSprite ? [this.enemySprite, this.enemyGlowSprite] : [this.enemySprite];
+    this.setupEnemyIdle(ENEMY_ART_GROUND, ENEMY_ART_LAYOUT[key].breathSec, (ENEMY_ART_LAYOUT[key].bob ?? 0) * size, motionTargets);
+  }
+
+  /** Eski vektör çizimli düşman: aynı ortak nefes; zemin çizgisi vektör çiziminin gölge hizasıdır, havada duran türlere hafif süzülme eşlik eder. */
+  private setupFallbackEnemyIdle() {
+    const size = this.enemy.isBoss ? 300 : 240;
+    const k = (this.enemy.isBoss ? 1.15 : 0.92) * (size / 240);
+    const ground = (0.56 * size + 76 * k) / size;
+    this.enemySprite.setOrigin(0.5, ground);
+    this.enemySprite.y = (ground - 0.5) * size;
+    this.enemySprite.setScale(1);
+    const sec = this.enemy.isBoss ? ENEMY_BREATH_DEFAULT.bossSec : ENEMY_BREATH_DEFAULT.normalSec;
+    const bobPx = ENEMY_FLOATING_ARCHETYPES.has(this.enemy.visualArchetype) ? size * 0.012 : 0;
+    this.setupEnemyIdle(ground, sec, bobPx, [this.enemySprite]);
+  }
+
+  private enemyIdleCfg: { baseY: number; sec: number; bobPx: number; targets: Phaser.GameObjects.Image[] } | null = null;
+  private enemyIdleResume: Phaser.Time.TimerEvent | null = null;
+
+  private setupEnemyIdle(ground: number, sec: number, bobPx: number, targets: Phaser.GameObjects.Image[]) {
+    const size = this.enemy.isBoss ? 300 : 240;
+    this.enemyIdleCfg = { baseY: (ground - 0.5) * size, sec: clampBreathSec(sec), bobPx, targets };
+    this.startEnemyIdle();
+  }
+
+  /** Tek döngü: önce mevcut tween ve zamanlayıcılar durdurulur, böylece aynı düşmanda ikinci bir nefes başlamaz. */
+  private startEnemyIdle() {
+    const cfg = this.enemyIdleCfg;
     this.enemyBreath?.stop();
+    this.enemyBob?.stop();
+    this.enemyBreath = null;
+    this.enemyBob = null;
+    if (!cfg || this.enemyHp <= 0 || this.turnPhase === 'victory') return;
     this.enemyBreath = this.tweens.add({
-      targets: motionTargets,
-      scaleY: 1 + HERO_BREATH.stretch,
-      scaleX: 1 + HERO_BREATH.stretch * 0.4,
-      duration: (ENEMY_ART_LAYOUT[key].breathSec / 2) * 1000,
+      targets: cfg.targets,
+      scaleY: 1 + ENEMY_BREATH_DEFAULT.stretch,
+      scaleX: 1 + ENEMY_BREATH_DEFAULT.stretch * 0.4,
+      duration: (cfg.sec / 2) * 1000,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
-    // Havada duran ruh ve elementaller: hafif süzülme (karada duranlarda bob yok)
-    const bobPx = (ENEMY_ART_LAYOUT[key].bob ?? 0) * size;
-    if (bobPx > 0) {
-      const baseY = this.enemySprite.y;
-      this.enemyBob?.stop();
+    if (cfg.bobPx > 0) {
       this.enemyBob = this.tweens.add({
-        targets: motionTargets,
-        y: { from: baseY + bobPx, to: baseY - bobPx },
+        targets: cfg.targets,
+        y: { from: cfg.baseY, to: cfg.baseY - cfg.bobPx * 2 },
         duration: 1500,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
       });
     }
+  }
+
+  /** Saldırı, hasar alma ve faz geçişi bekleme hareketinden önceliklidir: nefes durur, `ms` sonra düşman hayattaysa yumuşakça yeniden başlar. */
+  private holdEnemyIdle(ms: number) {
+    const cfg = this.enemyIdleCfg;
+    if (!cfg || !this.enemySprite?.active) return;
+    this.enemyBreath?.stop();
+    this.enemyBob?.stop();
+    this.enemyBreath = null;
+    this.enemyBob = null;
+    this.tweens.add({ targets: cfg.targets, scaleX: 1, scaleY: 1, y: cfg.baseY, duration: 120, ease: 'Sine.easeOut' });
+    this.enemyIdleResume?.remove(false);
+    this.enemyIdleResume = this.time.delayedCall(ms, () => {
+      this.enemyIdleResume = null;
+      this.startEnemyIdle();
+    });
+  }
+
+  /** Karşılaşma bittiğinde (zafer/kapanış) bekleme animasyonunu temizler. */
+  private stopEnemyIdle() {
+    this.enemyBreath?.stop();
+    this.enemyBob?.stop();
+    this.enemyBreath = null;
+    this.enemyBob = null;
+    this.enemyIdleResume?.remove(false);
+    this.enemyIdleResume = null;
   }
 
   /**
