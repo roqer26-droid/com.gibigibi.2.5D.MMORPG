@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_ART_META, enemyArtKey, enemyImage, type EnemyArtKey } from '../data/enemyArt';
 import {
   EnemyDef,
   EquipmentSlot,
@@ -443,6 +444,13 @@ export function drawEnemyToCanvas(
   enemy: EnemyDef
 ) {
   ctx.clearRect(0, 0, w, h);
+  // Düşmana özel şeffaf çizim (yüklendiyse); yoksa/yüklenmediyse arketip çizimi yedek olarak çalışır
+  const artKey = enemyArtKey(enemy.id);
+  const artImg = artKey ? enemyImage(artKey) : null;
+  if (artKey && artImg) {
+    drawEnemyArt(ctx, artImg, artKey, w, h);
+    return;
+  }
   const cx = w * 0.5;
   const cy = h * 0.56;
   const scale = (enemy.isBoss ? 1.15 : 0.92) * (Math.min(w, h) / 240);
@@ -1133,6 +1141,29 @@ export function createHeroPhaserTexture(
     tex.refresh();
   }
   return key;
+}
+
+/** Sola dönük çizimi ayak/kök çizgisi zemin çizgisine oturacak şekilde, oranı koruyarak çizer. */
+function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: EnemyArtKey, w: number, h: number) {
+  const L = ENEMY_ART_LAYOUT[key];
+  const m = ENEMY_ART_META[key];
+  const aspect = img.naturalWidth / img.naturalHeight;
+  let dh = L.height * h;
+  let dw = dh * aspect;
+  if (dw > L.maxWidth * w) {
+    dw = L.maxWidth * w;
+    dh = dw / aspect;
+  }
+  const ground = ENEMY_ART_GROUND * h;
+  ctx.fillStyle = 'rgba(0,0,0,0.42)';
+  ctx.beginPath();
+  ctx.ellipse(w / 2, ground + h * 0.012, Math.min(dw * 0.4, w * 0.36), h * 0.04, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = h * 0.03;
+  ctx.drawImage(img, w / 2 - dw / 2, ground - dh * m.footFrac, dw, dh);
+  ctx.restore();
 }
 
 export function createEnemyPhaserTexture(scene: Phaser.Scene, enemy: EnemyDef): string {

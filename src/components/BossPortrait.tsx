@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { drawEnemyToCanvas } from '../phaser/CharacterRenderer';
 import type { EnemyDef } from '../types/game';
+import { enemyArtKey, enemyImageReady } from '../data/enemyArt';
 
 interface BossPortraitProps {
   enemy: EnemyDef;
@@ -23,6 +24,17 @@ export function BossPortrait({ enemy, size, className, dimmed = false }: BossPor
     canvas.width = px;
     canvas.height = px;
     drawEnemyToCanvas(ctx, px, px, enemy);
+    // Düşmana özel çizim yüklenince yedek çizimin yerine yeniden çiz
+    const key = enemyArtKey(enemy.id);
+    let alive = true;
+    if (key) {
+      void enemyImageReady(key).then(() => {
+        if (alive) drawEnemyToCanvas(ctx, px, px, enemy);
+      });
+    }
+    return () => {
+      alive = false;
+    };
   }, [enemy, size]);
 
   return (

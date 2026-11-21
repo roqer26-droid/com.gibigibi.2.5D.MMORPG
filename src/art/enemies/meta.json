@@ -1,0 +1,18 @@
+{
+ "goblin": {
+  "aspect": 1.1054,
+  "footFrac": 0.9948
+ },
+ "shadow_demon": {
+  "aspect": 1.0702,
+  "footFrac": 0.99
+ },
+ "frost_queen": {
+  "aspect": 0.7734,
+  "footFrac": 0.9812
+ },
+ "treant": {
+  "aspect": 0.9328,
+  "footFrac": 0.9891
+ }
+}

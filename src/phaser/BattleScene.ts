@@ -22,6 +22,7 @@ import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
+import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
 import {
   bigfootSkillShield,
@@ -224,6 +225,10 @@ export class BattleScene extends Phaser.Scene {
   private heroBreath: Phaser.Tweens.Tween | null = null;
   private breathResume: Phaser.Time.TimerEvent | null = null;
   private heroGlowGraphics!: Phaser.GameObjects.Graphics;
+  /** Düşmana özel çizim: zemine sabit nefes ve kristal parlaması */
+  private enemyGlowGraphics!: Phaser.GameObjects.Graphics;
+  private enemyBreath: Phaser.Tweens.Tween | null = null;
+  private enemyArtActive = false;
   private artIdleKey = '';
   private artAttackKey = '';
   /** Kurt Adam: Av yükü ve bu tur 2×2 kare yükü verildi mi */
@@ -382,6 +387,7 @@ export class BattleScene extends Phaser.Scene {
       });
     }
 
+    this.enemyGlowGraphics = this.add.graphics();
     this.enemyContainer = this.add.container(0, 0);
     this.enemySprite = this.add.image(0, 0, enemyKey);
     this.enemyContainer.add(this.enemySprite);
@@ -415,16 +421,32 @@ export class BattleScene extends Phaser.Scene {
         ease: 'Sine.easeInOut',
       });
     }
-    this.tweens.add({
-      targets: this.enemySprite,
-      y: this.enemy.isBoss ? -8 : -5,
-      scaleX: 1.03,
-      scaleY: 0.98,
-      duration: this.enemy.isBoss ? 1800 : 1400,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    const eKey = enemyArtKey(this.enemy.id);
+    if (eKey && enemyImage(eKey)) {
+      this.applyEnemyArt();
+    } else {
+      // Düşmana özel çizim yüklenene kadar (ya da hiç yoksa) mevcut çizim ve nefes davranışı
+      this.enemyBreath = this.tweens.add({
+        targets: this.enemySprite,
+        y: this.enemy.isBoss ? -8 : -5,
+        scaleX: 1.03,
+        scaleY: 0.98,
+        duration: this.enemy.isBoss ? 1800 : 1400,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+      if (eKey) {
+        void enemyImageReady(eKey).then(() => {
+          if (!this.enemySprite || !this.enemySprite.active || !enemyImage(eKey)) return;
+          this.enemyBreath?.stop();
+          this.enemySprite.setScale(1);
+          this.enemySprite.y = 0;
+          this.enemySprite.setTexture(createEnemyPhaserTexture(this, this.enemy));
+          this.applyEnemyArt();
+        });
+      }
+    }
 
     // Board & VFX containers
     this.boardContainer = this.add.container(0, 0);
@@ -533,6 +555,26 @@ export class BattleScene extends Phaser.Scene {
         this.enemyContainer.y + 10,
         this.enemyContainer.scaleX * 95
       );
+    }
+
+    // Düşmana özel çizim: kristal rengi düşük yoğunluklu parlama (düşman yenilince kapanır)
+    if (this.enemyGlowGraphics) {
+      const eg = this.enemyGlowGraphics;
+      eg.clear();
+      const ek = enemyArtKey(this.enemy.id);
+      if (ek && this.enemyArtActive && this.enemyHp > 0 && this.enemySprite?.active) {
+        const EL = ENEMY_ART_LAYOUT[ek];
+        const size = this.enemy.isBoss ? 300 : 240;
+        const s = this.enemyContainer.scaleX;
+        const pulse = 0.5 + 0.5 * Math.sin(((_time / 1000) * Math.PI * 2) / 4.4);
+        const col = parseInt(EL.glow.slice(1), 16);
+        const cy = this.enemyContainer.y + s * size * (ENEMY_ART_GROUND - 0.5 - EL.height / 2);
+        const R = s * size * Math.max(EL.height, 0.55) * 0.62;
+        for (let i = 6; i >= 1; i--) {
+          eg.fillStyle(col, (0.011 + 0.007 * pulse) * (1 - i / 8));
+          eg.fillCircle(this.enemyContainer.x, cy, (R * i) / 6);
+        }
+      }
     }
 
     // Görsel kahramanlar: sınıf renginde düşük yoğunluklu, nefes alan parlama (arayüzün altında kalır)
@@ -3378,6 +3420,27 @@ export class BattleScene extends Phaser.Scene {
           onComplete: () => txt.destroy(),
         });
       },
+    });
+  }
+
+  /** Düşmana özel çizim: pivot ayak/kök çizgisinde, bu yüzden nefes alırken zemine basan nokta kaymaz. */
+  private applyEnemyArt() {
+    const key = enemyArtKey(this.enemy.id);
+    if (!key) return;
+    const size = this.enemy.isBoss ? 300 : 240;
+    this.enemyArtActive = true;
+    this.enemySprite.setOrigin(0.5, ENEMY_ART_GROUND);
+    this.enemySprite.y = (ENEMY_ART_GROUND - 0.5) * size;
+    this.enemySprite.setScale(1);
+    this.enemyBreath?.stop();
+    this.enemyBreath = this.tweens.add({
+      targets: this.enemySprite,
+      scaleY: 1 + HERO_BREATH.stretch,
+      scaleX: 1 + HERO_BREATH.stretch * 0.4,
+      duration: (ENEMY_ART_LAYOUT[key].breathSec / 2) * 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
     });
   }
 

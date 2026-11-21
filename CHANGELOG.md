@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.19.0 — Dört düşmanın yeni savaş çizimleri
+- Goblin Yağmacısı (`goblin_raider`), Elit Dikenli Ağaç (`elder_treant`), Buz Kraliçesi (`boss_frost_queen`) ve Gölge İblisi (`boss_shadow_demon`)
+  için şeffaf, köşeli kristal tarzı çizimler savaşta ve boss kartlarında kullanılır. Çizim düşman KİMLİĞİNE bağlıdır: normal ağaç, kaya muhafızı,
+  uçurumdaki gölge iblisi gibi aynı türü paylaşan düşmanlar eski çizimlerini korur.
+- Çizimler sola dönüktür, kahramana bakar, aynalanmaz. Her düşmanın ölçeği ve zemin hizası kendi silüetine göre ayarlıdır (`src/data/enemyArt.ts`).
+- Mevcut bekleme, saldırı, hasar ve yenilgi efektleri aynen çalışır. Beklemede ayak/kök çizgisinde sabit, ~3 sn'lik %1,5 nefes ve düşük yoğunluklu
+  kristal parlaması vardır. Görsel yüklenene kadar eski çizim yedek olarak gösterilir. Düşman değerleri, boss fazları, ödüller ve kayıtlar değişmedi.
+
 ## v1.18.0 — On yaratık kahramanın yeni çizimleri
 - Peri (`fairy`), Ruh Tilkisi (`kitsune`), Naga (`naga`), Siren (`siren`), Minotor (`minotaur`), Kristal Golem (`golem`), Anka (`phoenix`),
   Cin (`djinn`), İblis (`demon`) ve Serafim (`seraph`) için şeffaf çizimler seçim ekranı, menü ve savaşta kullanılır. Kimlik, yetenek, istatistik,
