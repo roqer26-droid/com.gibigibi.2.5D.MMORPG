@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.27.0 — Dördüncü beşli düşman seti (25 karşılaşma)
+- Kutup Buz Golemi (`aurora_vault`), Düş Ağaç Ruhu (`dream_marsh`), Ayna Boşluk Avcısı (`mirror_court`), Gece Boşluk Avcısı (`midnight_observatory`) ve
+  Sönük Ateş Ruhu (`hollow_sun`) çizimleri; her biri kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlı:
+  toplam 25 kimlik, 5 dosya (şimdiye kadar 70 çizim, 162 düşman kimliği). Ayna ve Gece Boşluk Avcıları aynı türü paylaşsa da ayrı çizim kullanır.
+  Hazine/elit/boss düşmanları kendi görsellerini korur. Sönük Ateş Ruhu süzülür, diğerlerinin temas noktası sabit.
+
 ## v1.26.0 — Üçüncü beşli düşman paketi (25 karşılaşma)
 - Yankı Boşluk Avcısı (`echo_terrace`), Cıva Ateş Ruhu (`mercury_foundry`), Kor Semender (`cinder_garden`), Prizma Taş Nöbetçi (`prism_labyrinth`) ve
   Demir Yağmacı (`iron_orbit`) çizimleri. Her çizim kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlıdır:

@@ -136,6 +136,32 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   iron_orbit_4_enemy: 'demir_yagmaci',
   iron_orbit_6_enemy: 'demir_yagmaci',
   iron_orbit_8_enemy: 'demir_yagmaci',
+  // v1.27.0: dördüncü beşli set (bölge başına 5 normal karşılaşma: aşama 1, 2, 4, 6, 8)
+  aurora_vault_1_enemy: 'kutup_buz_golemi',
+  aurora_vault_2_enemy: 'kutup_buz_golemi',
+  aurora_vault_4_enemy: 'kutup_buz_golemi',
+  aurora_vault_6_enemy: 'kutup_buz_golemi',
+  aurora_vault_8_enemy: 'kutup_buz_golemi',
+  dream_marsh_1_enemy: 'dus_agac_ruhu',
+  dream_marsh_2_enemy: 'dus_agac_ruhu',
+  dream_marsh_4_enemy: 'dus_agac_ruhu',
+  dream_marsh_6_enemy: 'dus_agac_ruhu',
+  dream_marsh_8_enemy: 'dus_agac_ruhu',
+  mirror_court_1_enemy: 'ayna_bosluk_avcisi',
+  mirror_court_2_enemy: 'ayna_bosluk_avcisi',
+  mirror_court_4_enemy: 'ayna_bosluk_avcisi',
+  mirror_court_6_enemy: 'ayna_bosluk_avcisi',
+  mirror_court_8_enemy: 'ayna_bosluk_avcisi',
+  midnight_observatory_1_enemy: 'gece_bosluk_avcisi',
+  midnight_observatory_2_enemy: 'gece_bosluk_avcisi',
+  midnight_observatory_4_enemy: 'gece_bosluk_avcisi',
+  midnight_observatory_6_enemy: 'gece_bosluk_avcisi',
+  midnight_observatory_8_enemy: 'gece_bosluk_avcisi',
+  hollow_sun_1_enemy: 'sonuk_ates_ruhu',
+  hollow_sun_2_enemy: 'sonuk_ates_ruhu',
+  hollow_sun_4_enemy: 'sonuk_ates_ruhu',
+  hollow_sun_6_enemy: 'sonuk_ates_ruhu',
+  hollow_sun_8_enemy: 'sonuk_ates_ruhu',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -239,6 +265,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   kor_semender: { height: 0.44, maxWidth: 0.96, glow: '#f87171', breathSec: 2.8 },
   prizma_tas_nobetci: { height: 0.66, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.4 },
   demir_yagmaci: { height: 0.64, maxWidth: 0.86, glow: '#f87171', breathSec: 2.8 },
+  // v1.27.0 (240'lık doku)
+  kutup_buz_golemi: { height: 0.62, maxWidth: 0.92, glow: '#7dd3fc', breathSec: 3.4 },
+  dus_agac_ruhu: { height: 0.74, maxWidth: 0.94, glow: '#c084fc', breathSec: 3.4 },
+  ayna_bosluk_avcisi: { height: 0.72, maxWidth: 0.92, glow: '#f0abfc', breathSec: 2.8 },
+  gece_bosluk_avcisi: { height: 0.76, maxWidth: 0.86, glow: '#818cf8', breathSec: 2.8 },
+  sonuk_ates_ruhu: { height: 0.64, maxWidth: 0.86, glow: '#fb923c', breathSec: 3.0, float: 0.06, bob: 0.014 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */

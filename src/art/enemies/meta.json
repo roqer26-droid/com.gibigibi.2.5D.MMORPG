@@ -258,5 +258,25 @@
  "demir_yagmaci": {
   "aspect": 0.9938,
   "footFrac": 0.9969
+ },
+ "sonuk_ates_ruhu": {
+  "aspect": 0.8609,
+  "footFrac": 1.0
+ },
+ "dus_agac_ruhu": {
+  "aspect": 0.9797,
+  "footFrac": 0.9859
+ },
+ "gece_bosluk_avcisi": {
+  "aspect": 0.7688,
+  "footFrac": 0.9578
+ },
+ "ayna_bosluk_avcisi": {
+  "aspect": 0.9094,
+  "footFrac": 0.9484
+ },
+ "kutup_buz_golemi": {
+  "aspect": 1.1852,
+  "footFrac": 0.9981
  }
 }
