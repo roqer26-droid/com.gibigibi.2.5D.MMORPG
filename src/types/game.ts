@@ -556,6 +556,8 @@ export interface GameSettings {
   muted: boolean;
   screenShake: boolean;
   highParticles: boolean;
+  /** Savaş hızı tercihi (2× yalnızca açıkken geçerli) */
+  battleSpeed: 1 | 2;
 }
 
 export interface HeroProgress {
@@ -671,6 +673,8 @@ export interface GameSaveState {
   mastery: MasterySave;
   /** Yoldaşlar */
   companions: CompanionSave;
+  /** 2× savaş hızı açılışı (kalıcı) ve açılış bildiriminin gösterilip gösterilmediği */
+  speed: { unlocked: boolean; noticeShown: boolean };
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
@@ -689,6 +693,8 @@ import type { IntentView } from '../game/enemyIntent';
 export interface BattleCombatSnapshot {
   /** Ustalık hedeflerinin savaş içi ilerlemesi (hikâye aşamalarında) */
   mastery?: { current: number; target: number; done: boolean }[];
+  /** Savaş hızı: sahnede uygulanan hız */
+  speed?: 1 | 2;
   /** Aktif yoldaşın savaş durumu */
   companion?: { id: CompanionId; state: 'ready' | 'armed' | 'used' };
   heroHp: number;

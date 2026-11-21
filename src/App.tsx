@@ -14,6 +14,7 @@ import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
+import { applySpeedUnlock, setBattleSpeed } from './data/battleSpeed';
 import { CompanionsScreen } from './components/CompanionsScreen';
 import { applyEliteParts, setActiveCompanion, unlockCompanion } from './data/companions';
 import type { CompanionId } from './types/game';
@@ -171,6 +172,14 @@ export function App() {
     exitNativeApp();
   };
   useEffect(() => onNativeBack(() => backRef.current()), []);
+
+  // 2× savaş hızı açıldığında (zafer ya da eski kayıt yüklemesi) bildirimi bir kez göster
+  useEffect(() => {
+    if (save.speed.unlocked && !save.speed.noticeShown) {
+      pushToast('2× savaş hızı açıldı!');
+      setSave((cur) => ({ ...cur, speed: { ...cur.speed, noticeShown: true } }));
+    }
+  }, [save.speed, pushToast, setSave]);
 
   // Auto-save whenever state updates
   useEffect(() => {
@@ -417,10 +426,12 @@ export function App() {
             ? [...prev.bossVictories, stage.enemy.bossId]
             : prev.bossVictories;
 
+        const unlocked = applySpeedUnlock({ ...prev, completedStages });
         return recordQuestActivity({
           ...prev,
           mastery: withMastery.mastery,
           companions: withParts.companions,
+          speed: unlocked.speed,
           gold: prev.gold + goldGained,
           crystals: prev.crystals + crystalsGained,
           completedStages,
@@ -836,6 +847,7 @@ export function App() {
           stage={activeStage}
           onMatchStats={handleMatchStats}
           onCompleteVictory={handleCompleteVictory}
+          onSetBattleSpeed={(sp) => setSave((cur) => setBattleSpeed(cur, sp))}
           isLeague={!!activeLeagueOpponent}
           onLeagueDefeat={activeLeagueOpponent ? () => handleLeagueResult(false) : undefined}
           onLeagueForfeit={activeLeagueOpponent ? () => { handleLeagueResult(false, true); } : undefined}

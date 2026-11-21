@@ -47,6 +47,7 @@ import {
 } from '../types/game';
 import { getNextStageAfter } from '../data/world';
 import { getStageObjectives, objectiveText, stageStars } from '../data/mastery';
+import { effectiveSpeed } from '../data/battleSpeed';
 import { activeCompanionFor, getCompanion } from '../data/companions';
 import { COMPANION_IMAGES } from '../data/companionArt';
 import { computeHeroBuild } from '../utils/rpgLogic';
@@ -67,6 +68,8 @@ interface BattleViewProps {
   save: GameSaveState;
   stage: StageDef;
   onMatchStats: (gemsMatched: Partial<Record<GemType, number>>, combo: number, skillUsed: boolean) => void;
+  /** Savaş hızı tercihi (yalnızca açıkken değişir) */
+  onSetBattleSpeed?: (speed: 1 | 2) => void;
   onCompleteVictory: (stage: StageDef, masteryDone?: [boolean, boolean], battleToken?: string) => BattleRewardSummary;
   isLeague?: boolean;
   onLeagueDefeat?: () => BattleRewardSummary;
@@ -88,6 +91,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
   stage,
   onMatchStats,
   onCompleteVictory,
+  onSetBattleSpeed,
   isLeague = false,
   onLeagueDefeat,
   onLeagueForfeit,
@@ -175,6 +179,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   const [paused, setPaused] = useState(false);
   const [masteryOpen, setMasteryOpen] = useState(false);
+  const speedUnlocked = save.speed.unlocked;
+  const speedPref = effectiveSpeed(save);
   const companionId = useMemo(() => activeCompanionFor(save, save.activeHeroClass), [save.companions, save.activeHeroClass]); // eslint-disable-line react-hooks/exhaustive-deps
   // Ustalık yalnızca hikâye aşamalarında (lig, av ve zindan savaşlarında yok)
   const masteryObjectives = useMemo(
@@ -235,6 +241,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       hunt,
       mastery: masteryObjectives,
       companion: companionId,
+      speed: speedPref,
       arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
       startHeroHp: dungeon?.startHp,
       onBattleEnd: (victory, turns, heroHp) => {
@@ -300,6 +307,11 @@ export const BattleView: React.FC<BattleViewProps> = ({
     };
   }, [stage.id, hunt?.id, battleKey]);
   // (zindan savaşı: stage.id her savaşta farklıdır; yeniden kurulum aşama kimliğiyle olur)
+
+  // Hız tercihi değişince sahneye bildir (animasyon sürüyorsa çözümleme bitince uygulanır)
+  useEffect(() => {
+    sceneRef.current?.requestSpeed(speedPref);
+  }, [speedPref]);
 
   // Sync updated audio/shake settings into running scene
   useEffect(() => {
@@ -626,18 +638,42 @@ export const BattleView: React.FC<BattleViewProps> = ({
             </span>
           </div>
         )}
-        {masteryObjectives && (
-          <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
-            <button
-              type="button"
-              onClick={() => setMasteryOpen((v) => !v)}
-              aria-expanded={masteryOpen}
-              data-testid="mastery-button"
-              className="pointer-events-auto flex h-8 items-center gap-1 rounded-full border border-amber-400/50 bg-slate-950/85 px-2.5 text-[11px] font-extrabold text-amber-300"
-            >
-              <Star className="h-3.5 w-3.5 fill-amber-300" /> Ustalık
-            </button>
-            {masteryOpen && (
+        <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1.5">
+              {/* Savaş hızı: 100. aşamadan sonra açılır; son tercih kaydedilir */}
+              <button
+                type="button"
+                disabled={!speedUnlocked}
+                onClick={() => onSetBattleSpeed?.(speedPref === 2 ? 1 : 2)}
+                data-testid="speed-button"
+                data-speed={speedPref}
+                data-applied={snapshot.speed ?? 1}
+                aria-label={speedUnlocked ? `Savaş hızı ${speedPref}×, değiştirmek için dokun` : 'Savaş hızı kilitli: 100. aşamayı tamamla'}
+                title={speedUnlocked ? 'Savaş hızı' : '100. aşamayı tamamlayınca açılır'}
+                className={`pointer-events-auto flex h-12 min-w-[60px] items-center justify-center gap-1 rounded-full border px-4 text-[15px] font-extrabold ${
+                  speedUnlocked
+                    ? speedPref === 2
+                      ? 'border-amber-300 bg-amber-400/25 text-amber-200'
+                      : 'border-slate-500 bg-slate-950/85 text-slate-200'
+                    : 'border-slate-700 bg-slate-950/70 text-slate-500'
+                }`}
+              >
+                {!speedUnlocked && <Lock className="h-3 w-3" />}
+                {speedUnlocked ? `${speedPref}×` : '2×'}
+              </button>
+              {masteryObjectives && (
+                <button
+                  type="button"
+                  onClick={() => setMasteryOpen((v) => !v)}
+                  aria-expanded={masteryOpen}
+                  data-testid="mastery-button"
+                  className="pointer-events-auto flex h-9 items-center gap-1 rounded-full border border-amber-400/50 bg-slate-950/85 px-3 text-[11px] font-extrabold text-amber-300"
+                >
+                  <Star className="h-3.5 w-3.5 fill-amber-300" /> Ustalık
+                </button>
+              )}
+            </div>
+            {masteryObjectives && masteryOpen && (
               <div
                 data-testid="mastery-panel"
                 className="pointer-events-auto w-[236px] rounded-xl border border-amber-400/40 bg-slate-950/95 p-2.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.6)]"
@@ -665,7 +701,6 @@ export const BattleView: React.FC<BattleViewProps> = ({
               </div>
             )}
           </div>
-        )}
       </div>
 
       {/* AKTİF ETKİ ŞERİDİ + YETENEK BARı */}

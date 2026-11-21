@@ -92,6 +92,8 @@ export interface BattleSceneInitData {
   onBattleEnd: (victory: boolean, turns: number, heroHp: number) => void;
   /** Zindan savaşı: kahramanın savaşa başladığı can (varsayılan tam can) */
   startHeroHp?: number;
+  /** Başlangıç savaş hızı (varsayılan 1×) */
+  speed?: 1 | 2;
   /** Aktif yoldaş (yoksa tanımsız) */
   companion?: CompanionId;
   /** Hikâye aşaması ustalık hedefleri (hikâye dışı savaşlarda yok) */
@@ -196,6 +198,13 @@ export class BattleScene extends Phaser.Scene {
   private relicFlags: RelicBattleFlags = freshRelicFlags();
   /** Ustalık sayaçları: gerçek savaş olaylarından beslenir */
   private mastery: MasteryState = createMasteryState();
+  /** Savaş mantığının rastgeleliği (görsel efektler Math.random kullanır). Testlerde tohumlu bir üreteçle değiştirilebilir. */
+  public rng: () => number = Math.random;
+  /** Savaş kararlarının (kritik, sıyrılma, düşman planı) ayrı rastgelelik akışı: animasyon zamanlaması tahta akışını etkilemez. */
+  public combatRng: () => number = Math.random;
+  /** Savaş hızı: uygulanan ve (animasyon sürerken) bekleyen hız */
+  private speed: 1 | 2 = 1;
+  private pendingSpeed: 1 | 2 = 1;
   /** Yoldaş: savaş başına tek destek hakkı */
   private companionState: CompanionState = 'ready';
   private companionBurn = { turns: 0, perTurn: 0 };
@@ -231,7 +240,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemyHp = this.enemyMaxHp;
     this.enemyShield = 0;
     this.enemyTurnCounter = this.enemy.attackInterval;
-    this.plannedAction = planEnemyAction(this.enemy);
+    this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
     this.setFlags = freshSetFlags();
     this.setShieldPool = 0;
     this.phaseNotice = undefined;
@@ -293,6 +302,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   public create() {
+    // Başlangıç hızı (kilitliyse ya da belirtilmemişse 1×)
+    this.speed = this.pendingSpeed = this.initData.speed === 2 ? 2 : 1;
+    this.time.timeScale = this.speed;
+    this.tweens.timeScale = this.speed;
+    this.anims.globalTimeScale = this.speed;
     createGemTextures(this);
     this.heroIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
     this.heroAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
@@ -413,6 +427,7 @@ export class BattleScene extends Phaser.Scene {
   private lastIntentSignature = '';
 
   public update(_time: number, delta: number) {
+    this.applyPendingSpeed();
     // Yetenek/dondurma/sersemletme gibi hangi yoldan olursa olsun niyet değiştiğinde gösterge hemen güncellenir
     if (this.turnPhase !== 'victory' && this.turnPhase !== 'defeat') {
       const sig = this.intentSignature();
@@ -675,8 +690,8 @@ export class BattleScene extends Phaser.Scene {
     // Altın Taş şansı — "Altın Şans" yeteneği ile artar
     const goldenChance =
       0.045 * (1 + (this.initData?.build.passives.goldenLuckPct ?? 0) / 100);
-    if (Math.random() < goldenChance) return 'golden';
-    return BASE_GEMS[Math.floor(Math.random() * BASE_GEMS.length)];
+    if (this.rng() < goldenChance) return 'golden';
+    return BASE_GEMS[Math.floor(this.rng() * BASE_GEMS.length)];
   }
 
   private buildInitialBoard() {
@@ -1104,7 +1119,7 @@ export class BattleScene extends Phaser.Scene {
     this.huntRuleUsed = effect.usedThisTurn;
 
     if (effect.thaw > 0) {
-      Phaser.Utils.Array.Shuffle(frozenTiles);
+      this.shuffle(frozenTiles);
       for (const tv of frozenTiles.slice(0, effect.thaw)) {
         tv.tile.frozen = 0;
         this.syncTileOverlay(tv);
@@ -1444,6 +1459,7 @@ export class BattleScene extends Phaser.Scene {
           (classId === 'dragonheart' ? 40 : 0)) /
           100;
       const dmg = Math.round(atk * (0.34 * counts.fire) * comboMult * bonus);
+      const critFire = this.rollCrit('fire');
       if (classId === 'warrior' || classId === 'dragonheart') {
         this.heroRageStacks = Math.min(12, this.heroRageStacks + 1);
       }
@@ -1453,7 +1469,7 @@ export class BattleScene extends Phaser.Scene {
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + scaleHeal);
       }
       this.launchOrbs(centers.fire, this.enemyContainer.x, this.enemyContainer.y, 0xef4444, () => {
-        this.dealHeroAttackToEnemy(dmg, 'fire', false);
+        this.dealHeroAttackToEnemy(dmg, 'fire', critFire);
       });
     }
 
@@ -1467,6 +1483,7 @@ export class BattleScene extends Phaser.Scene {
           100;
       const manaGain = Math.round(counts.frost * 5.2 * comboMult * bonus);
       const dmg = Math.round(atk * 0.16 * counts.frost * elemBoost * comboMult);
+      const critFrost = this.rollCrit('frost');
       this.launchOrbs(centers.frost, this.heroContainer.x, this.heroContainer.y, 0x38bdf8, () => {
         this.heroMana = Math.min(this.heroMaxMana, this.heroMana + manaGain);
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 46, `+${manaGain} Mana`, '#38bdf8');
@@ -1474,7 +1491,7 @@ export class BattleScene extends Phaser.Scene {
           this.enemyFrozenTurns = 1;
           this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 60, 'YAVAŞLADI!', '#7dd3fc');
         }
-        this.dealHeroAttackToEnemy(dmg, 'frost', false);
+        this.dealHeroAttackToEnemy(dmg, 'frost', critFrost);
       });
     }
 
@@ -1526,8 +1543,9 @@ export class BattleScene extends Phaser.Scene {
           (classId === 'stormcaller' || classId === 'assassin' ? 40 : 0)) /
           100;
       const dmg = Math.round(atk * 0.31 * counts.lightning * elemBoost * comboMult * bonus);
+      const critLightning = counts.lightning < 4 && this.rollCrit('lightning');
       this.launchOrbs(centers.lightning, this.enemyContainer.x, this.enemyContainer.y, 0xfacc15, () => {
-        this.dealHeroAttackToEnemy(dmg, 'lightning', counts.lightning >= 4);
+        this.dealHeroAttackToEnemy(dmg, 'lightning', counts.lightning >= 4 || critLightning);
       });
     }
 
@@ -1542,10 +1560,11 @@ export class BattleScene extends Phaser.Scene {
           100;
       const ultiGain = Math.round(counts.arcane * 6.8 * bonus);
       const dmg = Math.round(atk * 0.28 * counts.arcane * elemBoost * comboMult);
+      const critArcane = this.rollCrit('arcane');
       this.launchOrbs(centers.arcane, this.heroContainer.x, this.heroContainer.y, 0xa855f7, () => {
         this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + ultiGain);
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 65, `+${ultiGain} Ulti`, '#d8b4fe');
-        this.dealHeroAttackToEnemy(dmg, 'arcane', false, true);
+        this.dealHeroAttackToEnemy(dmg, 'arcane', critArcane, true);
       });
     }
 
@@ -1567,6 +1586,14 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** Kritik kararı: rastgelelik akışından tam bir çekiliş (kritik güçlendirmesi varsa çekilmez). */
+  private rollCrit(element: GemType): boolean {
+    return (
+      this.heroCritBuffTurns > 0 ||
+      this.combatRng() * 100 < this.initData.build.stats.critChance + (element === 'lightning' ? 12 : 0)
+    );
+  }
+
   private dealHeroAttackToEnemy(
     rawDmg: number,
     element: GemType,
@@ -1576,10 +1603,8 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemyHp <= 0) return;
 
     const build = this.initData.build;
-    const critRoll =
-      this.heroCritBuffTurns > 0 ||
-      Math.random() * 100 < build.stats.critChance + (element === 'lightning' ? 12 : 0);
-    const isCrit = forceCrit || critRoll;
+    // Kritik kararı, zamanlamaya bağlı olmaması için taş efektlerinde saldırı planlanırken önceden verilir (forceCrit)
+    const isCrit = forceCrit || this.rollCrit(element);
 
     // Suikastçı pasifi: her kritik vuruş kanama biriktirir
     if (isCrit && this.initData.hero.classId === 'assassin') {
@@ -1638,7 +1663,7 @@ export class BattleScene extends Phaser.Scene {
     });
 
     if (isCrit && this.initData.settings.screenShake) {
-      this.cameras.main.shake(140, 0.009);
+      this.cameras.main.shake(this.d(140), 0.009);
     }
 
     const label = isCrit
@@ -1711,7 +1736,7 @@ export class BattleScene extends Phaser.Scene {
     const phaseChanged = this.enemyPhase !== phaseBefore;
     const enragedNow = this.enemyEnraged && !enragedBefore;
     if (!phaseChanged && !enragedNow) return;
-    this.plannedAction = planEnemyAction(this.enemy);
+    this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
     if (this.plannedAction.kind === 'attack') this.companionState = foxDisarm(this.companionState); // plan normal saldırıya döndü
     this.phaseNotice = {
       seq: ++this.phaseNoticeSeq,
@@ -1788,7 +1813,7 @@ export class BattleScene extends Phaser.Scene {
             '#f43f5e'
           );
           SoundEngine.playBossRoar();
-          if (this.initData.settings.screenShake) this.cameras.main.shake(260, 0.012);
+          if (this.initData.settings.screenShake) this.cameras.main.shake(this.d(260), 0.012);
           break;
         }
       }
@@ -1803,7 +1828,7 @@ export class BattleScene extends Phaser.Scene {
         if (tv && tv.tile.frozen === 0) candidates.push(tv);
       }
     }
-    Phaser.Utils.Array.Shuffle(candidates);
+    this.shuffle(candidates);
     for (let i = 0; i < Math.min(count, candidates.length); i++) {
       candidates[i].tile.frozen = 2;
       this.syncTileOverlay(candidates[i]);
@@ -2003,7 +2028,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.enemyTurnCounter <= 0) {
         await this.executeEnemyAttack();
         this.enemyTurnCounter = this.effectiveAttackInterval();
-        this.plannedAction = planEnemyAction(this.enemy);
+        this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
       }
     }
 
@@ -2039,7 +2064,7 @@ export class BattleScene extends Phaser.Scene {
     // Kahraman sıyrılma kontrolü (Duman Bombası buffı +%45 ekler)
     const dodgeChance =
       this.initData.build.stats.dodge + (this.heroDodgeBuffTurns > 0 ? 45 : 0);
-    if (Math.random() * 100 < dodgeChance) {
+    if (this.combatRng() * 100 < dodgeChance) {
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 45,
@@ -2102,7 +2127,7 @@ export class BattleScene extends Phaser.Scene {
 
     SoundEngine.playWeaponHit(this.enemy.isBoss);
     if (this.initData.settings.screenShake) {
-      this.cameras.main.shake(170, this.enemy.isBoss ? 0.012 : 0.007);
+      this.cameras.main.shake(this.d(170), this.enemy.isBoss ? 0.012 : 0.007);
     }
 
     // Shield absorbs first
@@ -2203,7 +2228,7 @@ export class BattleScene extends Phaser.Scene {
       const dim = this.add
         .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width * 2, this.scale.height * 2, 0x000000, 0.55)
         .setDepth(5);
-      this.cameras.main.zoomTo(1.14, 340, 'Cubic.easeOut');
+      this.cameras.main.zoomTo(1.14, this.d(340), 'Cubic.easeOut');
       await this.waitMs(380);
 
       const dmg = Math.round(atk * skill.powerMultiplier);
@@ -2291,10 +2316,10 @@ export class BattleScene extends Phaser.Scene {
       }
 
       if (this.initData.settings.screenShake) {
-        this.cameras.main.shake(320, 0.016);
+        this.cameras.main.shake(this.d(320), 0.016);
       }
       await this.waitMs(350);
-      this.cameras.main.zoomTo(1.0, 320, 'Cubic.easeInOut');
+      this.cameras.main.zoomTo(1.0, this.d(320), 'Cubic.easeInOut');
       dim.destroy();
     } else if (skill.effectType === 'fireball') {
       this.spawnBannerText('ATEŞ TOPU!', '#fb923c');
@@ -2313,8 +2338,8 @@ export class BattleScene extends Phaser.Scene {
       // Destroy 4 random tiles on board!
       const blast = new Set<string>();
       for (let i = 0; i < 4; i++) {
-        const rr = Math.floor(Math.random() * GRID_SIZE);
-        const cc = Math.floor(Math.random() * GRID_SIZE);
+        const rr = Math.floor(this.rng() * GRID_SIZE);
+        const cc = Math.floor(this.rng() * GRID_SIZE);
         blast.add(`${rr},${cc}`);
       }
       await this.destroyAndApplyEffect(blast, new Map());
@@ -2401,7 +2426,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (skill.effectType === 'golden_dragon') {
       this.spawnBannerText('ALTIN EJDERHA ÇAĞRILDI!', '#fde047');
       this.screenFlash(0xf59e0b, 0.4);
-      this.cameras.main.zoomTo(1.08, 260, 'Cubic.easeOut');
+      this.cameras.main.zoomTo(1.08, this.d(260), 'Cubic.easeOut');
       await this.launchProjectile(this.stageArea.x + 30, this.stageArea.y + 26, this.enemyContainer.x, this.enemyContainer.y, 0xfbbf24, 26);
       this.drawShockwave(this.enemyContainer.x, this.enemyContainer.y, 0xfde047, 165);
       this.spawnGemBurst(this.enemyContainer.x, this.enemyContainer.y, 'golden');
@@ -2410,7 +2435,7 @@ export class BattleScene extends Phaser.Scene {
       const goldShield = Math.round(this.heroMaxHp * 0.2);
       this.heroShield += goldShield;
       this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 56, `+30 Mana +${goldShield} Kalkan`, '#fde047');
-      this.cameras.main.zoomTo(1, 280, 'Cubic.easeInOut');
+      this.cameras.main.zoomTo(1, this.d(280), 'Cubic.easeInOut');
     } else if (skill.effectType === 'chrono_shift') {
       this.spawnBannerText('ZAMAN KAYMASI!', '#d8b4fe');
       this.screenFlash(0xa855f7, 0.45);
@@ -2429,15 +2454,15 @@ export class BattleScene extends Phaser.Scene {
       this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 62, 'TÜM BEKLEMELER SIFIRLANDI!', '#fde047');
     } else if (skill.effectType === 'chaos_rift') {
       this.spawnBannerText('KAOS YIRTIĞI!', '#f43f5e');
-      this.cameras.main.zoomTo(1.16, 300, 'Cubic.easeOut');
+      this.cameras.main.zoomTo(1.16, this.d(300), 'Cubic.easeOut');
       this.screenFlash(0xf43f5e, 0.5);
       this.drawShockwave(this.enemyContainer.x, this.enemyContainer.y, 0xa855f7, 190);
       this.spawnGemBurst(this.enemyContainer.x, this.enemyContainer.y, 'arcane');
       this.dealHeroAttackToEnemy(Math.round(atk * skill.powerMultiplier), 'arcane', true, true);
       this.convertTiles(6, ['golden', 'arcane']);
-      if (this.initData.settings.screenShake) this.cameras.main.shake(300, 0.015);
+      if (this.initData.settings.screenShake) this.cameras.main.shake(this.d(300), 0.015);
       await this.waitMs(320);
-      this.cameras.main.zoomTo(1, 320, 'Cubic.easeInOut');
+      this.cameras.main.zoomTo(1, this.d(320), 'Cubic.easeInOut');
     } else if (skill.effectType === 'shield_bash') {
       this.spawnBannerText('KALKAN ÇARPMASI!', '#cbd5e1');
       await this.launchProjectile(this.heroContainer.x, this.heroContainer.y, this.enemyContainer.x, this.enemyContainer.y, 0xcbd5e1, 22);
@@ -2480,7 +2505,7 @@ export class BattleScene extends Phaser.Scene {
           0xfacc15,
           9
         );
-        this.dealHeroAttackToEnemy(Math.round(atk * skill.powerMultiplier), 'lightning', Math.random() < 0.5);
+        this.dealHeroAttackToEnemy(Math.round(atk * skill.powerMultiplier), 'lightning', this.combatRng() < 0.5);
       }
     } else if (skill.effectType === 'sniper_mark') {
       this.spawnBannerText('NİŞANCI İZİ!', '#fef08a');
@@ -2614,7 +2639,7 @@ export class BattleScene extends Phaser.Scene {
       this.heroShield += dShield;
       // Form zaten aktifse temel ölçeği yeniden yazma (büyüme birikmesin)
       if (!wasInForm) this.heroBaseScale = this.heroContainer.scaleX;
-      this.cameras.main.zoomTo(1.08, 280, 'Cubic.easeOut');
+      this.cameras.main.zoomTo(1.08, this.d(280), 'Cubic.easeOut');
       this.tweens.add({
         targets: this.heroContainer,
         scaleX: this.heroBaseScale * 1.22,
@@ -2632,7 +2657,7 @@ export class BattleScene extends Phaser.Scene {
         '#fb923c'
       );
       await this.waitMs(330);
-      this.cameras.main.zoomTo(1, 300, 'Cubic.easeInOut');
+      this.cameras.main.zoomTo(1, this.d(300), 'Cubic.easeInOut');
     }
 
     // Fantastik yaratık sınıflarının veri güdümlü yetenekleri
@@ -2816,7 +2841,7 @@ export class BattleScene extends Phaser.Scene {
         if (tv) cells.push(tv);
       }
     }
-    Phaser.Utils.Array.Shuffle(cells);
+    this.shuffle(cells);
     for (let i = 0; i < Math.min(count, cells.length); i++) {
       const t = types[i % types.length];
       cells[i].tile.type = t;
@@ -2833,7 +2858,7 @@ export class BattleScene extends Phaser.Scene {
     let guard = 0;
     while (blast.size < count && guard < 220) {
       blast.add(
-        `${Math.floor(Math.random() * GRID_SIZE)},${Math.floor(Math.random() * GRID_SIZE)}`
+        `${Math.floor(this.rng() * GRID_SIZE)},${Math.floor(this.rng() * GRID_SIZE)}`
       );
       guard++;
     }
@@ -2844,7 +2869,7 @@ export class BattleScene extends Phaser.Scene {
 
   /** Rastgele tek bir satırı yok eden yıldırım hattı */
   private async destroyRandomRow() {
-    const row = Math.floor(Math.random() * GRID_SIZE);
+    const row = Math.floor(this.rng() * GRID_SIZE);
     const blast = new Set<string>();
     for (let c = 0; c < GRID_SIZE; c++) blast.add(`${row},${c}`);
     const y = this.cellToWorld(row, 0).y;
@@ -2855,8 +2880,8 @@ export class BattleScene extends Phaser.Scene {
 
   /** Rastgele bir satır + bir sütunu yok eden çapraz lazer */
   private async destroyRowAndColumn() {
-    const row = Math.floor(Math.random() * GRID_SIZE);
-    const col = Math.floor(Math.random() * GRID_SIZE);
+    const row = Math.floor(this.rng() * GRID_SIZE);
+    const col = Math.floor(this.rng() * GRID_SIZE);
     const blast = new Set<string>();
     for (let i = 0; i < GRID_SIZE; i++) {
       blast.add(`${row},${i}`);
@@ -2903,7 +2928,7 @@ export class BattleScene extends Phaser.Scene {
       ease: 'Back.easeOut',
     });
     if (this.initData.settings.screenShake) {
-      this.cameras.main.shake(380, 0.012);
+      this.cameras.main.shake(this.d(380), 0.012);
     }
     this.spawnBannerText(`BOSS: ${this.enemy.name.toUpperCase()}!`, '#f43f5e');
   }
@@ -2961,7 +2986,7 @@ export class BattleScene extends Phaser.Scene {
           if (tv) flat.push(tv);
         }
       }
-      Phaser.Utils.Array.Shuffle(flat);
+      this.shuffle(flat);
       let idx = 0;
       for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -3036,6 +3061,7 @@ export class BattleScene extends Phaser.Scene {
       blendMode: 'ADD',
       emitting: false,
     });
+    particles.timeScale = this.speed;
     particles.explode(count);
     this.time.delayedCall(450, () => particles.destroy());
   }
@@ -3202,6 +3228,40 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+  private shuffle<T>(arr: T[]): T[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  /** Kamera efektleri sahne zaman ölçeğinden etkilenmez; süreleri hıza göre kısaltılır. */
+  private d(ms: number): number {
+    return Math.max(1, Math.round(ms / this.speed));
+  }
+
+  /**
+   * Savaş hızını ister. Hamle çözümlenirken (taşlar hareket ediyor, saldırı/efekt sürüyor) değişiklik, çözümleme bitip
+   * oyuncu sırası açılınca uygulanır; böylece yarım kalan animasyonun hızı bir anda değişmez.
+   */
+  public requestSpeed(speed: 1 | 2) {
+    this.pendingSpeed = speed;
+    this.applyPendingSpeed();
+  }
+
+  private applyPendingSpeed() {
+    if (this.pendingSpeed === this.speed) return;
+    if (!this.time || !this.tweens || !this.anims) return; // sahne henüz kurulmadı: başlangıç hızı create()'te uygulanır
+    if (this.inputLocked || this.turnPhase !== 'player') return;
+    this.speed = this.pendingSpeed;
+    // Zaman ölçeği: bekleme (delayedCall), tween ve animasyonlar aynı oranda hızlanır
+    this.time.timeScale = this.speed;
+    this.tweens.timeScale = this.speed;
+    this.anims.globalTimeScale = this.speed;
+    this.emitSnapshot();
+  }
+
   private waitMs(ms: number): Promise<void> {
     return new Promise((resolve) => this.time.delayedCall(ms, resolve));
   }
@@ -3255,6 +3315,7 @@ export class BattleScene extends Phaser.Scene {
     this.lastIntentSignature = this.intentSignature();
     this.initData.onCombatUpdate({
       mastery: this.initData.mastery ? this.initData.mastery.map((o) => progressOf(this.mastery, o)) : undefined,
+      speed: this.speed,
       companion: this.initData.companion ? { id: this.initData.companion, state: this.companionState } : undefined,
       heroHp: this.heroHp,
       heroMaxHp: this.heroMaxHp,

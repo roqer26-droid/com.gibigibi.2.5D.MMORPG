@@ -1,6 +1,7 @@
 import { HERO_CLASS_LIST } from '../data/classes';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
+import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
@@ -19,7 +20,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 type RawSave = Record<string, unknown>;
 
@@ -44,6 +45,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   8: (raw) => raw,
   // v9 -> v10: yoldaşlar (`companions`) eklendi; eksikse boş başlar, alınmış ustalık sandıklarının parça payı yüklemede bir kez tanınır.
   9: (raw) => raw,
+  // v10 -> v11: 2× savaş hızı (`speed`, `settings.battleSpeed`) eklendi; 100. aşama ya da sonrası tamamlanmış kayıtlar yüklemede otomatik açılır.
+  10: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -133,9 +136,12 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     dungeons: sanitizeDungeonSaves(save.dungeons),
     mastery: sanitizeMastery(save.mastery),
     companions: sanitizeCompanions(save.companions, Object.keys(heroes)),
+    speed: sanitizeSpeed(save.speed),
   };
   // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
-  return reconcileCompanionParts(sanitized);
+  const reconciled = reconcileCompanionParts(sanitized);
+  const withSpeed = applySpeedUnlock(reconciled);
+  return { ...withSpeed, settings: { ...withSpeed.settings, battleSpeed: withSpeed.settings.battleSpeed === 2 ? 2 : 1 } };
 }
 
 function safeSetItem(key: string, value: string): boolean {
@@ -182,6 +188,7 @@ export function createInitialSaveState(): GameSaveState {
     dungeons: createDungeonSaves(),
     mastery: emptyMastery(),
     companions: emptyCompanionSave(),
+    speed: { unlocked: false, noticeShown: false },
     stats: {
       totalMatches: 0,
       totalGemsMatched: {
@@ -204,6 +211,7 @@ export function createInitialSaveState(): GameSaveState {
       muted: false,
       screenShake: true,
       highParticles: true,
+      battleSpeed: 1,
     },
     lastSavedAt: Date.now(),
   };

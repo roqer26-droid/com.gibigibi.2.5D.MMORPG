@@ -13,6 +13,7 @@ class SoundEngineImpl {
     muted: false,
     screenShake: true,
     highParticles: true,
+    battleSpeed: 1,
   };
 
   private mode: MusicMode = 'none';

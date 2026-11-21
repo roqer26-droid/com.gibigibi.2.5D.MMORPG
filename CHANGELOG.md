@@ -4,6 +4,16 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.15.0 — 1× / 2× savaş hızı
+- Dünya Haritası'ndaki genel sıraya göre 100. aşama tamamlanınca 2× hız kalıcı açılır (`src/data/battleSpeed.ts`); 100. ya da sonraki bir aşaması
+  tamamlanmış eski kayıtlarda yüklemede otomatik açılır. Açılışta "2× savaş hızı açıldı!" bildirimi bir kez gösterilir. Kayıt sürümü 11.
+- Savaş ekranında "1× / 2×" düğmesi (kilitliyken kilit simgeli): tüm savaş modlarında ve eski aşamalarda çalışır, varsayılan 1×, son tercih kaydedilir.
+- 2×: sahne zaman ölçeği (taş takası, patlama, düşme, saldırılar, efektler, bekleme süreleri, kamera efektleri) iki katına çıkar. Animasyon sürerken
+  basılırsa değişiklik hamlenin çözümlemesi bitince uygulanır; hareket eden taşlara yeni hamle verilemez. Menü ve açıklama pencereleri normal hızdadır.
+- Savaş kuralları hızdan bağımsızdır: tahta rastgeleliği (`rng`) ile savaş kararları (`combatRng`: kritik, sıyrılma, düşman planı) ayrı akışlardır ve
+  kritik kararı efekt zamanlamasına bağlı değildir. Aynı tahta, tohum ve hamle dizisiyle 1× ve 2× sonuçları birebir aynıdır.
+- Düzeltme: kayıtlı 2× tercihiyle savaşa girerken sahne kurulmadan hız istendiği için ekranın boş kalması önlendi.
+
 ## v1.14.1 — Yoldaşlar ana menüde
 - Yoldaşlar, Kahramanlar ekranından çıkarılıp ana menüde ayrı bir seçenek ve ekran oldu (yeni kahramanlar eklense de yoldaşlar ayrı yerde durur).
   Menü kutusu "x/3 yoldaş açık" gösterir; açılabilir yoldaş varsa rozet çıkar.
