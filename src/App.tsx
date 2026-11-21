@@ -15,6 +15,7 @@ import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
 import { applySpeedUnlock, setBattleSpeed } from './data/battleSpeed';
+import { applyHeroUnlocks } from './data/heroUnlocks';
 import { CompanionsScreen } from './components/CompanionsScreen';
 import { applyEliteParts, setActiveCompanion, unlockCompanion } from './data/companions';
 import type { CompanionId } from './types/game';
@@ -180,6 +181,15 @@ export function App() {
       setSave((cur) => ({ ...cur, speed: { ...cur.speed, noticeShown: true } }));
     }
   }, [save.speed, pushToast, setSave]);
+
+  // Başarıyla açılan kahramanlar (Kurt Adam, Vampir, Kocaayak, Gecenin Çığırtkanı): koşul sağlanınca ya da eski kayıt yüklenince açılır
+  useEffect(() => {
+    const r = applyHeroUnlocks(save);
+    if (r.newlyUnlocked.length === 0) return;
+    setSave((cur) => applyHeroUnlocks(cur).save);
+    pushToast(`${r.newlyUnlocked.map((id) => HERO_CLASSES[id].name).join(', ')} kahramanı açıldı!`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [save.completedStages, save.dungeons, save.heroUnlocks]);
 
   // Auto-save whenever state updates
   useEffect(() => {

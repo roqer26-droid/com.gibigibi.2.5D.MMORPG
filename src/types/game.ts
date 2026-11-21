@@ -36,7 +36,10 @@ export type CreatureClassId =
   | 'demon'
   | 'seraph';
 
-export type HeroClassId = CoreHeroClassId | CreatureClassId;
+/** Görsel tabanlı (şeffaf tam boy PNG) yeni kahramanlar; 'vampire' ve 'werewolf' yaratık kimlikleriyle birlikte bu gruba dahildir */
+export type ImageHeroClassId = 'werewolf' | 'vampire' | 'bigfoot' | 'night_screecher';
+
+export type HeroClassId = CoreHeroClassId | CreatureClassId | 'bigfoot' | 'night_screecher';
 
 export type ElementType = 'fire' | 'frost' | 'nature' | 'lightning' | 'arcane' | 'holy' | 'physical';
 
@@ -160,6 +163,10 @@ export type SkillEffectType =
   | 'flame_rain'
   | 'frost_lance'
   | 'stone_bulwark'
+  | 'claw_strike'
+  | 'ruby_slash'
+  | 'rock_bulwark'
+  | 'echo_wave'
   | 'thunder_chain'
   | 'venom_bloom'
   | 'holy_judgement'
@@ -259,6 +266,8 @@ export interface HeroClassDef {
   themeColor: string;
   /** Kahramanı açmak için gereken kaynak (yok = baştan açık) */
   unlockCost?: { gold: number; crystals: number };
+  /** Kaynakla değil başarıyla açılan kahramanlar: koşul metni (mantık `heroUnlocks.ts` içindedir) */
+  unlockCondition?: { text: string };
   /** Sınıfın görsel imzası (aura, efekt renkleri) */
   accentColor?: string;
   /** Fantastik yaratık sınıfı mı? */
@@ -693,6 +702,8 @@ import type { IntentView } from '../game/enemyIntent';
 export interface BattleCombatSnapshot {
   /** Ustalık hedeflerinin savaş içi ilerlemesi (hikâye aşamalarında) */
   mastery?: { current: number; target: number; done: boolean }[];
+  /** Kahramana özel sayaç (ör. Kurt Adam Av yükü) */
+  kit?: { label: string; value: number; max: number };
   /** Savaş hızı: sahnede uygulanan hız */
   speed?: 1 | 2;
   /** Aktif yoldaşın savaş durumu */

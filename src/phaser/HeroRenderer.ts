@@ -1,5 +1,8 @@
 import { CoreHeroClassId, CreatureClassId, EquipmentSlot, HeroProgress, ItemCategory } from '../types/game';
 import { CREATURE_SPECS, drawCreature } from './CreatureRenderer';
+import { HERO_ART_LAYOUT, heroImage } from '../data/heroArt';
+import { isImageHero } from '../data/imageHeroes';
+import type { ImageHeroClassId } from '../types/game';
 
 /* ================================================================== */
 /*  BÜYÜ AURASI — Ekipman + seviyesi arttıkça karakter parlamaya başlar */
@@ -564,6 +567,40 @@ function drawEnchantAura(ctx: CanvasRenderingContext2D, aura: EnchantAura, time:
 /*  ANA ÇİZİM                                                           */
 /* ================================================================== */
 
+/**
+ * Görsel tabanlı kahramanlar: oranlar korunur, ayaklar yer çizgisine (y=+74) oturur; Gecenin Çığırtkanı yerden yüksekte
+ * süzülür. Saldırı pozunda öne eğilir (hasar/ bekleme animasyonları kapsayıcı katmanda aynen çalışır).
+ */
+function drawHeroArt(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  id: ImageHeroClassId,
+  pose: 'idle' | 'attack',
+  time: number
+) {
+  const L = HERO_ART_LAYOUT[id];
+  const aspect = img.naturalWidth / img.naturalHeight;
+  let h = L.height;
+  let w = h * aspect;
+  if (w > L.maxWidth) {
+    w = L.maxWidth;
+    h = w / aspect;
+  }
+  const ground = 74;
+  const bob = L.bob ? Math.sin(time * 2.1) * L.bob : 0;
+  ctx.save();
+  // Yerdeki gölge, süzülen kahramanda daha küçük ve soluk kalır
+  ctx.translate(0, ground - L.float + bob);
+  if (pose === 'attack') {
+    ctx.translate(16, 0);
+    ctx.rotate(0.07);
+  }
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = 10;
+  ctx.drawImage(img, -w / 2, -h, w, h);
+  ctx.restore();
+}
+
 /** Phaser dokusu için standart kahraman kare boyutu (aura payı dahil) */
 export const HERO_TEX_SIZE = 300;
 
@@ -605,7 +642,10 @@ export function drawHeroToCanvas(
   ctx.scale(1 + breath * 0.012, 1 + breath * 0.024);
   ctx.translate(0, -74);
 
-  if (creature) {
+  const art = isImageHero(hero.classId) ? heroImage(hero.classId) : null;
+  if (art && isImageHero(hero.classId)) {
+    drawHeroArt(ctx, art, hero.classId, pose, time);
+  } else if (creature) {
     drawCreature(ctx, hero, pose, time, aura, creature);
   } else {
     switch (hero.classId) {

@@ -631,6 +631,18 @@ export const BattleView: React.FC<BattleViewProps> = ({
       {/* PHASER 3 ARENA + BOARD CANVAS */}
       <div className="relative flex min-h-0 w-full flex-1">
         <div ref={mountRef} className="game-no-scroll relative h-full min-h-0 w-full flex-1 overflow-hidden" />
+        {snapshot.kit && (
+          <div
+            className="pointer-events-none absolute left-1.5 top-[46px] z-10 flex items-center gap-1 rounded-full border border-amber-400/50 bg-slate-950/85 px-2.5 py-1 text-[11px] font-extrabold text-amber-200"
+            data-testid="hero-kit-hud"
+            data-value={snapshot.kit.value}
+          >
+            {snapshot.kit.label}
+            {Array.from({ length: snapshot.kit.max }, (_, i) => (
+              <span key={i} className={`h-2.5 w-2.5 rounded-full border ${i < snapshot.kit!.value ? 'border-amber-300 bg-amber-300' : 'border-slate-600 bg-slate-800'}`} />
+            ))}
+          </div>
+        )}
         {snapshot.companion && (
           <div
             className="pointer-events-none absolute left-1.5 top-1.5 z-10 flex items-center gap-1.5 rounded-full border bg-slate-950/85 py-0.5 pl-0.5 pr-2.5"

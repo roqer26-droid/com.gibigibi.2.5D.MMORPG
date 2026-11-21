@@ -1,5 +1,6 @@
 import { CoreHeroClassId, HeroClassDef, HeroClassId } from '../types/game';
 import { CREATURE_CLASSES } from './creatureClasses';
+import { IMAGE_HERO_CLASSES } from './imageHeroes';
 
 const CORE_CLASSES: Record<CoreHeroClassId, HeroClassDef> = {
   warrior: {
@@ -1393,8 +1394,8 @@ const TIER4_NODES: Record<CoreHeroClassId, HeroClassDef['skillTree']> = {
   CORE_CLASSES[classId].skillTree.push(...TIER4_NODES[classId]);
 });
 
-/** 8 çekirdek sınıf + 12 fantastik yaratık = 20 kahraman */
-export const HERO_CLASSES = { ...CORE_CLASSES, ...CREATURE_CLASSES } as Record<
+/** 8 çekirdek sınıf + 12 fantastik yaratık + 2 yeni görsel kahraman (Kurt Adam ve Vampir yaratık kimlikleriyle yenilendi) = 22 kahraman */
+export const HERO_CLASSES = { ...CORE_CLASSES, ...CREATURE_CLASSES, ...IMAGE_HERO_CLASSES } as Record<
   HeroClassId,
   HeroClassDef
 >;

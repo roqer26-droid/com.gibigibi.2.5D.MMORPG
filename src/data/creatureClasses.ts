@@ -11,7 +11,7 @@ import {
 } from '../types/game';
 
 type PassiveType = NonNullable<SkillTreeNode['passiveEffect']>['type'];
-type Pick = [PassiveType, number];
+export type Pick = [PassiveType, number];
 
 /* ------------------------------------------------------------------ */
 /*  Yetenek ağacı üreticisi — açıklamalar etkilerden otomatik yazılır   */
@@ -80,7 +80,7 @@ function node(
 }
 
 /** names: off1-4, mag1-4, def1-4 • picks: off2, mag1, mag4, def2 */
-function buildTree(p: string, n: string[], picks: Pick[]): SkillTreeNode[] {
+export function buildTree(p: string, n: string[], picks: Pick[]): SkillTreeNode[] {
   return [
     node(`${p}_off_1`, n[0], 'offense', 1, 3, undefined, { attack: 9, critChance: 2 }),
     node(`${p}_off_2`, n[1], 'offense', 2, 3, `${p}_off_1`, undefined, picks[0]),

@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.16.0 — Dört yeni kahraman: Kurt Adam, Vampir, Kocaayak, Gecenin Çığırtkanı
+- Şeffaf tam boy görseller (`src/art/heroes`) kahraman seçim ekranında ve savaşta kullanılır; oran korunur, ayaklar yer çizgisine oturur,
+  Gecenin Çığırtkanı hafifçe havada durur. Bekleme/saldırı/hasar animasyonları mevcut kapsayıcı katmanda aynen çalışır.
+- Kurt Adam (Av yükü, Pençe Darbesi, Dolunay Hücumu), Vampir (Kan Bağı, Yakut Kesik, Kızıl Düello), Kocaayak (Sağlam Duruş, Kaya Siperi,
+  Orman Sarsıntısı), Gecenin Çığırtkanı (Gece Yankısı, Yankı Dalgası, Hilal Çığlığı). Tüm değerler `src/data/imageHeroes.ts` içinde ayarlanır;
+  mantık `src/game/heroKits.ts` içindedir. Kurt Adam ve Vampir eski kimliklerini (ve yetenek ağacı yatırımlarını) korur.
+- Açılma şartları başarıyla: Büyülü Orman tamamlanınca / Karanlık Uçurum'un son boss'u / Köklerin Mahzeni'nin son savaşı / genel sıradaki 100. aşama.
+  Eski kayıtlarda yüklemede otomatik tanınır ("… kahramanı açıldı!"). Seçim ekranı rolü, pasifi, yeteneği, ultiyi ve açılma şartını gösterir.
+- Gecenin Çığırtkanı geciktirmesi aynı eylem için toplamda en fazla 1 tur; niyet göstergesi hemen güncellenir; geciktirme "ağır saldırıyı engelle"
+  ustalık hedefini tamamlamaz. Savaş ekranında Kurt Adam için Av yükü göstergesi.
+
 ## v1.15.1 — Kilitli 2× düğmesi ipucu
 - Savaşta kilitli 2× düğmesine dokununca "Dünya Haritası 100. seviyede açılır" yazısı çıkar ve 2 saniye sonra kaybolur (hız 1× kalır).
 

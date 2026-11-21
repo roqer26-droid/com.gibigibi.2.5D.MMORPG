@@ -1,3 +1,4 @@
+import { IMAGE_HERO_SKILLS } from './imageHeroes';
 import {
   ActiveSkillDef,
   EquipmentSlot,
@@ -655,7 +656,7 @@ const CORE_CLASS_SKILLS: Record<CoreHeroClassId, ActiveSkillDef[]> = {
 };
 
 /** Tüm sınıfların imza yetenekleri (çekirdek + yaratıklar) */
-export const CLASS_SKILLS = { ...CORE_CLASS_SKILLS, ...CREATURE_SKILLS } as Record<
+export const CLASS_SKILLS = { ...CORE_CLASS_SKILLS, ...CREATURE_SKILLS, ...IMAGE_HERO_SKILLS } as Record<
   HeroClassId,
   ActiveSkillDef[]
 >;

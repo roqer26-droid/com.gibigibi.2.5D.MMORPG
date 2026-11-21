@@ -122,12 +122,12 @@ describe('progression, league, quests and legacy save migration', () => {
     assert.ok(migrated.save.claimedQuests.includes('main_1_first_win'));
     assert.equal(migrated.save.questPeriods.daily.counters.gems.fire, 12);
     assert.ok(migrated.save.questPeriods.daily.claimed.includes('daily_nature_gems'));
-    assert.equal(Object.keys(migrated.save.heroes).length, 20);
+    assert.equal(Object.keys(migrated.save.heroes).length, 22);
     assert.equal(migrated.save.league.points, 0);
 
     assert.equal(new Set(QUESTS_LIST.map((q) => q.id)).size, QUESTS_LIST.length, 'quest ids must be unique');
     const supportedPeriodObjectives = new Set(['match_gem', 'make_matches', 'reach_combo', 'win_battles', 'defeat_bosses', 'upgrade_item', 'use_skills', 'league_battles', 'league_wins']);
     assert.ok(QUESTS_LIST.filter((q) => q.category === 'daily' || q.category === 'weekly').every((q) => supportedPeriodObjectives.has(q.objectiveType)));
-    console.log(`Progression checks passed: ${QUESTS_LIST.length} quests, 20 heroes, league and period migration.`);
+    console.log(`Progression checks passed: ${QUESTS_LIST.length} quests, 22 heroes, league and period migration.`);
   });
 });

@@ -15,6 +15,8 @@ import {
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { GameSaveState, HeroClassId } from '../types/game';
 import { computeEnchantAura } from '../phaser/HeroRenderer';
+import { CLASS_SKILLS } from '../data/skills';
+import { heroConditionMet } from '../data/heroUnlocks';
 import { computeHeroBuild, xpRequiredForLevel } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
 
@@ -223,8 +225,8 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
           </div>
         </div>
 
-        {/* Pasif + Ulti */}
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Pasif + Yetenek + Ulti */}
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2" data-testid={`hero-kit-${id}`}>
           <div className="rounded-xl border border-sky-500/30 bg-sky-950/30 p-3.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-sky-300">
               <Sparkles className="h-4 w-4" />
@@ -232,6 +234,16 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
             </div>
             <p className="mt-1 text-xs leading-relaxed text-slate-300">{cls.passiveDesc}</p>
           </div>
+          {(CLASS_SKILLS[id] ?? []).slice(0, 1).map((sk) => (
+            <div key={sk.id} className="rounded-xl border border-emerald-500/30 bg-emerald-950/25 p-3.5" data-testid="hero-skill">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-300">
+                <GitBranch className="h-4 w-4" />
+                Yetenek: {sk.name}
+                <span className="ml-auto text-[10px] font-semibold text-slate-400">{sk.manaCost} Mana · {sk.cooldown} tur</span>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">{sk.description}</p>
+            </div>
+          ))}
           <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-3.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
               <Swords className="h-4 w-4" />
@@ -245,7 +257,18 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
 
         {/* Eylemler */}
         <div className={`mt-5 flex flex-wrap items-center gap-3 ${inModal ? '' : ''}`}>
-          {!isUnlocked ? (
+          {!isUnlocked && cls.unlockCondition ? (
+            <div
+              className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl border border-amber-500/40 bg-amber-950/25 px-4 py-3 text-center"
+              data-testid={`unlock-condition-${id}`}
+              data-met={heroConditionMet(save, id) ? '1' : '0'}
+            >
+              <span className="flex items-center gap-2 text-sm font-extrabold text-amber-200">
+                <Lock className="h-4 w-4" /> Açılma şartı
+              </span>
+              <span className="text-[13px] font-semibold text-slate-200">{cls.unlockCondition.text}</span>
+            </div>
+          ) : !isUnlocked ? (
             <button
               type="button"
               disabled={!canAfford}
@@ -391,7 +414,11 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                         )}
                       </div>
                       <p className="truncate text-[10px] text-slate-400">{c.title}</p>
-                      {locked && c.unlockCost ? (
+                      {locked && c.unlockCondition ? (
+                        <p className="mt-0.5 line-clamp-2 text-[10px] font-bold leading-tight text-amber-300">
+                          🔒 {c.unlockCondition.text}
+                        </p>
+                      ) : locked && c.unlockCost ? (
                         <p className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] font-bold text-amber-300 sm:justify-start">
                           <Coins className="h-3 w-3" />
                           {c.unlockCost.gold.toLocaleString('tr-TR')}

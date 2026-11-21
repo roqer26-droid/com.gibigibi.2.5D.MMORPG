@@ -21,6 +21,22 @@ import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRe
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
+import { heroImage, heroImageReady } from '../data/heroArt';
+import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
+import {
+  bigfootSkillShield,
+  bigfootStartShield,
+  bigfootUltShield,
+  bloodBond,
+  clawStrike,
+  delayEnemyAction,
+  huntChargeOnSquares,
+  nightEcho,
+  vampireSlashHeal,
+  vampireUltHeal,
+  werewolfUltBonus,
+} from '../game/heroKits';
+import { isImageHero } from '../data/imageHeroes';
 import type { CompanionId } from '../types/game';
 import {
   emberTrigger,
@@ -205,6 +221,15 @@ export class BattleScene extends Phaser.Scene {
   /** Savaş hızı: uygulanan ve (animasyon sürerken) bekleyen hız */
   private speed: 1 | 2 = 1;
   private pendingSpeed: 1 | 2 = 1;
+  /** Kurt Adam: Av yükü ve bu tur 2×2 kare yükü verildi mi */
+  private huntCharges = 0;
+  private huntSquareGiven = false;
+  /** Vampir: Kan Bağı bu tur kullanıldı mı; son verilen doğrudan hasar */
+  private bloodBondUsed = false;
+  private lastDealt = 0;
+  /** Gecenin Çığırtkanı: Gece Yankısı kullanıldı mı; eylem başına verilen gecikme */
+  private echoUsed = false;
+  private delaysByPlan = new WeakMap<EnemyAction, number>();
   /** Yoldaş: savaş başına tek destek hakkı */
   private companionState: CompanionState = 'ready';
   private companionBurn = { turns: 0, perTurn: 0 };
@@ -227,8 +252,15 @@ export class BattleScene extends Phaser.Scene {
     this.heroShield =
       resolved.build.passives.startShield +
       (resolved.build.relicEffects ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp) : 0);
+    // Kocaayak — Sağlam Duruş: savaş başında maksimum canın %8'i kadar kalkan
+    if (this.initData.hero.classId === 'bigfoot') this.heroShield += bigfootStartShield(this.heroMaxHp);
     this.relicFlags = freshRelicFlags();
     this.mastery = createMasteryState();
+    this.huntCharges = 0;
+    this.huntSquareGiven = false;
+    this.bloodBondUsed = false;
+    this.echoUsed = false;
+    this.delaysByPlan = new WeakMap();
     this.companionState = 'ready';
     this.companionBurn = { turns: 0, perTurn: 0 };
     this.heroMaxMana = resolved.build.stats.mana;
@@ -325,6 +357,15 @@ export class BattleScene extends Phaser.Scene {
     this.heroContainer = this.add.container(0, 0);
     this.heroSprite = this.add.image(0, 0, this.heroIdleKey);
     this.heroContainer.add(this.heroSprite);
+    // Görsel tabanlı kahramanlar: görsel henüz yüklenmediyse hazır olunca dokular yenilenir
+    if (isImageHero(this.initData.hero.classId) && !heroImage(this.initData.hero.classId)) {
+      void heroImageReady(this.initData.hero.classId).then(() => {
+        if (!this.heroSprite || !this.heroSprite.active) return;
+        this.heroIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
+        this.heroAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
+        this.heroSprite.setTexture(this.heroIdleKey);
+      });
+    }
 
     this.enemyContainer = this.add.container(0, 0);
     this.enemySprite = this.add.image(0, 0, enemyKey);
@@ -1394,6 +1435,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.mastery = onFrozenCleared(onResolve(this.mastery, counts, squares.length), frozenCleared);
     this.applyCompanionOnMatch(counts, squares.length);
+    this.applyHeroPassiveOnMatch(squares.length);
 
     // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
     this.applyHuntFireRule(counts);
@@ -1645,6 +1687,16 @@ export class BattleScene extends Phaser.Scene {
 
     this.enemyHp = Math.max(0, this.enemyHp - hpDamage);
     this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 4);
+    this.lastDealt = dmg;
+    // Vampir — Kan Bağı: her oyuncu turunda verilen ilk doğrudan hasar için bir kez can yeniler
+    if (this.initData.hero.classId === 'vampire') {
+      const bb = bloodBond(dmg, this.heroMaxHp, this.bloodBondUsed);
+      this.bloodBondUsed = bb.used;
+      if (bb.heal > 0) {
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + bb.heal);
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 100, `KAN BAĞI +${bb.heal} Can`, '#fb7185', 15);
+      }
+    }
 
     // Hero attack lunge + weapon slash!
     this.playHeroAttackAnim(isCrit, GEM_COLOR_NUM[element]);
@@ -2044,6 +2096,8 @@ export class BattleScene extends Phaser.Scene {
     this.setFlags = freshSetFlags();
     this.relicFlags = { ...this.relicFlags, turnMatchUsed: false };
     this.mastery = startTurn(this.mastery);
+    this.huntSquareGiven = false;
+    this.bloodBondUsed = false;
     SoundEngine.setIntensity(1);
     this.turnPhase = 'player';
     this.inputLocked = false;
@@ -2231,7 +2285,13 @@ export class BattleScene extends Phaser.Scene {
       this.cameras.main.zoomTo(1.14, this.d(340), 'Cubic.easeOut');
       await this.waitMs(380);
 
-      const dmg = Math.round(atk * skill.powerMultiplier);
+      let dmg = Math.round(atk * skill.powerMultiplier);
+      if (this.initData.hero.classId === 'werewolf') {
+        // Dolunay Hücumu: tüm Av yükleri harcanır, yük başına ek hasar
+        const wu = werewolfUltBonus(this.huntCharges, atk);
+        dmg += wu.bonus;
+        this.huntCharges = wu.charges;
+      }
       const hpBeforeUlt = this.enemyHp;
       this.drawShockwave(this.enemyContainer.x, this.enemyContainer.y, 0xfde047, 170);
       this.spawnGemBurst(this.enemyContainer.x, this.enemyContainer.y, 'golden');
@@ -2303,6 +2363,17 @@ export class BattleScene extends Phaser.Scene {
           '#fb923c'
         );
       }
+      if (this.initData.hero.classId === 'vampire') {
+        const h = vampireUltHeal(this.lastDealt, this.heroMaxHp);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + h);
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 52, `+${h} Can`, '#fb7185');
+      }
+      if (this.initData.hero.classId === 'bigfoot') {
+        const sh = bigfootUltShield(this.heroMaxHp);
+        this.heroShield += sh;
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 52, `+${sh} Kalkan`, '#86efac');
+      }
+      if (this.initData.hero.classId === 'night_screecher') this.delayEnemyAction();
       if (this.initData.hero.classId === 'paladin') {
         const heal = Math.round(this.heroMaxHp * 0.35);
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + heal);
@@ -2321,6 +2392,31 @@ export class BattleScene extends Phaser.Scene {
       await this.waitMs(350);
       this.cameras.main.zoomTo(1.0, this.d(320), 'Cubic.easeInOut');
       dim.destroy();
+    } else if (skill.effectType === 'claw_strike') {
+      this.spawnBannerText('PENÇE DARBESİ!', '#fde047');
+      const cs = clawStrike(this.huntCharges);
+      this.huntCharges = cs.charges;
+      this.drawShockwave(this.enemyContainer.x, this.enemyContainer.y, 0xfde047, 110);
+      this.dealHeroAttackToEnemy(Math.round(atk * cs.mult), 'fire', false);
+      if (cs.charged) this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 100, 'AV YÜKÜ HARCANDI', '#fde047', 15);
+    } else if (skill.effectType === 'ruby_slash') {
+      this.spawnBannerText('YAKUT KESİK!', '#fb7185');
+      this.drawBeamEffect(this.heroContainer.x, this.heroContainer.y, this.enemyContainer.x, this.enemyContainer.y, 0xfb7185);
+      this.dealHeroAttackToEnemy(Math.round(atk * skill.powerMultiplier), 'arcane', false);
+      const rh = vampireSlashHeal(this.lastDealt, this.heroMaxHp);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + rh);
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 46, `+${rh} Can`, '#fb7185');
+    } else if (skill.effectType === 'rock_bulwark') {
+      this.spawnBannerText('KAYA SİPERİ!', '#86efac');
+      const rb = bigfootSkillShield(this.heroMaxHp);
+      this.heroShield += rb;
+      this.drawShockwave(this.heroContainer.x, this.heroContainer.y, 0x22c55e, 120);
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 46, `+${rb} Kalkan`, '#86efac');
+    } else if (skill.effectType === 'echo_wave') {
+      this.spawnBannerText('YANKI DALGASI!', '#c4b5fd');
+      this.drawShockwave(this.enemyContainer.x, this.enemyContainer.y, 0xa78bfa, 130);
+      this.dealHeroAttackToEnemy(Math.round(atk * skill.powerMultiplier), 'arcane', false);
+      this.delayEnemyAction();
     } else if (skill.effectType === 'fireball') {
       this.spawnBannerText('ATEŞ TOPU!', '#fb923c');
       await this.launchProjectile(this.heroContainer.x, this.heroContainer.y, this.enemyContainer.x, this.enemyContainer.y, 0xef4444, 18);
@@ -3284,6 +3380,34 @@ export class BattleScene extends Phaser.Scene {
     return [...dots, `Zayıflık: ${weakName}`].join(' • ');
   }
 
+  /** Kurt Adam: Av İçgüdüsü (ilk kare → Av yükü) ve Gecenin Çığırtkanı: Gece Yankısı (ilk 3 adımlık zincir → ulti). */
+  private applyHeroPassiveOnMatch(squareCount: number) {
+    const id = this.initData.hero.classId;
+    if (id === 'werewolf') {
+      const r = huntChargeOnSquares(this.huntCharges, squareCount, this.huntSquareGiven);
+      this.huntCharges = r.charges;
+      this.huntSquareGiven = r.turnFlag;
+      if (r.given) this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 120, `AV YÜKÜ ${this.huntCharges}/${IMAGE_HERO_TUNING.werewolf.maxCharges}`, '#fde047', 15);
+    } else if (id === 'night_screecher') {
+      const r = nightEcho(this.mastery.stepsThisMove, this.mastery.swapMove, this.echoUsed);
+      if (r.ulti > 0) {
+        this.echoUsed = r.used;
+        this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + r.ulti);
+        this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 120, `GECE YANKISI +${r.ulti} Ulti`, '#c4b5fd', 15);
+      }
+    }
+  }
+
+  /** Sıradaki düşman eylemini geciktirir (aynı eylem toplamda en fazla 1 tur); niyet göstergesi hemen yenilenir. */
+  private delayEnemyAction() {
+    const r = delayEnemyAction(this.plannedAction, this.delaysByPlan, this.enemyTurnCounter);
+    if (r.delayed > 0) {
+      this.enemyTurnCounter = r.counter;
+      this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 80, `EYLEM +${r.delayed} TUR GECİKTİ`, '#c4b5fd', 15);
+    }
+    this.emitSnapshot();
+  }
+
   /** Yoldaş: Köz Ejderciği (ilk kare → yanma) ve Buz Tilkisi (ağır saldırı hazırlığında ilk buz eşleşmesi → hazırlan). */
   private applyCompanionOnMatch(counts: Record<GemType, number>, squareCount: number) {
     const id = this.initData.companion;
@@ -3316,6 +3440,7 @@ export class BattleScene extends Phaser.Scene {
     this.initData.onCombatUpdate({
       mastery: this.initData.mastery ? this.initData.mastery.map((o) => progressOf(this.mastery, o)) : undefined,
       speed: this.speed,
+      kit: this.initData.hero.classId === 'werewolf' ? { label: 'Av yükü', value: this.huntCharges, max: IMAGE_HERO_TUNING.werewolf.maxCharges } : undefined,
       companion: this.initData.companion ? { id: this.initData.companion, state: this.companionState } : undefined,
       heroHp: this.heroHp,
       heroMaxHp: this.heroMaxHp,
