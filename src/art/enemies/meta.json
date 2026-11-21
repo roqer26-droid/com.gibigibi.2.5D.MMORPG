@@ -98,5 +98,85 @@
  "boss_abyssal_king": {
   "aspect": 1.0191,
   "footFrac": 0.9697
+ },
+ "dikenli_yaban_domuzu": {
+  "aspect": 1.3115,
+  "footFrac": 0.9836
+ },
+ "kutsal_koru_bekcisi": {
+  "aspect": 0.7969,
+  "footFrac": 0.9953
+ },
+ "buzul_dev_avcisi": {
+  "aspect": 0.9,
+  "footFrac": 0.9984
+ },
+ "magma_fenrisi": {
+  "aspect": 1.219,
+  "footFrac": 0.9733
+ },
+ "ucurum_celladi": {
+  "aspect": 1.2379,
+  "footFrac": 0.9981
+ },
+ "gok_hazine_kartali": {
+  "aspect": 1.0031,
+  "footFrac": 1.0
+ },
+ "bulut_kartali": {
+  "aspect": 1.1532,
+  "footFrac": 1.0
+ },
+ "firtina_sovalyesi": {
+  "aspect": 0.7953,
+  "footFrac": 0.9906
+ },
+ "deniz_yilani": {
+  "aspect": 0.8922,
+  "footFrac": 0.9953
+ },
+ "col_akrebi": {
+  "aspect": 1.1228,
+  "footFrac": 0.9912
+ },
+ "mumya_muhafiz": {
+  "aspect": 0.6141,
+  "footFrac": 1.0
+ },
+ "sis_cadisi": {
+  "aspect": 0.6781,
+  "footFrac": 1.0
+ },
+ "ay_kurdu": {
+  "aspect": 0.8859,
+  "footFrac": 0.9891
+ },
+ "elmas_golem": {
+  "aspect": 1.0407,
+  "footFrac": 0.9984
+ },
+ "kul_zombisi": {
+  "aspect": 0.8844,
+  "footFrac": 0.9969
+ },
+ "zaman_kurdu": {
+  "aspect": 1.039,
+  "footFrac": 0.9838
+ },
+ "kan_yarasasi": {
+  "aspect": 1.3035,
+  "footFrac": 1.0
+ },
+ "buz_ejderi_yavrusu": {
+  "aspect": 1.0614,
+  "footFrac": 0.9784
+ },
+ "yavru_ejderha": {
+  "aspect": 1.1615,
+  "footFrac": 0.9764
+ },
+ "kaos_lordu": {
+  "aspect": 0.7438,
+  "footFrac": 0.9016
  }
 }

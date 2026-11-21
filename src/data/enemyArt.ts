@@ -18,6 +18,40 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   boss_frost_queen: 'frost_queen',
   boss_shadow_demon: 'shadow_demon',
   // v1.21.0: her düşmanın kendi kimliği (dosya adı = kimlik)
+  // v1.22.0: genişleme bölgeleri (şablonla üretilen düşmanlar). Anahtar şablonun aşama başına KİMLİĞİDİR (`<bölge>_<no>_enemy`);
+  // aynı şablonun tekrarlandığı aşamalar (normal + Elit varyantı) aynı çizimi kullanır, yalnızca türü paylaşan diğer düşmanlar kullanmaz.
+  forest_6_enemy: 'dikenli_yaban_domuzu',
+  forest_7_enemy: 'kutsal_koru_bekcisi',
+  mountains_6_enemy: 'buzul_dev_avcisi',
+  volcano_6_enemy: 'magma_fenrisi',
+  abyss_6_enemy: 'ucurum_celladi',
+  sky_3_enemy: 'gok_hazine_kartali',
+  sky_1_enemy: 'bulut_kartali',
+  sky_5_enemy: 'bulut_kartali',
+  sky_2_enemy: 'firtina_sovalyesi',
+  sky_6_enemy: 'firtina_sovalyesi',
+  ocean_1_enemy: 'deniz_yilani',
+  ocean_5_enemy: 'deniz_yilani',
+  desert_2_enemy: 'col_akrebi',
+  desert_6_enemy: 'col_akrebi',
+  desert_7_enemy: 'mumya_muhafiz',
+  swamp_4_enemy: 'sis_cadisi',
+  moonlit_1_enemy: 'ay_kurdu',
+  moonlit_5_enemy: 'ay_kurdu',
+  crystal_caves_7_enemy: 'elmas_golem',
+  ashen_1_enemy: 'kul_zombisi',
+  ashen_5_enemy: 'kul_zombisi',
+  time_rift_7_enemy: 'zaman_kurdu',
+  blood_moon_2_enemy: 'kan_yarasasi',
+  blood_moon_6_enemy: 'kan_yarasasi',
+  eternal_winter_1_enemy: 'buz_ejderi_yavrusu',
+  eternal_winter_5_enemy: 'buz_ejderi_yavrusu',
+  eternal_winter_9_enemy: 'buz_ejderi_yavrusu',
+  dragon_roost_1_enemy: 'yavru_ejderha',
+  dragon_roost_5_enemy: 'yavru_ejderha',
+  dragon_roost_9_enemy: 'yavru_ejderha',
+  eternity_2_enemy: 'kaos_lordu',
+  eternity_6_enemy: 'kaos_lordu',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -76,7 +110,35 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   mythic_vault_keeper: { height: 0.56, maxWidth: 0.92, glow: '#d946ef', breathSec: 3.2 },
   abyss_general: { height: 0.76, maxWidth: 0.9, glow: '#c084fc', breathSec: 3.4 },
   boss_abyssal_king: { height: 0.7, maxWidth: 0.92, glow: '#c026d3', breathSec: 3.8 },
+  // v1.22.0 genişleme düşmanları (240'lık doku). Elit/hazine karşılaşmaları normal düşmandan büyük çizilir.
+  dikenli_yaban_domuzu: { height: 0.56, maxWidth: 0.96, glow: '#f59e0b', breathSec: 3.0 },
+  kutsal_koru_bekcisi: { height: 0.76, maxWidth: 0.82, glow: '#a3e635', breathSec: 3.4 },
+  buzul_dev_avcisi: { height: 0.8, maxWidth: 0.84, glow: '#7dd3fc', breathSec: 3.4 },
+  magma_fenrisi: { height: 0.6, maxWidth: 0.96, glow: '#f97316', breathSec: 2.8 },
+  ucurum_celladi: { height: 0.78, maxWidth: 0.94, glow: '#e11d48', breathSec: 3.4 },
+  gok_hazine_kartali: { height: 0.74, maxWidth: 0.98, glow: '#38bdf8', breathSec: 3.0, float: 0.04, bob: 0.014 },
+  bulut_kartali: { height: 0.5, maxWidth: 0.96, glow: '#bae6fd', breathSec: 2.6, float: 0.07, bob: 0.016 },
+  firtina_sovalyesi: { height: 0.68, maxWidth: 0.82, glow: '#facc15', breathSec: 3.0 },
+  deniz_yilani: { height: 0.62, maxWidth: 0.86, glow: '#2dd4bf', breathSec: 3.2 },
+  col_akrebi: { height: 0.46, maxWidth: 0.94, glow: '#fb923c', breathSec: 2.6 },
+  mumya_muhafiz: { height: 0.7, maxWidth: 0.7, glow: '#a3e635', breathSec: 3.2 },
+  sis_cadisi: { height: 0.66, maxWidth: 0.78, glow: '#c084fc', breathSec: 3.0, float: 0.03, bob: 0.012 },
+  ay_kurdu: { height: 0.56, maxWidth: 0.86, glow: '#cbd5e1', breathSec: 2.8 },
+  elmas_golem: { height: 0.7, maxWidth: 0.92, glow: '#e9d5ff', breathSec: 3.6 },
+  kul_zombisi: { height: 0.6, maxWidth: 0.78, glow: '#ef4444', breathSec: 3.0 },
+  zaman_kurdu: { height: 0.58, maxWidth: 0.96, glow: '#fbbf24', breathSec: 2.8 },
+  kan_yarasasi: { height: 0.44, maxWidth: 0.96, glow: '#e11d48', breathSec: 2.2, float: 0.12, bob: 0.018 },
+  buz_ejderi_yavrusu: { height: 0.54, maxWidth: 0.9, glow: '#7dd3fc', breathSec: 3.0 },
+  yavru_ejderha: { height: 0.52, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.0 },
+  kaos_lordu: { height: 0.7, maxWidth: 0.84, glow: '#d946ef', breathSec: 3.2 },
 };
+
+/** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */
+export const ENEMY_ART_ELITE_SCALE = 1.08;
+const SHARED_WITH_ELITE = new Set(['bulut_kartali', 'deniz_yilani', 'ay_kurdu', 'kul_zombisi', 'buz_ejderi_yavrusu', 'yavru_ejderha']);
+export function enemyArtScale(key: EnemyArtKey, enemyName: string): number {
+  return SHARED_WITH_ELITE.has(key) && enemyName.startsWith('Elit ') ? ENEMY_ART_ELITE_SCALE : 1;
+}
 
 export const ENEMY_ART_META = meta as Record<string, { aspect: number; footFrac: number }>;
 

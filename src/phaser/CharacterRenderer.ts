@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_ART_META, enemyArtKey, enemyImage, type EnemyArtKey } from '../data/enemyArt';
+import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_ART_META, enemyArtKey, enemyArtScale, enemyImage, type EnemyArtKey } from '../data/enemyArt';
 import {
   EnemyDef,
   EquipmentSlot,
@@ -448,7 +448,7 @@ export function drawEnemyToCanvas(
   const artKey = enemyArtKey(enemy.id);
   const artImg = artKey ? enemyImage(artKey) : null;
   if (artKey && artImg) {
-    drawEnemyArt(ctx, artImg, artKey, w, h);
+    drawEnemyArt(ctx, artImg, artKey, w, h, enemy.name);
     return;
   }
   const cx = w * 0.5;
@@ -1144,18 +1144,27 @@ export function createHeroPhaserTexture(
 }
 
 /** Sola dönük çizimi ayak/kök çizgisi zemin çizgisine oturacak şekilde, oranı koruyarak çizer. */
-function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: EnemyArtKey, w: number, h: number) {
+/** Çizimin dokudaki kutusu (oran korunur, genişlik sınırı ve Elit ölçeği uygulanır). */
+function enemyArtBox(key: EnemyArtKey, img: HTMLImageElement, w: number, h: number, enemyName: string) {
   const L = ENEMY_ART_LAYOUT[key];
   const m = ENEMY_ART_META[key];
   const aspect = img.naturalWidth / img.naturalHeight;
-  let dh = L.height * h;
+  let dh = L.height * h * enemyArtScale(key, enemyName);
   let dw = dh * aspect;
   if (dw > L.maxWidth * w) {
     dw = L.maxWidth * w;
     dh = dw / aspect;
   }
-  const ground = ENEMY_ART_GROUND * h;
   const lift = (L.float ?? 0) * h;
+  const x = w / 2 - dw / 2;
+  const y = ENEMY_ART_GROUND * h - lift - dh * m.footFrac;
+  return { dw, dh, x, y, lift };
+}
+
+/** Sola dönük çizimi ayak/kök çizgisi zemin çizgisine oturacak şekilde, oranı koruyarak çizer. */
+function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key: EnemyArtKey, w: number, h: number, enemyName: string) {
+  const { dw, dh, x, y, lift } = enemyArtBox(key, img, w, h, enemyName);
+  const ground = ENEMY_ART_GROUND * h;
   ctx.fillStyle = 'rgba(0,0,0,0.42)';
   ctx.beginPath();
   ctx.ellipse(w / 2, ground + h * 0.012, Math.min(dw * (lift > 0 ? 0.28 : 0.4), w * 0.36), h * 0.04, 0, 0, Math.PI * 2);
@@ -1163,7 +1172,7 @@ function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key:
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = h * 0.03;
-  ctx.drawImage(img, w / 2 - dw / 2, ground - lift - dh * m.footFrac, dw, dh);
+  ctx.drawImage(img, x, y, dw, dh);
   ctx.restore();
 }
 
@@ -1182,17 +1191,7 @@ export function createEnemyGlowTexture(scene: Phaser.Scene, enemy: EnemyDef): st
   const tex = scene.textures.createCanvas(key, size, size);
   if (!tex) return null;
   const ctx = tex.getContext();
-  const L = ENEMY_ART_LAYOUT[artKey];
-  const m = ENEMY_ART_META[artKey];
-  const aspect = img.naturalWidth / img.naturalHeight;
-  let dh = L.height * size;
-  let dw = dh * aspect;
-  if (dw > L.maxWidth * size) {
-    dw = L.maxWidth * size;
-    dh = dw / aspect;
-  }
-  const x = size / 2 - dw / 2;
-  const y = ENEMY_ART_GROUND * size - (L.float ?? 0) * size - dh * m.footFrac;
+  const { dw, dh, x, y } = enemyArtBox(artKey, img, size, size, enemy.name);
   // Çizimi tuvalin dışına, gölgesini içine düşür: tuvalde yalnızca bulanık kontur ışıması kalır
   const OFF = size * 4;
   ctx.shadowColor = '#ffffff';

@@ -4,6 +4,18 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.22.0 — Genişleme bölgelerindeki 20 düşmanın yeni çizimleri
+- Dikenli Yaban Domuzu, Kutsal Koru Bekçisi, Buzul Dev Avcısı, Magma Fenrisi, Uçurum Celladı, Gök Hazine Kartalı, Bulut Kartalı, Fırtına Şövalyesi,
+  Deniz Yılanı, Çöl Akrebi, Mumya Muhafız, Sis Cadısı, Ay Kurdu, Elmas Golem, Kül Zombisi, Zaman Kurdu, Kan Yarasası, Buz Ejderi Yavrusu,
+  Yavru Ejderha ve Kaos Lordu çizimleri (`src/art/enemies`, anahtar = şablon adı).
+- Şablonla üretilen düşmanlara aşama başına kimlikle (`<bölge>_<no>_enemy`) bağlandı: 34 düşman kimliği 20 çizimi paylaşır. Aynı şablonun tekrarlandığı
+  aşamalar (ör. Bulut Kartalı normal + Elit, Fırtına Şövalyesi ×2, Buz Ejderi Yavrusu ×3) aynı çizimi kullanır; Elit varyantı %8 büyük çizilir.
+  Yalnızca türü paylaşan diğer düşmanlar (ör. gerçek bölge bossları, İnci Sandığı Bekçisi) eski çizimini korur.
+- Not: Dikenli Yaban Domuzu, Buzul Dev Avcısı, Magma Fenrisi, Uçurum Celladı (Elit) ile Kutsal Koru Bekçisi ve Gök Hazine Kartalı (Hazine) oyunda boss değil;
+  bölge bossları (Yaban Kalbi Ordun vb.) bu pakette yok ve değişmedi. Elit/hazine karşılaşmaları normal düşmandan büyük çizildi.
+- Karada duranlarda ayak sabit nefes; Bulut Kartalı, Gök Hazine Kartalı, Kan Yarasası ve Sis Cadısı hafif süzülür. Silüeti izleyen ışıma, mevcut efektler,
+  1×/2× zamanlaması ve yalnızca aktif düşmanın görselinin yüklenmesi korunur.
+
 ## v1.21.2 — Savaş sonu ekranında "Ana Menüye Dön"
 - Dünya haritasındaki bir aşamayı kazandığında ya da kaybettiğinde sonuç ekranında "Haritaya Dön" yanında "Ana Menüye Dön" düğmesi çıkar.
   Zindan, boss avı ve lig savaşlarında sonuç ekranı değişmedi (onların kendi dönüş akışı var).
