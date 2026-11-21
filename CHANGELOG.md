@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.21.0 — 21 düşmanın yeni savaş çizimleri
+- Gölge Kurdu, Yosun Hazine Muhafızı, Kadim Orman Muhafızı (boss), Buzul Kurdu, Dağ Yetisi, Buz Hazine Golemi, Elit Kadim Buz Golemi, Ateş Semenderi,
+  Alev Elementali, Obsidyen Hazine Ruhu, Elit Magma Lordu, Cehennem Ejderhası (boss), Kadim Taş Gözcü, Hiçlik İzleyicisi, Prizma Mahzen Bekçisi,
+  Kristal Titan (boss), Uçurum Akıncısı, Elit Kaos Golemi, Kaos Hazine Bekçisi, Elit Uçurum Generali ve Uçurum Kralı Malakor (boss) için şeffaf çizimler.
+- Çizimler düşman KİMLİĞİNE bağlıdır (dosya adı = kimlik, `src/art/enemies`); aynı arketipi paylaşan diğer düşmanlar (ör. `forest_6_enemy`) eski çizimini korur.
+  Önceki setten Goblin Yağmacısı, Elit Dikenli Ağaç, Buz Kraliçesi ve Gölge İblisi yeni çizimlerini kullanmaya devam eder (toplam 25).
+- Sola dönük çizimler aynalanmadan kahramana bakar. Her düşmanın boyu/genişliği/zemin hizası `src/data/enemyArt.ts` içinde silüetine göre ayarlı;
+  bosslar normal düşmanlardan hem daha büyük dokuda hem de daha yüksek çizilir ama tahtaya/HUD'a taşmaz.
+- Karada duranlarda ayak sabit, ~3 sn %1,5 nefes; havada duran ruh/elementallerde (Alev Elementali, Obsidyen Hazine Ruhu, Hiçlik İzleyicisi) hafif süzülme.
+  Hafif kristal parlaması, mevcut saldırı/hasar/yenilgi efektleri ve 1×/2× zamanlaması aynen korunur. Savaşta yalnızca karşılaşmadaki düşmanın görseli yüklenir.
+
 ## v1.20.0 — Zorluk: nadir eşyalar zor düşer, düşmanlar geç oyunda sert vurur; + parlaması yeni çizimlere göre
 - **Eşya düşüşü** (`src/data/loot.ts`): Efsanevi/Mitik çok daha nadir. Seviye 30–41 aşamalarında Efsanevi %34 → %7,5, Mitik %10 → %0,5;
   seviye 22–29'da Efsanevi %27 → %5, Mitik kalktı; 12–21'de %14 → %3. Boss/elit "garanti" artık Destansı+ tabandır; bildirilen Efsanevi %12,

@@ -1155,14 +1155,15 @@ function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key:
     dh = dw / aspect;
   }
   const ground = ENEMY_ART_GROUND * h;
+  const lift = (L.float ?? 0) * h;
   ctx.fillStyle = 'rgba(0,0,0,0.42)';
   ctx.beginPath();
-  ctx.ellipse(w / 2, ground + h * 0.012, Math.min(dw * 0.4, w * 0.36), h * 0.04, 0, 0, Math.PI * 2);
+  ctx.ellipse(w / 2, ground + h * 0.012, Math.min(dw * (lift > 0 ? 0.28 : 0.4), w * 0.36), h * 0.04, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = h * 0.03;
-  ctx.drawImage(img, w / 2 - dw / 2, ground - dh * m.footFrac, dw, dh);
+  ctx.drawImage(img, w / 2 - dw / 2, ground - lift - dh * m.footFrac, dw, dh);
   ctx.restore();
 }
 

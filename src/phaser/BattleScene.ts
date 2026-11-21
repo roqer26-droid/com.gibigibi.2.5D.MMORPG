@@ -231,6 +231,7 @@ export class BattleScene extends Phaser.Scene {
   private enemyGlowGraphics!: Phaser.GameObjects.Graphics;
   private enemyBreath: Phaser.Tweens.Tween | null = null;
   private enemyArtActive = false;
+  private enemyBob: Phaser.Tweens.Tween | null = null;
   private artIdleKey = '';
   private artAttackKey = '';
   /** Kurt Adam: Av yükü ve bu tur 2×2 kare yükü verildi mi */
@@ -571,7 +572,7 @@ export class BattleScene extends Phaser.Scene {
         const s = this.enemyContainer.scaleX;
         const pulse = 0.5 + 0.5 * Math.sin(((_time / 1000) * Math.PI * 2) / 4.4);
         const col = parseInt(EL.glow.slice(1), 16);
-        const cy = this.enemyContainer.y + s * size * (ENEMY_ART_GROUND - 0.5 - EL.height / 2);
+        const cy = this.enemyContainer.y + s * size * (ENEMY_ART_GROUND - (EL.float ?? 0) - 0.5 - EL.height / 2);
         const R = s * size * Math.max(EL.height, 0.55) * 0.62;
         for (let i = 6; i >= 1; i--) {
           eg.fillStyle(col, (0.011 + 0.007 * pulse) * (1 - i / 8));
@@ -3456,6 +3457,20 @@ export class BattleScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+    // Havada duran ruh ve elementaller: hafif süzülme (karada duranlarda bob yok)
+    const bobPx = (ENEMY_ART_LAYOUT[key].bob ?? 0) * size;
+    if (bobPx > 0) {
+      const baseY = this.enemySprite.y;
+      this.enemyBob?.stop();
+      this.enemyBob = this.tweens.add({
+        targets: this.enemySprite,
+        y: { from: baseY + bobPx, to: baseY - bobPx },
+        duration: 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
   }
 
   /**
