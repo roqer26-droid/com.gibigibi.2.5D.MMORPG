@@ -4,6 +4,9 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.15.1 — Kilitli 2× düğmesi ipucu
+- Savaşta kilitli 2× düğmesine dokununca "Dünya Haritası 100. seviyede açılır" yazısı çıkar ve 2 saniye sonra kaybolur (hız 1× kalır).
+
 ## v1.15.0 — 1× / 2× savaş hızı
 - Dünya Haritası'ndaki genel sıraya göre 100. aşama tamamlanınca 2× hız kalıcı açılır (`src/data/battleSpeed.ts`); 100. ya da sonraki bir aşaması
   tamamlanmış eski kayıtlarda yüklemede otomatik açılır. Açılışta "2× savaş hızı açıldı!" bildirimi bir kez gösterilir. Kayıt sürümü 11.

@@ -180,6 +180,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const [paused, setPaused] = useState(false);
   const [masteryOpen, setMasteryOpen] = useState(false);
   const speedUnlocked = save.speed.unlocked;
+  // Kilitli 2× düğmesine basılınca açılma koşulu 2 saniye gösterilir
+  const [speedHint, setSpeedHint] = useState(false);
+  const speedHintTimer = useRef<number | null>(null);
+  const showSpeedHint = () => {
+    setSpeedHint(true);
+    if (speedHintTimer.current) window.clearTimeout(speedHintTimer.current);
+    speedHintTimer.current = window.setTimeout(() => setSpeedHint(false), 2000);
+  };
+  useEffect(() => () => { if (speedHintTimer.current) window.clearTimeout(speedHintTimer.current); }, []);
   const speedPref = effectiveSpeed(save);
   const companionId = useMemo(() => activeCompanionFor(save, save.activeHeroClass), [save.companions, save.activeHeroClass]); // eslint-disable-line react-hooks/exhaustive-deps
   // Ustalık yalnızca hikâye aşamalarında (lig, av ve zindan savaşlarında yok)
@@ -643,11 +652,12 @@ export const BattleView: React.FC<BattleViewProps> = ({
               {/* Savaş hızı: 100. aşamadan sonra açılır; son tercih kaydedilir */}
               <button
                 type="button"
-                disabled={!speedUnlocked}
-                onClick={() => onSetBattleSpeed?.(speedPref === 2 ? 1 : 2)}
+                aria-disabled={!speedUnlocked}
+                onClick={() => (speedUnlocked ? onSetBattleSpeed?.(speedPref === 2 ? 1 : 2) : showSpeedHint())}
                 data-testid="speed-button"
                 data-speed={speedPref}
                 data-applied={snapshot.speed ?? 1}
+                data-locked={speedUnlocked ? '0' : '1'}
                 aria-label={speedUnlocked ? `Savaş hızı ${speedPref}×, değiştirmek için dokun` : 'Savaş hızı kilitli: 100. aşamayı tamamla'}
                 title={speedUnlocked ? 'Savaş hızı' : '100. aşamayı tamamlayınca açılır'}
                 className={`pointer-events-auto flex h-12 min-w-[60px] items-center justify-center gap-1 rounded-full border px-4 text-[15px] font-extrabold ${
@@ -673,6 +683,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 </button>
               )}
             </div>
+            {!speedUnlocked && speedHint && (
+              <div
+                role="status"
+                data-testid="speed-hint"
+                className="pointer-events-none rounded-lg border border-amber-400/50 bg-slate-950/95 px-2.5 py-1.5 text-[12px] font-bold text-amber-200 shadow-[0_6px_18px_rgba(0,0,0,0.6)]"
+              >
+                Dünya Haritası 100. seviyede açılır
+              </div>
+            )}
             {masteryObjectives && masteryOpen && (
               <div
                 data-testid="mastery-panel"
