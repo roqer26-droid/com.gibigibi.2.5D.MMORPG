@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.23.0 — Beş bölge bossunun yeni çizimleri
+- Yaban Kalbi Ordun (`forest_lord`, `forest_8_enemy`), Buz Devi Kralı Skrymir (`frost_giant_king`, `mountains_8_enemy`), Magma İmparatoriçesi Vhara
+  (`magma_empress`, `volcano_8_enemy`), Rün İmparatoru Kaelos (`rune_emperor`, `ruins_8_enemy`) ve Uçurum İmparatoriçesi Nirvaya (`abyss_empress`, `abyss_8_enemy`)
+  için şeffaf çizimler (`src/art/enemies`). Eşleştirme render'ın kullandığı `enemy.id` ile yapılır; ortak tür üzerinden değil.
+- Kadim Orman Muhafızı, Elit Buzul Dev Avcısı, Elit Magma Lordu ve Uçurum Kralı Malakor kendi çizimlerini korur; önceki 45 çizim eşleştirmesi değişmedi (toplam 50 çizim, 62 düşman kimliği).
+- Nirvaya hafif süzülür; diğer dördünün ayağı sabit. Boylar sahne yüksekliğine sığacak şekilde ≤ %76. Boss portresi (`BossPortrait`) aynı çizim yolunu kullanır.
+
 ## v1.22.0 — Genişleme bölgelerindeki 20 düşmanın yeni çizimleri
 - Dikenli Yaban Domuzu, Kutsal Koru Bekçisi, Buzul Dev Avcısı, Magma Fenrisi, Uçurum Celladı, Gök Hazine Kartalı, Bulut Kartalı, Fırtına Şövalyesi,
   Deniz Yılanı, Çöl Akrebi, Mumya Muhafız, Sis Cadısı, Ay Kurdu, Elmas Golem, Kül Zombisi, Zaman Kurdu, Kan Yarasası, Buz Ejderi Yavrusu,

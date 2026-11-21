@@ -178,5 +178,25 @@
  "kaos_lordu": {
   "aspect": 0.7438,
   "footFrac": 0.9016
+ },
+ "rune_emperor": {
+  "aspect": 0.9828,
+  "footFrac": 0.9953
+ },
+ "forest_lord": {
+  "aspect": 1.0579,
+  "footFrac": 0.9934
+ },
+ "magma_empress": {
+  "aspect": 0.8719,
+  "footFrac": 0.9828
+ },
+ "abyss_empress": {
+  "aspect": 0.9844,
+  "footFrac": 1.0
+ },
+ "frost_giant_king": {
+  "aspect": 0.9953,
+  "footFrac": 0.9969
  }
 }

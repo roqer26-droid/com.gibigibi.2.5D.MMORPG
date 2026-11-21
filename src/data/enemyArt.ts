@@ -52,6 +52,12 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   dragon_roost_9_enemy: 'yavru_ejderha',
   eternity_2_enemy: 'kaos_lordu',
   eternity_6_enemy: 'kaos_lordu',
+  // v1.23.0: genişleme bölgelerinin ilk beş bölge bossu (anahtar = bossId; render `enemy.id` ile arar)
+  forest_8_enemy: 'forest_lord',
+  mountains_8_enemy: 'frost_giant_king',
+  volcano_8_enemy: 'magma_empress',
+  ruins_8_enemy: 'rune_emperor',
+  abyss_8_enemy: 'abyss_empress',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -131,6 +137,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   buz_ejderi_yavrusu: { height: 0.54, maxWidth: 0.9, glow: '#7dd3fc', breathSec: 3.0 },
   yavru_ejderha: { height: 0.52, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.0 },
   kaos_lordu: { height: 0.7, maxWidth: 0.84, glow: '#d946ef', breathSec: 3.2 },
+  // v1.23.0 bölge bossları (300'lük doku; sahne yüksekliğine sığması için boy ≤ 0.76)
+  forest_lord: { height: 0.74, maxWidth: 0.98, glow: '#4ade80', breathSec: 3.8 },
+  frost_giant_king: { height: 0.74, maxWidth: 0.98, glow: '#7dd3fc', breathSec: 3.8 },
+  magma_empress: { height: 0.76, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.6 },
+  rune_emperor: { height: 0.74, maxWidth: 0.96, glow: '#22d3ee', breathSec: 3.8 },
+  abyss_empress: { height: 0.72, maxWidth: 0.96, glow: '#a855f7', breathSec: 3.4, float: 0.03, bob: 0.012 },
 };
 
 /** Elit varyantı: aynı çizim biraz büyük gösterilir (yalnızca normal + Elit ortak çizimi olan düşmanlarda). */

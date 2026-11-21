@@ -36,7 +36,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
   });
   it('bosslar normal düşmanlardan yüksek, havadakiler süzülür', () => {
     const bosses = allEnemies.filter((e) => e.isBoss && enemyArtKey(e.id));
-    expect(bosses.length).toBe(6);
+    expect(bosses.length).toBe(11);
     for (const b of bosses) expect(ENEMY_ART_LAYOUT[enemyArtKey(b.id)!].height).toBeGreaterThanOrEqual(0.6);
     for (const id of ['flame_elemental', 'obsidian_vault_guard', 'void_stalker']) expect(ENEMY_ART_LAYOUT[id].bob).toBeGreaterThan(0);
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
@@ -83,5 +83,38 @@ describe('v1.22.0: genişleme 20 düşman', () => {
   it('havadakiler süzülür, gerçek bosslar bu pakette değil', () => {
     for (const k of ['bulut_kartali', 'gok_hazine_kartali', 'kan_yarasasi', 'sis_cadisi']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);
     for (const id of Object.keys(ENEMY_ART_BY_ID).filter((i) => NEW20.includes(ENEMY_ART_BY_ID[i]))) expect(allEnemies.find((e) => e.id === id)!.isBoss, id).toBe(false);
+  });
+});
+
+describe('v1.23.0: beş bölge bossu', () => {
+  const BOSSES: [string, string, string][] = [
+    ['forest_lord', 'forest_8_enemy', 'forest_lord'],
+    ['frost_giant_king', 'mountains_8_enemy', 'frost_giant_king'],
+    ['magma_empress', 'volcano_8_enemy', 'magma_empress'],
+    ['rune_emperor', 'ruins_8_enemy', 'rune_emperor'],
+    ['abyss_empress', 'abyss_8_enemy', 'abyss_empress'],
+  ];
+  it('bossId → gerçek enemy.id → çizim; kimlikler oyun verisiyle doğrulanır', () => {
+    for (const [bossId, enemyId, key] of BOSSES) {
+      const e = allEnemies.find((x) => x.id === enemyId)!;
+      expect(e.bossId, enemyId).toBe(bossId);
+      expect(e.isBoss).toBe(true);
+      expect(enemyArtKey(enemyId)).toBe(key);
+      expect(ENEMY_ART_META[key]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+    }
+    expect(ENEMY_ART_LAYOUT['abyss_empress'].bob).toBeGreaterThan(0);
+  });
+  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 50 çizim, 62 düşman kimliği', () => {
+    const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
+    for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(62);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(50);
+  });
+  it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
+    expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
+    expect(enemyArtKey('volcano_4_enemy') ?? enemyArtKey('magma_lord')).toBe('magma_lord');
+    expect(enemyArtKey('mountains_6_enemy')).toBe('buzul_dev_avcisi');
+    expect(enemyArtKey('boss_abyssal_king')).toBe('boss_abyssal_king');
   });
 });
