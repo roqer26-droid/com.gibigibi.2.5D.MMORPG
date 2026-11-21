@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.28.0 — 13 görsel, 33 karşılaşma (5 normal düşman + 8 bölge bossu)
+- Normal (bölge başına 5 karşılaşma: aşama 1, 2, 4, 6, 8): Kuyruklu Buz Golemi (`comet_bridge`), Rün Yağmacı (`rune_necropolis`), Kırık Boşluk Avcısı (`shattered_sky`),
+  Sıfır Boşluk Avcısı (`zero_threshold`), Şafak Ateş Ruhu (`dawn_core`, süzülür).
+- Boss (`<bölge>_10_enemy`): Camorman Bekçisi, Sönük Fenerin Bekçisi, Bakır Yürekli Golem, Sisin Mimarı (süzülür), Diken Tacı, Altın Kabuklu Mahrak,
+  Derinliklerin Arşivcisi, Surların Beyaz Muhafızı. Toplam 70 → 83 çizim, 162 → 195 düşman kimliği. Hazine/elit karşılaşmaları kendi görsellerini korur.
+
 ## v1.27.0 — Dördüncü beşli düşman seti (25 karşılaşma)
 - Kutup Buz Golemi (`aurora_vault`), Düş Ağaç Ruhu (`dream_marsh`), Ayna Boşluk Avcısı (`mirror_court`), Gece Boşluk Avcısı (`midnight_observatory`) ve
   Sönük Ateş Ruhu (`hollow_sun`) çizimleri; her biri kendi bölgesinin 5 normal karşılaşmasına (aşama 1, 2, 4, 6, 8; `<bölge>_<no>_enemy`) bağlı:

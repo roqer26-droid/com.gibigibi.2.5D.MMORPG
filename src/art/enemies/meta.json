@@ -278,5 +278,57 @@
  "kutup_buz_golemi": {
   "aspect": 1.1852,
   "footFrac": 0.9981
+ },
+ "kuyruklu_buz_golemi": {
+  "aspect": 1.0903,
+  "footFrac": 0.9983
+ },
+ "run_yagmaci": {
+  "aspect": 0.9313,
+  "footFrac": 0.9969
+ },
+ "kirik_bosluk_avcisi": {
+  "aspect": 0.7922,
+  "footFrac": 0.9641
+ },
+ "sifir_bosluk_avcisi": {
+  "aspect": 0.9125,
+  "footFrac": 0.9719
+ },
+ "safak_ates_ruhu": {
+  "aspect": 0.7422,
+  "footFrac": 1.0
+ },
+ "camorman_bekcisi": {
+  "aspect": 0.9531,
+  "footFrac": 0.9938
+ },
+ "sonuk_fenerin_bekcisi": {
+  "aspect": 1.0273,
+  "footFrac": 0.9936
+ },
+ "bakir_yurekli_golem": {
+  "aspect": 1.0997,
+  "footFrac": 1.0
+ },
+ "sisin_mimari": {
+  "aspect": 0.6766,
+  "footFrac": 1.0
+ },
+ "diken_taci": {
+  "aspect": 1.1408,
+  "footFrac": 0.9679
+ },
+ "altin_kabuklu_mahrak": {
+  "aspect": 1.2549,
+  "footFrac": 0.9902
+ },
+ "derinliklerin_arsivcisi": {
+  "aspect": 0.8484,
+  "footFrac": 0.9844
+ },
+ "surlarin_beyaz_muhafizi": {
+  "aspect": 1.039,
+  "footFrac": 0.9968
  }
 }
