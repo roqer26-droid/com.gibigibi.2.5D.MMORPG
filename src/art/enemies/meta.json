@@ -378,5 +378,25 @@
  "solgun_gunesin_yutucusu": {
   "aspect": 1.0866,
   "footFrac": 1.0
+ },
+ "sifirin_bekcisi": {
+  "aspect": 1.1511,
+  "footFrac": 1.0
+ },
+ "safagin_kalbi_aurel": {
+  "aspect": 1.0793,
+  "footFrac": 0.9865
+ },
+ "adsiz_mezar_krali": {
+  "aspect": 0.8641,
+  "footFrac": 1.0
+ },
+ "kopru_kuyruklu_muhafiz": {
+  "aspect": 1.1636,
+  "footFrac": 0.9964
+ },
+ "gokkubbeyi_kiran_velyr": {
+  "aspect": 1.0127,
+  "footFrac": 0.962
  }
 }

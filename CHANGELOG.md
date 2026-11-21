@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.30.0 — Son beş genişleme bossu (25 genişleme bossunun tamamı çizimli)
+- Köprünün Kuyruklu Muhafızı (`comet_bridge_10_enemy`), Adsız Mezar Kralı (`rune_necropolis_10_enemy`, süzülür), Gökkubbeyi Kıran Velyr (`shattered_sky_10_enemy`),
+  Sıfırın Bekçisi (`zero_threshold_10_enemy`, süzülür) ve Şafağın Kalbi Aurel (`dawn_core_10_enemy`) çizimleri. Paket 1 + 2 ile birlikte 25 genişleme bossunun
+  hepsi kendi çizimine bağlı (toplam 100 çizim, 212 düşman kimliği). Aynı bölgelerin normal/elit/hazine eşleşmeleri korunur.
+
 ## v1.29.0 — Paket 2: 12 bölge bossu
 - Obsidyen Amiral, Kara Gelgitin Leviathanı, Bin Sesli Velora, Cıva Ustası Rhodin, Küllerin Bahçıvanı, Spektrum Muhafızı, Demir Gezegenin Kalbi (süzülür),
   Aurora Kasasının Anahtarcısı, Bataklığın Rüya Dokuyucusu, Çift Suretli Hükümdar, Yıldız Avcısı Neros ve Solgun Güneşin Yutucusu (süzülür) çizimleri;

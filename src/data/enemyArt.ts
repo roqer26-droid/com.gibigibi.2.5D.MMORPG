@@ -209,6 +209,12 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   mirror_court_10_enemy: 'cift_suretli_hukumdar',
   midnight_observatory_10_enemy: 'yildiz_avcisi_neros',
   hollow_sun_10_enemy: 'solgun_gunesin_yutucusu',
+  // v1.30.0: son beş genişleme bossu
+  comet_bridge_10_enemy: 'kopru_kuyruklu_muhafiz',
+  rune_necropolis_10_enemy: 'adsiz_mezar_krali',
+  shattered_sky_10_enemy: 'gokkubbeyi_kiran_velyr',
+  zero_threshold_10_enemy: 'sifirin_bekcisi',
+  dawn_core_10_enemy: 'safagin_kalbi_aurel',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -345,6 +351,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   ruya_dokuyucusu: { height: 0.56, maxWidth: 0.98, glow: '#c084fc', breathSec: 3.6 },
   cift_suretli_hukumdar: { height: 0.66, maxWidth: 0.9, glow: '#e9d5ff', breathSec: 3.6 },
   yildiz_avcisi_neros: { height: 0.64, maxWidth: 0.96, glow: '#818cf8', breathSec: 3.6 },
+  // v1.30.0 son beş genişleme bossu (300'lük doku; boy ≤ 0.7)
+  kopru_kuyruklu_muhafiz: { height: 0.58, maxWidth: 0.98, glow: '#7dd3fc', breathSec: 3.8 },
+  adsiz_mezar_krali: { height: 0.66, maxWidth: 0.9, glow: '#34d399', breathSec: 3.6, float: 0.03, bob: 0.012 },
+  gokkubbeyi_kiran_velyr: { height: 0.64, maxWidth: 0.98, glow: '#fbbf24', breathSec: 3.8 },
+  sifirin_bekcisi: { height: 0.6, maxWidth: 0.98, glow: '#5eead4', breathSec: 3.6, float: 0.03, bob: 0.012 },
+  safagin_kalbi_aurel: { height: 0.66, maxWidth: 0.98, glow: '#fb923c', breathSec: 3.8 },
   solgun_gunesin_yutucusu: { height: 0.6, maxWidth: 0.98, glow: '#f59e0b', breathSec: 3.8, float: 0.03, bob: 0.012 },
 };
 
