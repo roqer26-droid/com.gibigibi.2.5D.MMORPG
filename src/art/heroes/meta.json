@@ -1,0 +1,50 @@
+{
+ "warrior": {
+  "aspect": 0.6768,
+  "footFrac": 0.9982
+ },
+ "paladin": {
+  "aspect": 0.7161,
+  "footFrac": 0.9964
+ },
+ "ranger": {
+  "aspect": 0.7179,
+  "footFrac": 0.9982
+ },
+ "mage": {
+  "aspect": 0.6589,
+  "footFrac": 0.9964
+ },
+ "necromancer": {
+  "aspect": 0.7929,
+  "footFrac": 1.0
+ },
+ "assassin": {
+  "aspect": 0.5554,
+  "footFrac": 0.9982
+ },
+ "stormcaller": {
+  "aspect": 0.6179,
+  "footFrac": 1.0
+ },
+ "dragonheart": {
+  "aspect": 0.6893,
+  "footFrac": 1.0
+ },
+ "werewolf": {
+  "aspect": 0.825,
+  "footFrac": 1.0
+ },
+ "vampire": {
+  "aspect": 0.7077,
+  "footFrac": 1.0
+ },
+ "bigfoot": {
+  "aspect": 0.9673,
+  "footFrac": 1.0
+ },
+ "night_screecher": {
+  "aspect": 1.0442,
+  "footFrac": 1.0
+ }
+}

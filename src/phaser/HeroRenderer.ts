@@ -1,8 +1,7 @@
-import { CoreHeroClassId, CreatureClassId, EquipmentSlot, HeroProgress, ItemCategory } from '../types/game';
+import { CoreHeroClassId, CreatureClassId, EquipmentSlot, HeroClassId, HeroProgress, ItemCategory } from '../types/game';
 import { CREATURE_SPECS, drawCreature } from './CreatureRenderer';
-import { HERO_ART_LAYOUT, heroImage } from '../data/heroArt';
-import { isImageHero } from '../data/imageHeroes';
-import type { ImageHeroClassId } from '../types/game';
+import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroImage } from '../data/heroArt';
+import { HERO_CLASSES } from '../data/classes';
 
 /* ================================================================== */
 /*  BÜYÜ AURASI — Ekipman + seviyesi arttıkça karakter parlamaya başlar */
@@ -567,20 +566,38 @@ function drawEnchantAura(ctx: CanvasRenderingContext2D, aura: EnchantAura, time:
 /*  ANA ÇİZİM                                                           */
 /* ================================================================== */
 
+/** Sınıf renginde düşük yoğunluklu, nefes alan parlama (çizimin arkasında). */
+function drawClassGlow(ctx: CanvasRenderingContext2D, color: string, time: number, centerY: number, radius: number) {
+  const pulse = 0.5 + 0.5 * Math.sin((time * Math.PI * 2) / 4);
+  const g = ctx.createRadialGradient(0, centerY, radius * 0.1, 0, centerY, radius);
+  g.addColorStop(0, `${color}${Math.round((0.16 + 0.07 * pulse) * 255).toString(16).padStart(2, '0')}`);
+  g.addColorStop(1, `${color}00`);
+  ctx.save();
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, centerY, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 /**
- * Görsel tabanlı kahramanlar: oranlar korunur, ayaklar yer çizgisine (y=+74) oturur; Gecenin Çığırtkanı yerden yüksekte
- * süzülür. Saldırı pozunda öne eğilir (hasar/ bekleme animasyonları kapsayıcı katmanda aynen çalışır).
+ * Görsel tabanlı kahramanlar: oranlar korunur, ayak çizgisi ortak zemine (y=+74) oturur; Gecenin Çığırtkanı yerden yüksekte
+ * süzülür. Saldırı pozunda hafifçe öne eğilir (hasar/ bekleme animasyonları kapsayıcı katmanda aynen çalışır).
+ * Silah ve zırh çizimin üzerindedir; ek ekipman katmanı çizilmez.
  */
 function drawHeroArt(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
-  id: ImageHeroClassId,
+  id: HeroClassId,
   pose: 'idle' | 'attack',
-  time: number
+  time: number,
+  noGlow = false
 ) {
-  const L = HERO_ART_LAYOUT[id];
+  const L = HERO_ART_LAYOUT[id]!;
+  const m = HERO_ART_META[id];
   const aspect = img.naturalWidth / img.naturalHeight;
-  let h = L.height;
+  // Ayak çizgisinden tepeye `above` birim; silah uçları ayak çizgisinin altına uzanıyorsa kırpılmadan çizilir
+  let h = L.above / m.footFrac;
   let w = h * aspect;
   if (w > L.maxWidth) {
     w = L.maxWidth;
@@ -588,8 +605,8 @@ function drawHeroArt(
   }
   const ground = 74;
   const bob = L.bob ? Math.sin(time * 2.1) * L.bob : 0;
+  if (!noGlow) drawClassGlow(ctx, HERO_CLASSES[id].themeColor, time, ground - L.float - h * 0.5, Math.max(w, h) * 0.62);
   ctx.save();
-  // Yerdeki gölge, süzülen kahramanda daha küçük ve soluk kalır
   ctx.translate(0, ground - L.float + bob);
   if (pose === 'attack') {
     ctx.translate(16, 0);
@@ -597,7 +614,8 @@ function drawHeroArt(
   }
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = 10;
-  ctx.drawImage(img, -w / 2, -h, w, h);
+  // Ayak çizgisi (görsel boyunun footFrac'i) tam zemin çizgisine oturur
+  ctx.drawImage(img, -w / 2, -h * m.footFrac, w, h);
   ctx.restore();
 }
 
@@ -610,7 +628,11 @@ export function drawHeroToCanvas(
   h: number,
   hero: HeroProgress,
   pose: 'idle' | 'attack' = 'idle',
-  time = 0
+  time = 0,
+  /** true: çizim yerine eski vektör çizimi (ör. Rhogar'ın Ejder Formu) */
+  proceduralOnly = false,
+  /** true: sınıf renkli parlama çizilmez (savaş sahnesi parlamayı canlı çizer) */
+  noGlow = false
 ) {
   ctx.clearRect(0, 0, w, h);
   const cx = w * 0.5;
@@ -636,15 +658,19 @@ export function drawHeroToCanvas(
   drawEnchantAura(ctx, aura, time);
 
   // NEFES ALMA — 20 kahramanın hepsi: gövde ayak tabanından hafifçe yükselip genişler
+  const usesArt = !proceduralOnly && hasHeroArt(hero.classId);
+  // Görsel kahramanlar: ~3 sn'lik döngüde gövde en fazla %1,5 esner (ayaklar sabit); diğerleri eski nefesi korur
   const breath = Math.sin(time * 1.9);
+  const archBreath = 0.5 + 0.5 * Math.sin((time * Math.PI * 2) / HERO_BREATH.periodSec);
   ctx.save();
   ctx.translate(0, 74);
-  ctx.scale(1 + breath * 0.012, 1 + breath * 0.024);
+  if (usesArt) ctx.scale(1 + archBreath * HERO_BREATH.stretch * 0.4, 1 + archBreath * HERO_BREATH.stretch);
+  else ctx.scale(1 + breath * 0.012, 1 + breath * 0.024);
   ctx.translate(0, -74);
 
-  const art = isImageHero(hero.classId) ? heroImage(hero.classId) : null;
-  if (art && isImageHero(hero.classId)) {
-    drawHeroArt(ctx, art, hero.classId, pose, time);
+  const art = !proceduralOnly && hasHeroArt(hero.classId) ? heroImage(hero.classId) : null;
+  if (art) {
+    drawHeroArt(ctx, art, hero.classId, pose, time, noGlow);
   } else if (creature) {
     drawCreature(ctx, hero, pose, time, aura, creature);
   } else {

@@ -4,6 +4,15 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.17.0 — Sekiz kahramanın yeni çizimleri
+- Savaşçı, Şövalye, Korucu, Büyücü, Nekromant, Suikastçı, Fırtına Çağıran ve Ejder Kalbi (Rhogar) için şeffaf PNG çizimler
+  seçim ekranında, menüde ve savaşta kullanılır. Sınıf kimlikleri aynı olduğundan seviye, ekipman, yetenek, yoldaş ve açılma durumu eski kayıtlardan aynen gelir.
+- Silah ve zırh çizimin üzerindedir; ekipman hesaplara girmeye devam eder ama görselde ikinci bir silah/zırh katmanı çizilmez.
+- Ayaklar ortak yer çizgisine hizalanır (`src/art/heroes/meta.json`). Bekleme nefesi ayak çizgisinde sabitlenmiş ~3 sn, %1,5 esnemedir;
+  sınıf renginde düşük yoğunluklu parlama arayüzün altında kalır.
+- Saldırı, hasar alma ve ulti animasyonları nefesten önceliklidir; bitince kahraman yumuşakça nefes döngüsüne döner (1× ve 2×).
+- Rhogar'ın yeni çizimi normal formudur; Ejder Formu mevcut kanatlı çizimi ve dönüşüm akışını kullanır.
+
 ## v1.16.0 — Dört yeni kahraman: Kurt Adam, Vampir, Kocaayak, Gecenin Çığırtkanı
 - Şeffaf tam boy görseller (`src/art/heroes`) kahraman seçim ekranında ve savaşta kullanılır; oran korunur, ayaklar yer çizgisine oturur,
   Gecenin Çığırtkanı hafifçe havada durur. Bekleme/saldırı/hasar animasyonları mevcut kapsayıcı katmanda aynen çalışır.

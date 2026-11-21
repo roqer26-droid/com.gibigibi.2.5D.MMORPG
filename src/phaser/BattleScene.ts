@@ -16,12 +16,12 @@ import {
   StageDef,
 } from '../types/game';
 import { ComputedHeroBuild } from '../utils/rpgLogic';
-import { computeEnchantAura } from './HeroRenderer';
+import { computeEnchantAura, HERO_TEX_SIZE } from './HeroRenderer';
 import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { capGemShield } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
-import { heroImage, heroImageReady } from '../data/heroArt';
+import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
 import {
   bigfootSkillShield,
@@ -36,7 +36,6 @@ import {
   vampireUltHeal,
   werewolfUltBonus,
 } from '../game/heroKits';
-import { isImageHero } from '../data/imageHeroes';
 import type { CompanionId } from '../types/game';
 import {
   emberTrigger,
@@ -221,6 +220,12 @@ export class BattleScene extends Phaser.Scene {
   /** Savaş hızı: uygulanan ve (animasyon sürerken) bekleyen hız */
   private speed: 1 | 2 = 1;
   private pendingSpeed: 1 | 2 = 1;
+  /** Görsel kahramanlar: ayak çizgisine sabitlenmiş nefes döngüsü, sınıf renkli parlama ve Ejder Formu dokuları */
+  private heroBreath: Phaser.Tweens.Tween | null = null;
+  private breathResume: Phaser.Time.TimerEvent | null = null;
+  private heroGlowGraphics!: Phaser.GameObjects.Graphics;
+  private artIdleKey = '';
+  private artAttackKey = '';
   /** Kurt Adam: Av yükü ve bu tur 2×2 kare yükü verildi mi */
   private huntCharges = 0;
   private huntSquareGiven = false;
@@ -350,6 +355,7 @@ export class BattleScene extends Phaser.Scene {
     }
     this.ambientGraphics = this.add.graphics();
     this.bossAuraGraphics = this.add.graphics();
+    this.heroGlowGraphics = this.add.graphics();
     this.heroAuraGraphics = this.add.graphics();
     this.boardFrameGraphics = this.add.graphics();
 
@@ -358,11 +364,20 @@ export class BattleScene extends Phaser.Scene {
     this.heroSprite = this.add.image(0, 0, this.heroIdleKey);
     this.heroContainer.add(this.heroSprite);
     // Görsel tabanlı kahramanlar: görsel henüz yüklenmediyse hazır olunca dokular yenilenir
-    if (isImageHero(this.initData.hero.classId) && !heroImage(this.initData.hero.classId)) {
+    const artHero = hasHeroArt(this.initData.hero.classId);
+    if (artHero) {
+      // Ayaklar sabit kalsın: çizim ortak zemin çizgisinden (y = 0,58 + 74 birim) döndürülür/ölçeklenir
+      const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
+      this.heroSprite.setOrigin(0.5, footY);
+      this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE;
+      this.artIdleKey = this.heroIdleKey;
+      this.artAttackKey = this.heroAttackKey;
+    }
+    if (artHero && !heroImage(this.initData.hero.classId)) {
       void heroImageReady(this.initData.hero.classId).then(() => {
         if (!this.heroSprite || !this.heroSprite.active) return;
-        this.heroIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
-        this.heroAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
+        this.heroIdleKey = this.artIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
+        this.heroAttackKey = this.artAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
         this.heroSprite.setTexture(this.heroIdleKey);
       });
     }
@@ -372,17 +387,21 @@ export class BattleScene extends Phaser.Scene {
     this.enemyContainer.add(this.enemySprite);
 
     // Idle breathing animations
-    // Nefes alma: hafif yükselme + göğüs genişlemesi (tüm kahramanlar)
-    this.tweens.add({
-      targets: this.heroSprite,
-      y: -5,
-      scaleY: 1.03,
-      scaleX: 0.99,
-      duration: 1450,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    // Nefes alma: eski kahramanlarda hafif yükselme + göğüs genişlemesi; görsel kahramanlarda ayaklar sabit, ~3 sn'lik %1,5 esneme
+    if (artHero) {
+      this.startHeroBreath();
+    } else {
+      this.tweens.add({
+        targets: this.heroSprite,
+        y: -5,
+        scaleY: 1.03,
+        scaleX: 0.99,
+        duration: 1450,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
     this.tweens.add({
       targets: this.enemySprite,
       y: this.enemy.isBoss ? -8 : -5,
@@ -501,6 +520,26 @@ export class BattleScene extends Phaser.Scene {
         this.enemyContainer.y + 10,
         this.enemyContainer.scaleX * 95
       );
+    }
+
+    // Görsel kahramanlar: sınıf renginde düşük yoğunluklu, nefes alan parlama (arayüzün altında kalır)
+    if (this.heroGlowGraphics) {
+      const gg = this.heroGlowGraphics;
+      gg.clear();
+      const gid = this.initData.hero.classId;
+      const GL = HERO_ART_LAYOUT[gid];
+      if (GL && hasHeroArt(gid) && this.turnPhase !== 'victory') {
+        const gt = _time / 1000;
+        const gp = 0.5 + 0.5 * Math.sin((gt * Math.PI * 2) / 4);
+        const gs = this.heroContainer.scaleX;
+        const col = parseInt(HERO_CLASSES[gid].themeColor.slice(1), 16);
+        const cy = this.heroContainer.y + gs * (98 - GL.float - GL.above / 2);
+        const R = gs * GL.above * 0.62;
+        for (let i = 6; i >= 1; i--) {
+          gg.fillStyle(col, (0.012 + 0.008 * gp) * (1 - i / 8));
+          gg.fillCircle(this.heroContainer.x, cy, (R * i) / 6);
+        }
+      }
     }
 
     // Kahramanın canlı büyü aurası — ekipman + seviyesi arttıkça kat kat güçlenir
@@ -1742,6 +1781,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private playHeroAttackAnim(isHeavy: boolean, slashCol: number) {
+    this.holdHeroBreath(380);
     this.heroSprite.setTexture(this.heroAttackKey);
     const startX = this.heroContainer.x;
     this.tweens.add({
@@ -2045,6 +2085,7 @@ export class BattleScene extends Phaser.Scene {
       this.dragonFormTurns -= 1;
       if (this.dragonFormTurns === 0 && this.heroSprite && this.heroSprite.active) {
         this.heroSprite.clearTint();
+        this.setDragonFormVisual(false);
         this.tweens.add({
           targets: this.heroContainer,
           scaleX: this.heroBaseScale,
@@ -2201,6 +2242,7 @@ export class BattleScene extends Phaser.Scene {
     if (dmg > 0) {
       this.heroHp = Math.max(0, this.heroHp - dmg);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 8);
+      this.holdHeroBreath(360);
       this.heroSprite.setTintFill(0xef4444);
       this.time.delayedCall(120, () => {
         if (this.heroSprite && this.heroSprite.active) this.heroSprite.clearTint();
@@ -2246,6 +2288,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inputLocked = true;
+    this.holdHeroBreath(isUlti ? 2600 : 900);
     this.mastery = setMoveKind(this.mastery, false);
     this.initData.onMatchStats({}, 0, true);
     // Yetenekle patlatılan taşlar da en az x1 kombo çarpanından faydalanır
@@ -2353,6 +2396,7 @@ export class BattleScene extends Phaser.Scene {
           ease: 'Back.easeOut',
         });
         this.heroSprite.setTint(0xffb37a);
+        this.setDragonFormVisual(true);
         this.heroShield += Math.round(this.heroMaxHp * 0.3);
         this.enemyBurnTurns = 2;
         this.screenFlash(0xf97316, 0.5);
@@ -3322,6 +3366,65 @@ export class BattleScene extends Phaser.Scene {
         });
       },
     });
+  }
+
+  /** Görsel kahramanın bekleme nefesi: pivot ayak çizgisinde, bu yüzden ayaklar kaymaz. */
+  private startHeroBreath() {
+    if (!this.heroSprite || !this.heroSprite.active) return;
+    this.heroBreath?.stop();
+    this.heroBreath = this.tweens.add({
+      targets: this.heroSprite,
+      scaleY: 1 + HERO_BREATH.stretch,
+      scaleX: 1 + HERO_BREATH.stretch * 0.4,
+      duration: (HERO_BREATH.periodSec / 2) * 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  /**
+   * Saldırı, hasar alma ve ulti animasyonları bekleme hareketine önceliklidir: nefes durur, çizim yumuşakça normal ölçüye döner,
+   * `ms` sonra nefes döngüsü kaldığı yerden değil, normal ölçüden yumuşakça yeniden başlar.
+   */
+  private holdHeroBreath(ms: number) {
+    if (!this.heroBreath) return;
+    this.heroBreath.stop();
+    this.heroBreath = null;
+    this.tweens.add({ targets: this.heroSprite, scaleX: 1, scaleY: 1, duration: 120, ease: 'Sine.easeOut' });
+    this.breathResume?.remove(false);
+    this.breathResume = this.time.delayedCall(ms, () => {
+      this.breathResume = null;
+      this.startHeroBreath();
+    });
+  }
+
+  /** Rhogar: Ejder Formu süresince eski vektör çizim (kanatlı), bitince yeni çizim. */
+  private setDragonFormVisual(on: boolean) {
+    if (this.initData.hero.classId !== 'dragonheart' || !hasHeroArt('dragonheart')) return;
+    if (on) {
+      this.heroIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle', true);
+      this.heroAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack', true);
+    } else {
+      this.heroIdleKey = this.artIdleKey;
+      this.heroAttackKey = this.artAttackKey;
+    }
+    this.heroSprite.setTexture(this.heroIdleKey);
+    // Vektör çizimin pivotu orta noktadır: ayak çizgisi pivotu yalnızca yeni çizimde geçerli
+    this.heroSprite.setOrigin(0.5, on ? 0.5 : (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE);
+    this.heroSprite.y = on ? 0 : ((HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE - 0.5) * HERO_TEX_SIZE;
+    if (on) {
+      this.heroBreath?.stop();
+      this.heroBreath = null;
+    }
+    this.startHeroBreathIfArt();
+  }
+
+  private startHeroBreathIfArt() {
+    if (hasHeroArt(this.initData.hero.classId)) {
+      this.heroSprite.setScale(1);
+      this.startHeroBreath();
+    }
   }
 
   private shuffle<T>(arr: T[]): T[] {

@@ -1115,14 +1115,21 @@ function heroAuraKey(hero: HeroProgress): string {
  * `time` sabitlenerek aura en parlak anında "donmuş" halde pişirilir;
  * savaş sahnesinde ayrıca canlı, nabız gibi atan bir aura katmanı çizilir.
  */
-export function createHeroPhaserTexture(scene: Phaser.Scene, hero: HeroProgress, pose: 'idle' | 'attack'): string {
-  const key = `hero_tex_${hero.classId}_${pose}_${heroAuraKey(hero)}`;
+export function createHeroPhaserTexture(
+  scene: Phaser.Scene,
+  hero: HeroProgress,
+  pose: 'idle' | 'attack',
+  /** true: çizim yerine eski vektör çizimi (Rhogar'ın Ejder Formu) */
+  procedural = false
+): string {
+  const key = `hero_tex_${hero.classId}_${pose}_${heroAuraKey(hero)}${procedural ? '_form' : ''}`;
   if (scene.textures.exists(key)) {
     scene.textures.remove(key);
   }
   const tex = scene.textures.createCanvas(key, HERO_TEX_SIZE, HERO_TEX_SIZE);
   if (tex) {
-    drawHeroScene(tex.getContext(), HERO_TEX_SIZE, HERO_TEX_SIZE, hero, pose, 0.6);
+    // Sınıf renkli parlama savaş sahnesinde canlı çizilir; dokuya gömülmez
+    drawHeroScene(tex.getContext(), HERO_TEX_SIZE, HERO_TEX_SIZE, hero, pose, 0.6, procedural, true);
     tex.refresh();
   }
   return key;
