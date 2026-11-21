@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.14.1 — Yoldaşlar ana menüde
+- Yoldaşlar, Kahramanlar ekranından çıkarılıp ana menüde ayrı bir seçenek ve ekran oldu (yeni kahramanlar eklense de yoldaşlar ayrı yerde durur).
+  Menü kutusu "x/3 yoldaş açık" gösterir; açılabilir yoldaş varsa rozet çıkar.
+
 ## v1.14.0 — Yoldaşlar
 - Kök Filizi, Buz Tilkisi ve Köz Ejderciği (`src/data/companions.ts`, tüm sayılar ayarlanabilir). Açmak için parça + doğru modda boss zaferi gerekir:
   Kök Filizi 24 Kök Parçası + Seçimli Zindanlar · Köklerin Mahzeni (Kadim Orman Muhafızı); Buz Tilkisi 32 Buz Parçası + Boss Avları · Donmuş Taht

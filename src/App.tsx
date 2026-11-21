@@ -14,6 +14,7 @@ import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { WorldNav, WorldView } from './components/WorldMapScreen';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
+import { CompanionsScreen } from './components/CompanionsScreen';
 import { applyEliteParts, setActiveCompanion, unlockCompanion } from './data/companions';
 import type { CompanionId } from './types/game';
 import type { HuntDef } from './data/hunts';
@@ -62,7 +63,7 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'upgrade';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
@@ -158,7 +159,7 @@ export function App() {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return;
     }
-    if (route === 'dungeons') return setRoute('menu');
+    if (route === 'dungeons' || route === 'companions') return setRoute('menu');
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route === 'upgrade') return setRoute(upgradeOrigin);
     if (route === 'hunts') {
@@ -703,14 +704,21 @@ export function App() {
         />
       )}
 
+      {route === 'companions' && (
+        <CompanionsScreen
+          save={save}
+          onBack={() => setRoute('menu')}
+          onUnlock={handleUnlockCompanion}
+          onSetActive={handleSetCompanion}
+        />
+      )}
+
       {route === 'heroes' && (
         <HeroesScreen
           save={save}
           onBack={() => setRoute('menu')}
           onSelectHero={handleSelectHero}
           onUnlockHero={handleUnlockHero}
-          onUnlockCompanion={handleUnlockCompanion}
-          onSetCompanion={handleSetCompanion}
           onOpenSkillTree={() => setRoute('skills')}
         />
       )}

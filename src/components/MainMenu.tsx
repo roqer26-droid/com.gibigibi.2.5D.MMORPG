@@ -16,12 +16,14 @@ import {
   Target,
   Hammer,
   Skull,
+  PawPrint,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { QUESTS_LIST } from '../data/quests';
 import { getFullSkillCodex } from '../data/skills';
 import { HUNTS, isHuntUnlocked } from '../data/hunts';
+import { COMPANIONS, companionStatus } from '../data/companions';
 import { DUNGEONS, isDungeonUnlocked, dungeonUnlockText } from '../data/dungeons';
 import { tierFor } from '../data/league';
 import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
@@ -41,6 +43,7 @@ export type MenuDest =
   | 'achievements'
   | 'hunts'
   | 'dungeons'
+  | 'companions'
   | 'league';
 
 const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
@@ -191,6 +194,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         wide: !open,
       };
     }),
+    {
+      id: 'companions',
+      label: 'Yoldaşlar',
+      sub: `${save.companions.unlocked.length}/${COMPANIONS.length} yoldaş açık`,
+      Icon: PawPrint,
+      border: 'border-teal-400/45',
+      iconWrap: 'bg-teal-500/15 text-teal-300',
+      badge: COMPANIONS.some((c) => companionStatus(save, c.id).canUnlock) ? { text: 'Açılabilir', cls: 'bg-rose-500 text-white' } : undefined,
+    },
     {
       id: 'league',
       label: 'Rekabet Ligi',

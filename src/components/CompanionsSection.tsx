@@ -19,7 +19,6 @@ export function CompanionsSection({ save, onUnlock, onSetActive }: CompanionsSec
     <section data-testid="companions" aria-label="Yoldaşlar" className="lg:col-span-12">
       <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="font-display text-xl font-bold text-amber-300">Yoldaşlar</h2>
           <p className="text-[12px] text-slate-400">{heroName} için tek aktif yoldaş seçilebilir. Her yoldaş savaş başına en fazla bir kez destek verir.</p>
         </div>
       </div>
