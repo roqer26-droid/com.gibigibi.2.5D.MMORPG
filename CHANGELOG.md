@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.21.1 — Düşman arkasındaki dairesel renk lekeleri kaldırıldı
+- Çizimli düşmanların arkasındaki dairesel boss aurası (zayıflık rengi/öfkede kırmızı dolu daire) ve dairesel kristal ışıması kaldırıldı.
+- Yerine çizimin SİLÜETİNİ izleyen yumuşak ışıma geldi (`createEnemyGlowTexture`): ışık yalnızca konturdan taşar, çizimle birlikte nefes alır/süzülür.
+  Boss'ta renk zayıflık rengidir, öfkede kırmızıya döner; normal düşmanda düşmanın kristal rengi. Düşman yenilince kapanır.
+- Bu yol tüm çizimli düşmanlar için ortaktır: `ENEMY_ART_LAYOUT`'a eklenen yeni düşman çizimleri ayrıca ayar yapmadan aynı ışımayı alır.
+  Çizimsiz düşmanlar eski görünümünü korur.
+
 ## v1.21.0 — 21 düşmanın yeni savaş çizimleri
 - Gölge Kurdu, Yosun Hazine Muhafızı, Kadim Orman Muhafızı (boss), Buzul Kurdu, Dağ Yetisi, Buz Hazine Golemi, Elit Kadim Buz Golemi, Ateş Semenderi,
   Alev Elementali, Obsidyen Hazine Ruhu, Elit Magma Lordu, Cehennem Ejderhası (boss), Kadim Taş Gözcü, Hiçlik İzleyicisi, Prizma Mahzen Bekçisi,

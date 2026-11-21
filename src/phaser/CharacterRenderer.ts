@@ -1167,6 +1167,44 @@ function drawEnemyArt(ctx: CanvasRenderingContext2D, img: HTMLImageElement, key:
   ctx.restore();
 }
 
+/**
+ * Düşmanın SİLÜETİNİ izleyen yumuşak ışıma dokusu (beyaz; sahnede renklendirilir, ADD karışımıyla arkada çizilir).
+ * Dairesel/kutu biçimli arka plan ışımaları yerine kullanılır: ışık yalnızca çizimin konturundan taşar.
+ * Her düşman çizimi (şimdiki ve yenileri) bu yolu kullanır; ayrı bir ayar gerekmez.
+ */
+export function createEnemyGlowTexture(scene: Phaser.Scene, enemy: EnemyDef): string | null {
+  const artKey = enemyArtKey(enemy.id);
+  const img = artKey ? enemyImage(artKey) : null;
+  if (!artKey || !img) return null;
+  const key = `enemy_glow_${enemy.id}`;
+  if (scene.textures.exists(key)) scene.textures.remove(key);
+  const size = enemy.isBoss ? 300 : 240;
+  const tex = scene.textures.createCanvas(key, size, size);
+  if (!tex) return null;
+  const ctx = tex.getContext();
+  const L = ENEMY_ART_LAYOUT[artKey];
+  const m = ENEMY_ART_META[artKey];
+  const aspect = img.naturalWidth / img.naturalHeight;
+  let dh = L.height * size;
+  let dw = dh * aspect;
+  if (dw > L.maxWidth * size) {
+    dw = L.maxWidth * size;
+    dh = dw / aspect;
+  }
+  const x = size / 2 - dw / 2;
+  const y = ENEMY_ART_GROUND * size - (L.float ?? 0) * size - dh * m.footFrac;
+  // Çizimi tuvalin dışına, gölgesini içine düşür: tuvalde yalnızca bulanık kontur ışıması kalır
+  const OFF = size * 4;
+  ctx.shadowColor = '#ffffff';
+  ctx.shadowOffsetX = OFF;
+  for (const blur of [size * 0.05, size * 0.1]) {
+    ctx.shadowBlur = blur;
+    ctx.drawImage(img, x - OFF, y, dw, dh);
+  }
+  tex.refresh();
+  return key;
+}
+
 export function createEnemyPhaserTexture(scene: Phaser.Scene, enemy: EnemyDef): string {
   const key = `enemy_tex_${enemy.id}`;
   if (scene.textures.exists(key)) {

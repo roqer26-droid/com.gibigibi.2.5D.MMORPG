@@ -17,7 +17,7 @@ import {
 } from '../types/game';
 import { ComputedHeroBuild } from '../utils/rpgLogic';
 import { computeEnchantAura, HERO_TEX_SIZE, heroAuraGeometry } from './HeroRenderer';
-import { createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
+import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
@@ -228,7 +228,7 @@ export class BattleScene extends Phaser.Scene {
   private breathResume: Phaser.Time.TimerEvent | null = null;
   private heroGlowGraphics!: Phaser.GameObjects.Graphics;
   /** Düşmana özel çizim: zemine sabit nefes ve kristal parlaması */
-  private enemyGlowGraphics!: Phaser.GameObjects.Graphics;
+  private enemyGlowSprite: Phaser.GameObjects.Image | null = null;
   private enemyBreath: Phaser.Tweens.Tween | null = null;
   private enemyArtActive = false;
   private enemyBob: Phaser.Tweens.Tween | null = null;
@@ -391,7 +391,6 @@ export class BattleScene extends Phaser.Scene {
       });
     }
 
-    this.enemyGlowGraphics = this.add.graphics();
     this.enemyContainer = this.add.container(0, 0);
     this.enemySprite = this.add.image(0, 0, enemyKey);
     this.enemyContainer.add(this.enemySprite);
@@ -549,7 +548,8 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Boss pulsing dark aura
-    if (this.enemy.isBoss && this.bossAuraGraphics) {
+    // (çizimli düşmanlarda dairesel boss aurası yerine silüet ışıması kullanılır)
+    if (this.enemy.isBoss && this.bossAuraGraphics && !this.enemyArtActive) {
       this.bossAuraGraphics.clear();
       const pulse = 0.25 + 0.15 * Math.sin(_time * 0.004);
       const auraCol = this.enemyEnraged ? 0xef4444 : GEM_COLOR_NUM[this.enemyWeakness];
@@ -561,23 +561,20 @@ export class BattleScene extends Phaser.Scene {
       );
     }
 
-    // Düşmana özel çizim: kristal rengi düşük yoğunluklu parlama (düşman yenilince kapanır)
-    if (this.enemyGlowGraphics) {
-      const eg = this.enemyGlowGraphics;
-      eg.clear();
+    // Düşmana özel çizim: silüeti izleyen hafif ışıma (boss'ta zayıflık rengi, öfkede kırmızı); düşman yenilince kapanır
+    if (this.enemyGlowSprite && this.enemyGlowSprite.active) {
       const ek = enemyArtKey(this.enemy.id);
-      if (ek && this.enemyArtActive && this.enemyHp > 0 && this.enemySprite?.active) {
-        const EL = ENEMY_ART_LAYOUT[ek];
-        const size = this.enemy.isBoss ? 300 : 240;
-        const s = this.enemyContainer.scaleX;
-        const pulse = 0.5 + 0.5 * Math.sin(((_time / 1000) * Math.PI * 2) / 4.4);
-        const col = parseInt(EL.glow.slice(1), 16);
-        const cy = this.enemyContainer.y + s * size * (ENEMY_ART_GROUND - (EL.float ?? 0) - 0.5 - EL.height / 2);
-        const R = s * size * Math.max(EL.height, 0.55) * 0.62;
-        for (let i = 6; i >= 1; i--) {
-          eg.fillStyle(col, (0.011 + 0.007 * pulse) * (1 - i / 8));
-          eg.fillCircle(this.enemyContainer.x, cy, (R * i) / 6);
-        }
+      if (ek && this.enemyHp > 0) {
+        const pulse = 0.5 + 0.5 * Math.sin((_time / 1000) * Math.PI * 2 / 4.4);
+        const col = this.enemy.isBoss
+          ? this.enemyEnraged
+            ? 0xef4444
+            : GEM_COLOR_NUM[this.enemyWeakness]
+          : parseInt(ENEMY_ART_LAYOUT[ek].glow.slice(1), 16);
+        this.enemyGlowSprite.setTint(col);
+        this.enemyGlowSprite.setAlpha(0.3 + 0.22 * pulse + (this.enemyEnraged ? 0.12 : 0));
+      } else {
+        this.enemyGlowSprite.setAlpha(0);
       }
     }
 
@@ -3444,12 +3441,22 @@ export class BattleScene extends Phaser.Scene {
     if (!key) return;
     const size = this.enemy.isBoss ? 300 : 240;
     this.enemyArtActive = true;
+    this.bossAuraGraphics?.clear();
     this.enemySprite.setOrigin(0.5, ENEMY_ART_GROUND);
     this.enemySprite.y = (ENEMY_ART_GROUND - 0.5) * size;
     this.enemySprite.setScale(1);
+    // Silüet ışıması: çizimin arkasında, çizimle aynı pivotta ve aynı nefes/süzülme hareketinde
+    this.enemyGlowSprite?.destroy();
+    this.enemyGlowSprite = null;
+    const glowKey = createEnemyGlowTexture(this, this.enemy);
+    if (glowKey) {
+      this.enemyGlowSprite = this.add.image(0, this.enemySprite.y, glowKey).setOrigin(0.5, ENEMY_ART_GROUND).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+      this.enemyContainer.addAt(this.enemyGlowSprite, 0);
+    }
+    const motionTargets = this.enemyGlowSprite ? [this.enemySprite, this.enemyGlowSprite] : [this.enemySprite];
     this.enemyBreath?.stop();
     this.enemyBreath = this.tweens.add({
-      targets: this.enemySprite,
+      targets: motionTargets,
       scaleY: 1 + HERO_BREATH.stretch,
       scaleX: 1 + HERO_BREATH.stretch * 0.4,
       duration: (ENEMY_ART_LAYOUT[key].breathSec / 2) * 1000,
@@ -3463,7 +3470,7 @@ export class BattleScene extends Phaser.Scene {
       const baseY = this.enemySprite.y;
       this.enemyBob?.stop();
       this.enemyBob = this.tweens.add({
-        targets: this.enemySprite,
+        targets: motionTargets,
         y: { from: baseY + bobPx, to: baseY - bobPx },
         duration: 1500,
         yoyo: true,
