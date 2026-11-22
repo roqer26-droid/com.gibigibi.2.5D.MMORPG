@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.47.0 — Bölge bossları paket 2 (aşama 10)
+- 13 boss çizimi: Yıldızların Anası Astraia (süzülür), Zaman Muhafızı Chronos, Kanlı Ay Kraliçesi Lilith, Demir İmparator Malakar, Kar Tanrıçası Skadi, Rüya Yiyici Morpheus, Işık ve Gölge Yargıcı Aion, Kadim Ejderha Kralı Bahamut, Gök Tanrısı Valorian, Anka Kraliçesi Pyria (süzülür), Fırtına Tanrısı Tempest, Ölümsüzlük Muhafızı Eternia ve Sonsuzluk İmparatoru Valdris (`<aşama>_enemy.webp`; düşman kimliği = çizim anahtarı = dosya adı). Paket 1 ile aynı işleme/ayarlar. Toplam 213 çizim.
+- Boss kimliği, fazlar, saldırı türü, zayıflık, direnç, ödül ve kayıt davranışı değişmedi.
+
 ## v1.46.0 — Bölge bossları paket 1 (aşama 8)
 - Gök Tiranı Zephyros, Leviathan, Kum Firavunu Ramsutek, Hidra, Ay Matronu Selene, Kristal Hükümdarı Prismox, Kül Savaş Lordu Magmor, Astral Yutucu Nihiloth, Ruh Biçici Azrail ve Kaos İmparatoru Vorakh çizimleri (`<aşama>_enemy.webp`; düşman kimliği = çizim anahtarı = dosya adı). Şeffaf WebP, ≤400 px, sola dönük (aynalanmadı), en-boy oranı ve ayak hizası `meta.json`'da. Azrail hafifçe süzülür, diğerleri ayakta. Toplam 200 çizim.
 - Boss kimliği, fazlar, saldırı türü, zayıflık, direnç, ödül ve kayıt davranışı değişmedi.

@@ -838,5 +838,57 @@
  "chaos_8_enemy": {
   "aspect": 1.173,
   "footFrac": 0.9883
+ },
+ "blood_moon_10_enemy": {
+  "aspect": 0.91,
+  "footFrac": 0.9975
+ },
+ "cosmic_storm_10_enemy": {
+  "aspect": 1.1173,
+  "footFrac": 0.986
+ },
+ "dragon_roost_10_enemy": {
+  "aspect": 1.4493,
+  "footFrac": 0.971
+ },
+ "dreamscape_10_enemy": {
+  "aspect": 0.9675,
+  "footFrac": 0.975
+ },
+ "eternal_winter_10_enemy": {
+  "aspect": 0.9975,
+  "footFrac": 0.97
+ },
+ "eternity_10_enemy": {
+  "aspect": 0.8875,
+  "footFrac": 0.9575
+ },
+ "gods_court_10_enemy": {
+  "aspect": 1.0336,
+  "footFrac": 0.9897
+ },
+ "immortality_10_enemy": {
+  "aspect": 1.0526,
+  "footFrac": 0.9895
+ },
+ "iron_inferno_10_enemy": {
+  "aspect": 1.2579,
+  "footFrac": 0.9937
+ },
+ "light_shadow_10_enemy": {
+  "aspect": 1.0582,
+  "footFrac": 0.963
+ },
+ "rebirth_10_enemy": {
+  "aspect": 1.0782,
+  "footFrac": 1.0
+ },
+ "star_gate_10_enemy": {
+  "aspect": 1.0753,
+  "footFrac": 1.0
+ },
+ "time_rift_10_enemy": {
+  "aspect": 0.915,
+  "footFrac": 0.9875
  }
 }

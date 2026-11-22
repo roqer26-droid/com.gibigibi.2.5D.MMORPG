@@ -37,7 +37,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
   });
   it('bosslar normal düşmanlardan yüksek, havadakiler süzülür', () => {
     const bosses = allEnemies.filter((e) => e.isBoss && enemyArtKey(e.id));
-    expect(bosses.length).toBe(46);
+    expect(bosses.length).toBe(59);
     for (const b of bosses) expect(ENEMY_ART_LAYOUT[enemyArtKey(b.id)!].height).toBeGreaterThanOrEqual(0.5);
     for (const id of ['flame_elemental', 'obsidian_vault_guard', 'void_stalker']) expect(ENEMY_ART_LAYOUT[id].bob).toBeGreaterThan(0);
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
@@ -114,8 +114,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(312);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(200);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(325);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(213);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -632,5 +632,33 @@ describe('v1.46.0: bölge bossları paket 1 (aşama 8)', () => {
     expect(enemyArtKey('sky_10_enemy')).not.toBe('sky_8_enemy');
     for (const id of ['sky_7_enemy', 'ocean_7_enemy', 'swamp_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
     expect(enemyArtKey('astral_10_enemy')).toBeNull();
+  });
+});
+
+describe('v1.47.0: bölge bossları paket 2 (aşama 10)', () => {
+  const IDS = ['star_gate_10', 'time_rift_10', 'blood_moon_10', 'iron_inferno_10', 'eternal_winter_10', 'dreamscape_10', 'light_shadow_10', 'dragon_roost_10', 'gods_court_10', 'rebirth_10', 'cosmic_storm_10', 'immortality_10', 'eternity_10'];
+  it('13 boss: kimlik = çizim anahtarı = dosya adı; yalnızca Pyria ve Astraia süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    expect(IDS).toHaveLength(13);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      const key = `${id}_enemy`;
+      expect(st.type, id).toBe('boss');
+      expect(st.enemy.isBoss, id).toBe(true);
+      expect(st.enemy.id, id).toBe(key);
+      expect(ENEMY_ART_BY_ID[key], id).toBe(key);
+      expect(enemyArtKey(key)).toBe(key);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.5);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeGreaterThanOrEqual(0.5);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, id).toBe(id === 'rebirth_10' || id === 'star_gate_10');
+    }
+  });
+  it('tüm genişleme bölge bossları artık çizimli; önceki paketler korunur', () => {
+    const bosses = WORLD_REGIONS.slice(-25).flatMap((r) => r.stages).filter((s) => s.type === 'boss');
+    expect(bosses.length).toBe(25);
+    for (const s of bosses) expect(enemyArtKey(s.enemy.id), s.id).toBeTruthy();
+    expect(enemyArtKey('sky_8_enemy')).toBe('sky_8_enemy');
+    expect(enemyArtKey('dawn_core_10_enemy')).toBe('safagin_kalbi_aurel');
   });
 });
