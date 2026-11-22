@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.46.0 — Bölge bossları paket 1 (aşama 8)
+- Gök Tiranı Zephyros, Leviathan, Kum Firavunu Ramsutek, Hidra, Ay Matronu Selene, Kristal Hükümdarı Prismox, Kül Savaş Lordu Magmor, Astral Yutucu Nihiloth, Ruh Biçici Azrail ve Kaos İmparatoru Vorakh çizimleri (`<aşama>_enemy.webp`; düşman kimliği = çizim anahtarı = dosya adı). Şeffaf WebP, ≤400 px, sola dönük (aynalanmadı), en-boy oranı ve ayak hizası `meta.json`'da. Azrail hafifçe süzülür, diğerleri ayakta. Toplam 200 çizim.
+- Boss kimliği, fazlar, saldırı türü, zayıflık, direnç, ödül ve kayıt davranışı değişmedi.
+
 ## v1.45.0 — Kostümler
 - 22 şampiyonun her biri için alternatif görünüm (`src/art/costumes/*.webp`, şeffaf WebP, ≤560 px). Veri tabanlı yapı: `src/data/costumes.ts` (kimlik = dosya adı = çizim anahtarı; şampiyon başına birden fazla kostüm eklenebilir). Yeni kostüm = dosya + `meta.json` satırı + tek liste satırı.
 - Kahramanlar ekranı: detayda küçük **Kostümler** düğmesi → alt çekmece (Varsayılan Görünüm + kostümler). Karta dokununca önizleme değişir, **Kullan** ile kaydedilir, takılı görünümde **Kullanılıyor** etiketi çıkar, **Varsayılana dön** ile geri dönülür. Esc yalnızca çekmeceyi kapatır.

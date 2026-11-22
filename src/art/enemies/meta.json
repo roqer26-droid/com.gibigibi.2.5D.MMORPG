@@ -798,5 +798,45 @@
  "kor_mantari": {
   "aspect": 1.0753,
   "footFrac": 0.9919
+ },
+ "sky_8_enemy": {
+  "aspect": 1.3423,
+  "footFrac": 0.9765
+ },
+ "ocean_8_enemy": {
+  "aspect": 0.99,
+  "footFrac": 0.9775
+ },
+ "desert_8_enemy": {
+  "aspect": 0.8825,
+  "footFrac": 0.995
+ },
+ "swamp_8_enemy": {
+  "aspect": 1.4493,
+  "footFrac": 0.9783
+ },
+ "moonlit_8_enemy": {
+  "aspect": 1.0782,
+  "footFrac": 0.9919
+ },
+ "crystal_caves_8_enemy": {
+  "aspect": 1.1173,
+  "footFrac": 0.9665
+ },
+ "ashen_8_enemy": {
+  "aspect": 1.0929,
+  "footFrac": 0.9973
+ },
+ "astral_8_enemy": {
+  "aspect": 1.0811,
+  "footFrac": 0.9865
+ },
+ "spirit_8_enemy": {
+  "aspect": 1.0959,
+  "footFrac": 1.0
+ },
+ "chaos_8_enemy": {
+  "aspect": 1.173,
+  "footFrac": 0.9883
  }
 }
