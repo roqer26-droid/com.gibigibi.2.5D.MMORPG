@@ -627,14 +627,7 @@ export class BattleScene extends Phaser.Scene {
         }
       }
 
-      // Gökten inen ışık sütunu (kademe 3+)
-      if (t >= 3) {
-        const bw = s * (24 + t * 6);
-        for (let i = 0; i < 5; i++) {
-          g.fillStyle(col, Math.max(0.006, (0.05 - i * 0.008) * pulse));
-          g.fillRect(hx - bw + i * 2, hy - s * 150, (bw - i * 2) * 2, s * 222);
-        }
-      }
+      // (savaşta dikdörtgen ışık sütunu çizilmez: yalnızca dairesel parlama)
 
       // Dönen büyü zerreleri (kademe 4+)
       if (this.heroAura.motes > 0) {
@@ -3584,13 +3577,32 @@ export class BattleScene extends Phaser.Scene {
       dash(f, ground + s * 2, 0.45 + 0.25 * pulse, 0.72, true);
     }
 
-    // Işık sütunu (kademe 3+): çizimin tüm boyunu kaplar
-    if (t >= 3) {
-      const bw = s * Math.min(geo.w * 0.5 + t * 6, 110) * 0.8;
-      const top = ground - s * (geo.h + 14);
-      for (let i = 0; i < 5; i++) {
-        g.fillStyle(col, Math.max(0.006, (0.05 - i * 0.008) * pulse));
-        g.fillRect(hx - bw + i * 2, top, (bw - i * 2) * 2, ground - top);
+    // +10 ilerlemesi: +10'a ulaşan her ekipman (en çok 10) dairesel parlamayı güçlendirir; 10/10 olunca altın-beyaz "tam güç" parlaması
+    const maxed = Object.values(this.initData.hero.equipped).filter((it) => it && it.upgradeLevel >= 10).length;
+    if (maxed > 0) {
+      const boost = maxed / 10;
+      for (let i = 6; i >= 1; i--) g.fillStyle(col, (0.012 + 0.03 * boost) * pulse * (1 - i / 8)), g.fillCircle(hx, cy, (R * 1.12 * i) / 6);
+      // Her +10 ekipman için dairenin çevresinde bir ışık parçacığı
+      for (let i = 0; i < maxed; i++) {
+        const a = time * 0.9 + (i / maxed) * Math.PI * 2;
+        const px = hx + Math.cos(a) * R * 0.78;
+        const py = cy + Math.sin(a) * R * 0.78;
+        g.fillStyle(0xfff7d6, 0.5 + 0.35 * Math.abs(Math.sin(time * 2 + i)));
+        g.fillCircle(px, py, s * 2.6);
+      }
+    }
+    if (maxed >= 10) {
+      // Tam set +10: dönen altın-beyaz halka çifti ve sıcak merkez ışıması
+      for (let i = 8; i >= 1; i--) g.fillStyle(0xfde68a, 0.05 * pulse * (1 - i / 10)), g.fillCircle(hx, cy, (R * 0.9 * i) / 8);
+      for (let k = 0; k < 2; k++) {
+        const rr = R * (0.62 + 0.2 * k);
+        g.lineStyle(2.4 - k * 0.6, k === 0 ? 0xfff2b3 : 0xfde047, 0.5 + 0.35 * pulse);
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+          const a0 = a + time * (k === 0 ? 0.7 : -0.5);
+          g.beginPath();
+          g.arc(hx, cy, rr, a0, a0 + Math.PI / 9);
+          g.strokePath();
+        }
       }
     }
 
