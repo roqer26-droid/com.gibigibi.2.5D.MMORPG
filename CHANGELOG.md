@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.50.0 — Elit çizimleri paket 3
+- 10 elit çizimi: Kan Kurtları (×2), Ay Işığı Vampiri, Buhar Golemi (×2), Lav Dişlisi (süzülür), Donmuş Kurt, Kabus Perisi (×2, süzülür) ve Bulanık Hatıra (süzülür) (`<aşama>_enemy.webp`; aynı adlı düşmanlar kimliğine göre ayrı eşlenir). Toplam 243 çizim.
+- Yayın boyutu sınırına yer açmak için tüm düşman WebP'leri yeniden kodlandı (renk q62, alfa kalitesi 60); yeni çizimler q66. Saldırı profilleri, animasyonlar ve oynanış değerleri değişmedi.
+
 ## v1.49.0 — Elit çizimleri paket 2
 - 10 elit çizimi: Elit Meteor Golemi (Meteor Krateri), Kayıp Ruh (süzülür), Mezar Bekçisi, Kaos Parçacığı (süzülür), Hiçlik Ejderi, Yıldız Gezgini (×2), Meteor Golemi (Yıldızlararası Geçit) ve Dişli Golem (×2) (`<aşama>_enemy.webp`; aynı adlı düşmanlar kimliğine göre ayrı eşlenir). Toplam 233 çizim.
 - Saldırı profilleri, animasyonlar ve oynanış değerleri değişmedi.

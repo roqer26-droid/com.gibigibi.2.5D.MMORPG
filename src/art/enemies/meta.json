@@ -970,5 +970,45 @@
  "time_rift_9_enemy": {
   "aspect": 1.1173,
   "footFrac": 0.9972
+ },
+ "blood_moon_5_enemy": {
+  "aspect": 1.5152,
+  "footFrac": 0.9773
+ },
+ "blood_moon_7_enemy": {
+  "aspect": 0.74,
+  "footFrac": 0.9975
+ },
+ "blood_moon_9_enemy": {
+  "aspect": 1.3378,
+  "footFrac": 0.9732
+ },
+ "dreamscape_5_enemy": {
+  "aspect": 0.925,
+  "footFrac": 1.0
+ },
+ "dreamscape_7_enemy": {
+  "aspect": 0.7225,
+  "footFrac": 1.0
+ },
+ "dreamscape_9_enemy": {
+  "aspect": 0.9875,
+  "footFrac": 1.0
+ },
+ "eternal_winter_7_enemy": {
+  "aspect": 1.7094,
+  "footFrac": 0.9786
+ },
+ "iron_inferno_5_enemy": {
+  "aspect": 1.0753,
+  "footFrac": 0.9973
+ },
+ "iron_inferno_7_enemy": {
+  "aspect": 1.1527,
+  "footFrac": 1.0
+ },
+ "iron_inferno_9_enemy": {
+  "aspect": 1.039,
+  "footFrac": 0.9974
  }
 }
