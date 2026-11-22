@@ -658,5 +658,45 @@
  "prism_labyrinth_5": {
   "aspect": 0.9175,
   "footFrac": 1.0
+ },
+ "dream_marsh_9": {
+  "aspect": 1.6461,
+  "footFrac": 0.9547
+ },
+ "mirror_court_5": {
+  "aspect": 0.9,
+  "footFrac": 0.99
+ },
+ "mirror_court_7": {
+  "aspect": 1.005,
+  "footFrac": 0.9824
+ },
+ "mirror_court_9": {
+  "aspect": 0.7275,
+  "footFrac": 0.9825
+ },
+ "midnight_observatory_5": {
+  "aspect": 1.1662,
+  "footFrac": 1.0
+ },
+ "midnight_observatory_7": {
+  "aspect": 0.7925,
+  "footFrac": 1.0
+ },
+ "midnight_observatory_9": {
+  "aspect": 0.78,
+  "footFrac": 0.9825
+ },
+ "hollow_sun_5": {
+  "aspect": 0.9075,
+  "footFrac": 0.9975
+ },
+ "hollow_sun_7": {
+  "aspect": 1.023,
+  "footFrac": 0.9949
+ },
+ "hollow_sun_9": {
+  "aspect": 1.0309,
+  "footFrac": 0.9974
  }
 }

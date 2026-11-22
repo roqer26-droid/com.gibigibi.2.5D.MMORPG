@@ -108,8 +108,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(277);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(165);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(287);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(175);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -269,7 +269,7 @@ describe('v1.27.0: dördüncü beşli düşman seti', () => {
     expect(allEnemies.find((e) => e.id === 'mirror_court_1_enemy')!.visualArchetype).toBe(allEnemies.find((e) => e.id === 'midnight_observatory_1_enemy')!.visualArchetype);
   });
   it('hazine/elit/boss düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['aurora_vault_5_enemy', 'dream_marsh_7_enemy', 'midnight_observatory_5_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['aurora_vault_5_enemy', 'dream_marsh_7_enemy', 'iron_orbit_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('echo_terrace_1_enemy')).toBe('yanki_bosluk_avcisi');
   });
 });
@@ -334,7 +334,7 @@ describe('v1.29.0: paket 2, 12 bölge bossu', () => {
     expect(new Set(ids.map((i) => enemyArtKey(i))).size).toBe(25);
   });
   it('bu bölgelerin hazine/elit düşmanları etkilenmez', () => {
-    for (const id of ['prism_labyrinth_9_enemy', 'hollow_sun_7_enemy', 'iron_orbit_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['prism_labyrinth_9_enemy', 'dream_marsh_7_enemy', 'iron_orbit_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
   });
 });
 
@@ -528,5 +528,27 @@ describe('v1.39.0: elit karşılaşmalar 31–40', () => {
     expect(enemyArtKey('echo_terrace_1_enemy')).toBe('yanki_bosluk_avcisi');
     expect(enemyArtKey('echo_terrace_10_enemy')).toBe('bin_sesli_velora');
     expect(enemyArtKey('iron_orbit_5_enemy')).toBeNull();
+  });
+});
+
+describe('v1.40.0: elit karşılaşmalar 51–60', () => {
+  const IDS = ['dream_marsh_9', 'mirror_court_5', 'mirror_court_7', 'mirror_court_9', 'midnight_observatory_5', 'midnight_observatory_7', 'midnight_observatory_9', 'hollow_sun_5', 'hollow_sun_7', 'hollow_sun_9'];
+  it('10 elit aşama kimliği çizime bağlı; yalnızca Gözcü Baykuş ve Kutup Çarkı süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      expect(st.type, id).toBe('elite');
+      expect(enemyArtKey(st.enemy.id), id).toBe(id);
+      expect(ENEMY_ART_META[id]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[id].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'midnight_observatory_5' || id === 'midnight_observatory_7');
+    }
+  });
+  it('önceki paketler ve aynı bölgelerin diğer karşılaşmaları korunur', () => {
+    expect(enemyArtKey('echo_terrace_5_enemy')).toBe('echo_terrace_5');
+    expect(enemyArtKey('black_tide_9_enemy')).toBe('black_tide_9');
+    expect(enemyArtKey('dream_marsh_8_enemy')).toBe('dus_agac_ruhu');
+    expect(enemyArtKey('mirror_court_3_enemy')).toBe('ayna_kutusu');
+    expect(enemyArtKey('hollow_sun_10_enemy')).toBe('solgun_gunesin_yutucusu');
   });
 });
