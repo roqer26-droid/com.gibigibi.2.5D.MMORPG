@@ -221,6 +221,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   copper_mines_3_enemy: 'cevher_kasasi',
   mist_aqueduct_3_enemy: 'sarnic_hazinesi',
   thorn_citadel_3_enemy: 'dikenli_kasa',
+  // v1.34.0: ikinci hazine seti (aşama 3, treasure; yalnızca bu karşılaşma kimlikleri)
+  amber_dunes_3_enemy: 'kehribar_yigini',
+  sunken_archive_3_enemy: 'muhurlu_katalog',
+  salt_bastion_3_enemy: 'kristal_ambar',
+  obsidian_harbor_3_enemy: 'kirik_capa_sandigi',
+  black_tide_3_enemy: 'gelgit_kasasi',
+  echo_terrace_3_enemy: 'ses_muhuru',
+  mercury_foundry_3_enemy: 'civa_dokum_kasasi',
+  cinder_garden_3_enemy: 'kizil_mantar_sandigi',
+  prism_labyrinth_3_enemy: 'spektrum_hazinesi',
+  iron_orbit_3_enemy: 'yorunge_kasasi',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -362,6 +373,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   fener_sandigi: { height: 0.5, maxWidth: 0.96, glow: '#22d3ee', breathSec: 3.0 },
   cevher_kasasi: { height: 0.64, maxWidth: 0.88, glow: '#fbbf24', breathSec: 3.0 },
   sarnic_hazinesi: { height: 0.62, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.2, float: 0.04, bob: 0.012 },
+  // v1.34.0 hazine karşılaşmaları (240'lık doku)
+  kehribar_yigini: { height: 0.66, maxWidth: 0.88, glow: '#f59e0b', breathSec: 3.2 },
+  muhurlu_katalog: { height: 0.66, maxWidth: 0.88, glow: '#2dd4bf', breathSec: 3.2 },
+  kristal_ambar: { height: 0.6, maxWidth: 0.96, glow: '#e5e7eb', breathSec: 3.4 },
+  kirik_capa_sandigi: { height: 0.66, maxWidth: 0.9, glow: '#f87171', breathSec: 3.2 },
+  gelgit_kasasi: { height: 0.58, maxWidth: 0.96, glow: '#a3e635', breathSec: 3.0 },
+  ses_muhuru: { height: 0.7, maxWidth: 0.8, glow: '#c4b5fd', breathSec: 3.4, float: 0.04, bob: 0.012 },
+  civa_dokum_kasasi: { height: 0.58, maxWidth: 0.96, glow: '#fb923c', breathSec: 3.2 },
+  kizil_mantar_sandigi: { height: 0.64, maxWidth: 0.9, glow: '#ef4444', breathSec: 3.0 },
+  spektrum_hazinesi: { height: 0.7, maxWidth: 0.84, glow: '#67e8f9', breathSec: 3.0 },
+  yorunge_kasasi: { height: 0.6, maxWidth: 0.96, glow: '#94a3b8', breathSec: 3.2 },
   dikenli_kasa: { height: 0.52, maxWidth: 0.96, glow: '#f59e0b', breathSec: 3.0 },
   // v1.30.0 son beş genişleme bossu (300'lük doku; boy ≤ 0.7)
   kopru_kuyruklu_muhafiz: { height: 0.58, maxWidth: 0.98, glow: '#7dd3fc', breathSec: 3.8 },

@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.34.0 — İkinci hazine seti (10 karşılaşma)
+- Kehribar Yığını (`amber_dunes_3_enemy`), Mühürlü Katalog (`sunken_archive_3_enemy`), Kristal Ambar (`salt_bastion_3_enemy`), Kırık Çapa Sandığı (`obsidian_harbor_3_enemy`),
+  Gelgit Kasası (`black_tide_3_enemy`), Ses Mührü (`echo_terrace_3_enemy`, havada salınır), Döküm Kasası (`mercury_foundry_3_enemy`), Kızıl Mantar Sandığı (`cinder_garden_3_enemy`),
+  Spektrum Hazinesi (`prism_labyrinth_3_enemy`) ve Yörünge Kasası (`iron_orbit_3_enemy`) çizimleri. Bölge kimliği + hazine karşılaşması kimliğiyle bağlanır (her bölgede tek hazine aşaması).
+  Toplam 115 çizim, 227 düşman kimliği. Aynı bölgelerin normal/elit/boss eşleşmeleri korunur; hazine ödülleri ve istatistikleri değişmedi.
+
 ## v1.33.0 — Seviye iksirleri: sabit XP
 - İksirler seviyeden bağımsız sabit XP verir: Küçük 2.000, Orta 5.000, Büyük 20.000 (`POTION_META`, `src/data/potions.ts`). Mevcut XP sistemi üzerinden uygulanır;
   tek kullanımda birden fazla seviye atlanabilir, seviye 50'de iksir tüketilmez.

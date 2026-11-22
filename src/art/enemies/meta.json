@@ -418,5 +418,45 @@
  "cam_kozasi": {
   "aspect": 0.8281,
   "footFrac": 0.975
+ },
+ "kehribar_yigini": {
+  "aspect": 1.0631,
+  "footFrac": 0.9751
+ },
+ "muhurlu_katalog": {
+  "aspect": 1.0095,
+  "footFrac": 0.9811
+ },
+ "kristal_ambar": {
+  "aspect": 1.147,
+  "footFrac": 0.9964
+ },
+ "kirik_capa_sandigi": {
+  "aspect": 1.0475,
+  "footFrac": 0.9984
+ },
+ "gelgit_kasasi": {
+  "aspect": 1.1765,
+  "footFrac": 0.954
+ },
+ "ses_muhuru": {
+  "aspect": 0.9516,
+  "footFrac": 1.0
+ },
+ "civa_dokum_kasasi": {
+  "aspect": 1.1765,
+  "footFrac": 0.9963
+ },
+ "kizil_mantar_sandigi": {
+  "aspect": 1.0702,
+  "footFrac": 0.9649
+ },
+ "spektrum_hazinesi": {
+  "aspect": 0.8141,
+  "footFrac": 0.9359
+ },
+ "yorunge_kasasi": {
+  "aspect": 1.1449,
+  "footFrac": 0.932
  }
 }
