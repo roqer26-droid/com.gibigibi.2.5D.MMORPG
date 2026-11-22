@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.33.0 — Seviye iksirleri: sabit XP
+- İksirler seviyeden bağımsız sabit XP verir: Küçük 2.000, Orta 5.000, Büyük 20.000 (`POTION_META`, `src/data/potions.ts`). Mevcut XP sistemi üzerinden uygulanır;
+  tek kullanımda birden fazla seviye atlanabilir, seviye 50'de iksir tüketilmez.
+- Düşme (yalnızca dünya haritası zaferleri): küçük için zafer başına tek %70 kontrolü (başarılıysa 1 adet, %30 ihtimalle 2 adet; 2 adet %70'in içinde),
+  orta oranları aynı (normal %18, elit/hazine %30, boss %45), büyük yalnızca boss zaferinde %25. Lig, Seçimli Zindanlar ve Boss Avı iksir düşürmez (değişmedi).
+- Kahramanlar ekranı: her iksirin stok adedi ve sabit XP'si; seviye atlanacaksa "+20.000 XP · Sv. 1 → 12" biçiminde gerçek sonuç. Önizleme ve uygulama aynı hesabı kullanır.
+  "Yaklaşık X seviye" metinleri kaldırıldı. Mevcut stoklar ve kayıtlar korunur.
+
 ## v1.32.0 — "En İyilerini Kuşan" düzeltmesi + Seviye İksirleri
 - **Hata düzeltmesi:** Plan bir yüzüğü Yüzük 2'den Yüzük 1'e taşıyorsa (ör. Yüzük 2'deki güçlü yüzük + çantadan daha iyi bir yüzük) "Kuşan" "Ekipman değişti,
   öneriyi yeniden hesapla" diyerek hiçbir şey yapmıyordu. Kuşanılmış eşya artık herhangi bir yuvadan kullanılabilir sayılıyor. 300 rastgele senaryoluk taramada
