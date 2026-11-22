@@ -108,8 +108,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(297);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(185);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(302);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(190);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -572,5 +572,33 @@ describe('v1.41.0: elit karşılaşmalar 61–70', () => {
     expect(enemyArtKey('rune_necropolis_3_enemy')).toBe('muhurlu_lahit');
     expect(enemyArtKey('shattered_sky_10_enemy')).toBe('gokkubbeyi_kiran_velyr');
     expect(enemyArtKey('zero_threshold_8_enemy')).toBe('sifir_bosluk_avcisi');
+  });
+});
+
+describe('v1.42.0: elit karşılaşmalar 71–75 (son 5)', () => {
+  const IDS = ['zero_threshold_7', 'zero_threshold_9', 'dawn_core_5', 'dawn_core_7', 'dawn_core_9'];
+  it('5 elit aşama kimliği çizime bağlı; yalnızca Yokluk Kılıcı süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      expect(st.type, id).toBe('elite');
+      expect(enemyArtKey(st.enemy.id), id).toBe(id);
+      expect(ENEMY_ART_META[id]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[id].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'zero_threshold_9');
+    }
+  });
+  it('genişleme bölgelerindeki 75 elit aşamanın 65\'i kendi çizimine bağlı; kalan 10 (41–50 paketi) henüz çizimsiz', () => {
+    const ex = WORLD_REGIONS.slice(-25).flatMap((r) => r.stages).filter((s) => s.type === 'elite');
+    expect(ex.length).toBe(75);
+    const missing = ex.filter((s) => enemyArtKey(s.enemy.id) !== s.id).map((s) => s.id);
+    expect(missing).toEqual(['prism_labyrinth_7', 'prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']);
+    for (const id of missing) expect(enemyArtKey(id + '_enemy'), id).toBeNull();
+  });
+  it('önceki paketler ve aynı bölgelerin diğer karşılaşmaları korunur', () => {
+    expect(enemyArtKey('zero_threshold_5_enemy')).toBe('zero_threshold_5');
+    expect(enemyArtKey('dawn_core_1_enemy')).toBe('safak_ates_ruhu');
+    expect(enemyArtKey('dawn_core_3_enemy')).toBe('safak_hazinesi');
+    expect(enemyArtKey('dawn_core_10_enemy')).toBe('safagin_kalbi_aurel');
   });
 });

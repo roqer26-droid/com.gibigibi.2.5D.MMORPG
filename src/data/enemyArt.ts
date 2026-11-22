@@ -298,6 +298,12 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   shattered_sky_7_enemy: 'shattered_sky_7',
   shattered_sky_9_enemy: 'shattered_sky_9',
   zero_threshold_5_enemy: 'zero_threshold_5',
+  // v1.42.0: elit karşılaşmalar 71–75 (kimlik = aşama kimliği + _enemy)
+  zero_threshold_7_enemy: 'zero_threshold_7',
+  zero_threshold_9_enemy: 'zero_threshold_9',
+  dawn_core_5_enemy: 'dawn_core_5',
+  dawn_core_7_enemy: 'dawn_core_7',
+  dawn_core_9_enemy: 'dawn_core_9',
   // v1.39.0: elit karşılaşmalar 31–40 (kimlik = aşama kimliği + _enemy)
   echo_terrace_5_enemy: 'echo_terrace_5',
   echo_terrace_7_enemy: 'echo_terrace_7',
@@ -488,6 +494,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   shattered_sky_7: { height: 0.68, maxWidth: 0.9, glow: '#c026d3', breathSec: 3.4, float: 0.04, bob: 0.012 },
   shattered_sky_9: { height: 0.6, maxWidth: 0.94, glow: '#a855f7', breathSec: 3.4 },
   zero_threshold_5: { height: 0.56, maxWidth: 0.96, glow: '#d946ef', breathSec: 3.4 },
+  // v1.42.0 elit karşılaşmalar 71–75
+  zero_threshold_7: { height: 0.74, maxWidth: 0.92, glow: '#c026d3', breathSec: 3.4 },
+  zero_threshold_9: { height: 0.68, maxWidth: 0.9, glow: '#a855f7', breathSec: 3.4, float: 0.04, bob: 0.012 },
+  dawn_core_5: { height: 0.76, maxWidth: 0.8, glow: '#fb923c', breathSec: 3.4 },
+  dawn_core_7: { height: 0.7, maxWidth: 0.94, glow: '#fda4af', breathSec: 3.4 },
+  dawn_core_9: { height: 0.58, maxWidth: 0.96, glow: '#facc15', breathSec: 3.4 },
   sunken_archive_9: { height: 0.76, maxWidth: 0.88, glow: '#2dd4bf', breathSec: 3.4 },
   salt_bastion_5: { height: 0.44, maxWidth: 0.96, glow: '#e5e7eb', breathSec: 3.4 },
   salt_bastion_7: { height: 0.74, maxWidth: 0.94, glow: '#f9a8d4', breathSec: 3.4 },

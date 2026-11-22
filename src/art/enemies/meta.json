@@ -738,5 +738,25 @@
  "zero_threshold_5": {
   "aspect": 1.1364,
   "footFrac": 0.9716
+ },
+ "zero_threshold_7": {
+  "aspect": 0.9525,
+  "footFrac": 0.995
+ },
+ "zero_threshold_9": {
+  "aspect": 0.9775,
+  "footFrac": 1.0
+ },
+ "dawn_core_5": {
+  "aspect": 0.8075,
+  "footFrac": 0.9975
+ },
+ "dawn_core_7": {
+  "aspect": 1.0929,
+  "footFrac": 0.9891
+ },
+ "dawn_core_9": {
+  "aspect": 1.2232,
+  "footFrac": 0.9633
  }
 }
