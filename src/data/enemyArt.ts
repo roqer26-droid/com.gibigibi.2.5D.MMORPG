@@ -232,6 +232,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   cinder_garden_3_enemy: 'kizil_mantar_sandigi',
   prism_labyrinth_3_enemy: 'spektrum_hazinesi',
   iron_orbit_3_enemy: 'yorunge_kasasi',
+  // v1.35.0: üçüncü hazine seti (aşama 3, treasure; yalnızca bu karşılaşma kimlikleri)
+  aurora_vault_3_enemy: 'aurora_emaneti',
+  dream_marsh_3_enemy: 'ruya_kavanozu',
+  mirror_court_3_enemy: 'ayna_kutusu',
+  midnight_observatory_3_enemy: 'gozlem_sandigi',
+  hollow_sun_3_enemy: 'gunes_centigi',
+  comet_bridge_3_enemy: 'kuyruk_kristali',
+  rune_necropolis_3_enemy: 'muhurlu_lahit',
+  shattered_sky_3_enemy: 'kubbe_kalintisi',
+  zero_threshold_3_enemy: 'esik_muhuru',
+  dawn_core_3_enemy: 'safak_hazinesi',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -374,6 +385,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   cevher_kasasi: { height: 0.64, maxWidth: 0.88, glow: '#fbbf24', breathSec: 3.0 },
   sarnic_hazinesi: { height: 0.62, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.2, float: 0.04, bob: 0.012 },
   // v1.34.0 hazine karşılaşmaları (240'lık doku)
+  // v1.35.0 hazine karşılaşmaları (240'lık doku)
+  aurora_emaneti: { height: 0.6, maxWidth: 0.92, glow: '#5eead4', breathSec: 3.2 },
+  ruya_kavanozu: { height: 0.64, maxWidth: 0.9, glow: '#e879f9', breathSec: 3.2 },
+  ayna_kutusu: { height: 0.7, maxWidth: 0.8, glow: '#bfdbfe', breathSec: 3.2 },
+  gozlem_sandigi: { height: 0.68, maxWidth: 0.88, glow: '#818cf8', breathSec: 3.2 },
+  gunes_centigi: { height: 0.64, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.2 },
+  kuyruk_kristali: { height: 0.5, maxWidth: 0.96, glow: '#7dd3fc', breathSec: 3.0, float: 0.06, bob: 0.014 },
+  muhurlu_lahit: { height: 0.72, maxWidth: 0.86, glow: '#34d399', breathSec: 3.4 },
+  kubbe_kalintisi: { height: 0.64, maxWidth: 0.9, glow: '#a78bfa', breathSec: 3.2, float: 0.05, bob: 0.014 },
+  esik_muhuru: { height: 0.72, maxWidth: 0.74, glow: '#f472b6', breathSec: 3.0, float: 0.04, bob: 0.012 },
+  safak_hazinesi: { height: 0.62, maxWidth: 0.92, glow: '#fbbf24', breathSec: 3.2 },
   kehribar_yigini: { height: 0.66, maxWidth: 0.88, glow: '#f59e0b', breathSec: 3.2 },
   muhurlu_katalog: { height: 0.66, maxWidth: 0.88, glow: '#2dd4bf', breathSec: 3.2 },
   kristal_ambar: { height: 0.6, maxWidth: 0.96, glow: '#e5e7eb', breathSec: 3.4 },

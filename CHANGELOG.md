@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.35.0 — Üçüncü hazine seti (10 karşılaşma)
+- Aurora Emaneti (`aurora_vault_3_enemy`), Rüya Kavanozu (`dream_marsh_3_enemy`), Ayna Kutusu (`mirror_court_3_enemy`), Gözlem Sandığı (`midnight_observatory_3_enemy`),
+  Güneş Çentiği (`hollow_sun_3_enemy`), Kuyruk Kristali (`comet_bridge_3_enemy`, süzülür), Mühürlü Lahit (`rune_necropolis_3_enemy`), Kubbe Kalıntısı (`shattered_sky_3_enemy`, süzülür),
+  Eşik Mührü (`zero_threshold_3_enemy`, süzülür), Şafak Hazinesi (`dawn_core_3_enemy`). Karşılaşma kimliğiyle bağlanır. 25 genişleme bölgesinin hazine karşılaşmalarının hepsi artık çizimli
+  (toplam 125 çizim, 237 düşman kimliği). Ödüller, istatistikler ve kayıt değişmedi.
+
 ## v1.34.0 — İkinci hazine seti (10 karşılaşma)
 - Kehribar Yığını (`amber_dunes_3_enemy`), Mühürlü Katalog (`sunken_archive_3_enemy`), Kristal Ambar (`salt_bastion_3_enemy`), Kırık Çapa Sandığı (`obsidian_harbor_3_enemy`),
   Gelgit Kasası (`black_tide_3_enemy`), Ses Mührü (`echo_terrace_3_enemy`, havada salınır), Döküm Kasası (`mercury_foundry_3_enemy`), Kızıl Mantar Sandığı (`cinder_garden_3_enemy`),

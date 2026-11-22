@@ -458,5 +458,45 @@
  "yorunge_kasasi": {
   "aspect": 1.1449,
   "footFrac": 0.932
+ },
+ "aurora_emaneti": {
+  "aspect": 0.9629,
+  "footFrac": 0.9238
+ },
+ "ruya_kavanozu": {
+  "aspect": 1.0079,
+  "footFrac": 0.9961
+ },
+ "ayna_kutusu": {
+  "aspect": 0.8262,
+  "footFrac": 0.9844
+ },
+ "gozlem_sandigi": {
+  "aspect": 0.9375,
+  "footFrac": 0.9375
+ },
+ "gunes_centigi": {
+  "aspect": 1.0079,
+  "footFrac": 0.9744
+ },
+ "kuyruk_kristali": {
+  "aspect": 1.161,
+  "footFrac": 1.0
+ },
+ "muhurlu_lahit": {
+  "aspect": 0.9824,
+  "footFrac": 0.998
+ },
+ "kubbe_kalintisi": {
+  "aspect": 0.9727,
+  "footFrac": 1.0
+ },
+ "esik_muhuru": {
+  "aspect": 0.6641,
+  "footFrac": 1.0
+ },
+ "safak_hazinesi": {
+  "aspect": 1.0139,
+  "footFrac": 0.9683
  }
 }
