@@ -4,6 +4,9 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.41.0 — Elit karşılaşmalar 61–70
+- Kuyruk Nöbetçisi, Köprü Okçusu, Göktaşı Devriyesi (`comet_bridge_5/7/9`), Yazıt Kazıyıcı, Dikilitaş Nöbetçisi, Rün Celladı (`rune_necropolis_5/7/9`), Çatlak Nöbetçisi, Yörünge Sapması (süzülür), Kubbe Yontucusu (`shattered_sky_5/7/9`) ve Hiçlik Avcısı (`zero_threshold_5`) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 185 çizim.
+
 ## v1.40.0 — Elit karşılaşmalar 51–60
 - Kâbus Böceği (`dream_marsh_9`), Yansıma Mızrağı, Ayna Düellocusu, Cam Yargıç (`mirror_court_5/7/9`), Gözcü Baykuş (süzülür), Kutup Çarkı (süzülür), Gece Gökbilimcisi (`midnight_observatory_5/7/9`), Işın Bekçisi, Sönük Alev Devriyesi ve Altın Çeper Muhafızı (`hollow_sun_5/7/9`) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 175 çizim.
 

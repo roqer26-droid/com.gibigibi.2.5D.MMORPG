@@ -108,8 +108,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(287);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(175);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(297);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(185);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -304,7 +304,7 @@ describe('v1.28.0: 13 görsel, 33 karşılaşma', () => {
     for (const k of ['safak_ates_ruhu', 'sisin_mimari']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);
   });
   it('aynı bölgelerin hazine/elit düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['comet_bridge_7_enemy', 'zero_threshold_5_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['iron_orbit_5_enemy', 'prism_labyrinth_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('hollow_sun_8_enemy')).toBe('sonuk_ates_ruhu');
   });
@@ -366,7 +366,7 @@ describe('v1.30.0: son beş genişleme bossu, 25 genişleme bossu tamam', () => 
   it('aynı bölgelerin normal/elit/hazine eşleşmeleri korunur', () => {
     expect(enemyArtKey('comet_bridge_1_enemy')).toBe('kuyruklu_buz_golemi');
     expect(enemyArtKey('dawn_core_8_enemy')).toBe('safak_ates_ruhu');
-    for (const id of ['rune_necropolis_5_enemy', 'shattered_sky_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['iron_orbit_7_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
   });
 });
 
@@ -550,5 +550,27 @@ describe('v1.40.0: elit karşılaşmalar 51–60', () => {
     expect(enemyArtKey('dream_marsh_8_enemy')).toBe('dus_agac_ruhu');
     expect(enemyArtKey('mirror_court_3_enemy')).toBe('ayna_kutusu');
     expect(enemyArtKey('hollow_sun_10_enemy')).toBe('solgun_gunesin_yutucusu');
+  });
+});
+
+describe('v1.41.0: elit karşılaşmalar 61–70', () => {
+  const IDS = ['comet_bridge_5', 'comet_bridge_7', 'comet_bridge_9', 'rune_necropolis_5', 'rune_necropolis_7', 'rune_necropolis_9', 'shattered_sky_5', 'shattered_sky_7', 'shattered_sky_9', 'zero_threshold_5'];
+  it('10 elit aşama kimliği çizime bağlı; yalnızca Yörünge Sapması süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      expect(st.type, id).toBe('elite');
+      expect(enemyArtKey(st.enemy.id), id).toBe(id);
+      expect(ENEMY_ART_META[id]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[id].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'shattered_sky_7');
+    }
+  });
+  it('önceki paketler ve aynı bölgelerin diğer karşılaşmaları korunur', () => {
+    expect(enemyArtKey('hollow_sun_9_enemy')).toBe('hollow_sun_9');
+    expect(enemyArtKey('comet_bridge_1_enemy')).toBe('kuyruklu_buz_golemi');
+    expect(enemyArtKey('rune_necropolis_3_enemy')).toBe('muhurlu_lahit');
+    expect(enemyArtKey('shattered_sky_10_enemy')).toBe('gokkubbeyi_kiran_velyr');
+    expect(enemyArtKey('zero_threshold_8_enemy')).toBe('sifir_bosluk_avcisi');
   });
 });

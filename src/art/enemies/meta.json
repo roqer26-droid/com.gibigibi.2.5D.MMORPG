@@ -698,5 +698,45 @@
  "hollow_sun_9": {
   "aspect": 1.0309,
   "footFrac": 0.9974
+ },
+ "comet_bridge_5": {
+  "aspect": 0.88,
+  "footFrac": 0.9925
+ },
+ "comet_bridge_7": {
+  "aspect": 1.0101,
+  "footFrac": 0.9697
+ },
+ "comet_bridge_9": {
+  "aspect": 1.1331,
+  "footFrac": 0.9972
+ },
+ "rune_necropolis_5": {
+  "aspect": 0.8125,
+  "footFrac": 0.98
+ },
+ "rune_necropolis_7": {
+  "aspect": 0.7,
+  "footFrac": 0.9975
+ },
+ "rune_necropolis_9": {
+  "aspect": 0.985,
+  "footFrac": 0.9975
+ },
+ "shattered_sky_5": {
+  "aspect": 0.7975,
+  "footFrac": 0.995
+ },
+ "shattered_sky_7": {
+  "aspect": 0.93,
+  "footFrac": 1.0
+ },
+ "shattered_sky_9": {
+  "aspect": 1.1019,
+  "footFrac": 0.9972
+ },
+ "zero_threshold_5": {
+  "aspect": 1.1364,
+  "footFrac": 0.9716
  }
 }
