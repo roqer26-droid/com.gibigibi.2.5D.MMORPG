@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.37.0 — Elit karşılaşmalar 11–20
+- Gri Pelerin, Sarnıç Yılanı (`mist_aqueduct_7/9`), Çit Muhafızı, Diken Zırhlı Şövalye, Kuşatma Böceği (`thorn_citadel_5/7/9`), Kum Isıranı, Kızıl Akrep, Kehribar Pençe (`amber_dunes_5/7/9`),
+  Mürekkep Yılanı (`sunken_archive_5`, süzülür) ve Arşiv Nöbetçisi (`sunken_archive_7`) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 145 çizim, 257 düşman kimliği.
+  Derleme Artifact sınırı içinde kalsın diye tüm düşman WebP'leri en fazla 448 px'e indirildi (düşman dokusu 240–300 px'tir).
+
 ## v1.36.0 — İlk on elit karşılaşma
 - Keskin Dal Bekçisi, Kristal Boynuz, Cam Kabuklu Dev (`glass_forest_5/7/9`), Sahil Nöbetçisi, Paslı Kaptan, Dalgakıran Devi (`silent_shore_5/7/9`), Çekiç Ustası, Bakır Böcek, Vagon Kıran
   (`copper_mines_5/7/9`) ve Buhar Nöbetçisi (`mist_aqueduct_5`) çizimleri; her biri elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 135 çizim, 247 düşman kimliği.

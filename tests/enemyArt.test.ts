@@ -105,11 +105,11 @@ describe('v1.23.0: beş bölge bossu', () => {
     }
     expect(ENEMY_ART_LAYOUT['abyss_empress'].bob).toBeGreaterThan(0);
   });
-  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 135 çizim, 247 düşman kimliği', () => {
+  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 145 çizim, 257 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(247);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(135);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(257);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(145);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -147,7 +147,7 @@ describe('v1.24.0: beş yeni bölge düşmanı + ortak nefes', () => {
     expect(new Set(GROUPS.map((g) => g[1])).size).toBe(5);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları kendi görseline sahip değildir (aynı türü paylaşsalar da)', () => {
-    for (const id of ['thorn_citadel_5_enemy']) {
+    for (const id of ['salt_bastion_9_enemy']) {
       expect(enemyArtKey(id), id).toBeNull();
     }
   });
@@ -195,7 +195,7 @@ describe('v1.25.0: sıradaki beş genişleme düşmanı', () => {
     expect(total).toBe(25);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları ve önceki paket etkilenmez', () => {
-    for (const id of ['amber_dunes_5_enemy', 'sunken_archive_5_enemy', 'salt_bastion_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['salt_bastion_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('thorn_citadel_8_enemy')).toBe('diken_kurt');
   });
@@ -388,8 +388,8 @@ describe('v1.31.0: ilk beş genişleme hazine karşılaşması', () => {
   it('aynı bölgelerin normal/elit/boss eşleşmeleri korunur', () => {
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('thorn_citadel_10_enemy')).toBe('diken_taci');
-    expect(enemyArtKey('thorn_citadel_7_enemy')).toBeNull();
-    expect(enemyArtKey('thorn_citadel_9_enemy')).toBeNull();
+    expect(enemyArtKey('salt_bastion_7_enemy')).toBeNull();
+    expect(enemyArtKey('obsidian_harbor_5_enemy')).toBeNull();
   });
 });
 
@@ -462,7 +462,28 @@ describe('v1.36.0: ilk on elit karşılaşma', () => {
     expect(enemyArtKey('glass_forest_3_enemy')).toBe('cam_kozasi');
     expect(enemyArtKey('glass_forest_10_enemy')).toBe('camorman_bekcisi');
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
-    expect(enemyArtKey('thorn_citadel_5_enemy')).toBeNull();
-    expect(enemyArtKey('amber_dunes_5_enemy')).toBeNull();
+    expect(enemyArtKey('obsidian_harbor_7_enemy')).toBeNull();
+    expect(enemyArtKey('black_tide_5_enemy')).toBeNull();
+  });
+});
+
+describe('v1.37.0: elit karşılaşmalar 11–20', () => {
+  const IDS = ['mist_aqueduct_7', 'mist_aqueduct_9', 'thorn_citadel_5', 'thorn_citadel_7', 'thorn_citadel_9', 'amber_dunes_5', 'amber_dunes_7', 'amber_dunes_9', 'sunken_archive_5', 'sunken_archive_7'];
+  it('10 elit aşama kimliği çizime bağlı; yalnızca Mürekkep Yılanı süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      expect(st.type, id).toBe('elite');
+      expect(enemyArtKey(st.enemy.id), id).toBe(id);
+      expect(ENEMY_ART_META[id]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[id].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'sunken_archive_5');
+    }
+  });
+  it('önceki elit/hazine eşleşmeleri ve çizimsiz kalan elitler korunur', () => {
+    expect(enemyArtKey('glass_forest_5_enemy')).toBe('glass_forest_5');
+    expect(enemyArtKey('aurora_vault_3_enemy')).toBe('aurora_emaneti');
+    expect(enemyArtKey('sunken_archive_9_enemy')).toBeNull();
+    expect(enemyArtKey('salt_bastion_5_enemy')).toBeNull();
   });
 });

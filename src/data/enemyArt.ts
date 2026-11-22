@@ -254,6 +254,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   copper_mines_7_enemy: 'copper_mines_7',
   copper_mines_9_enemy: 'copper_mines_9',
   mist_aqueduct_5_enemy: 'mist_aqueduct_5',
+  // v1.37.0: elit karşılaşmalar 11–20 (kimlik = aşama kimliği + _enemy)
+  mist_aqueduct_7_enemy: 'mist_aqueduct_7',
+  mist_aqueduct_9_enemy: 'mist_aqueduct_9',
+  thorn_citadel_5_enemy: 'thorn_citadel_5',
+  thorn_citadel_7_enemy: 'thorn_citadel_7',
+  thorn_citadel_9_enemy: 'thorn_citadel_9',
+  amber_dunes_5_enemy: 'amber_dunes_5',
+  amber_dunes_7_enemy: 'amber_dunes_7',
+  amber_dunes_9_enemy: 'amber_dunes_9',
+  sunken_archive_5_enemy: 'sunken_archive_5',
+  sunken_archive_7_enemy: 'sunken_archive_7',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -398,6 +409,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   // v1.34.0 hazine karşılaşmaları (240'lık doku)
   // v1.35.0 hazine karşılaşmaları (240'lık doku)
   // v1.36.0 elit karşılaşmalar (240'lık doku; elitler normal düşmandan büyük çizilir)
+  // v1.37.0 elit karşılaşmalar (240'lık doku)
+  mist_aqueduct_7: { height: 0.76, maxWidth: 0.9, glow: '#94a3b8', breathSec: 3.4 },
+  mist_aqueduct_9: { height: 0.7, maxWidth: 0.92, glow: '#7dd3fc', breathSec: 3.4 },
+  thorn_citadel_5: { height: 0.72, maxWidth: 0.92, glow: '#84cc16', breathSec: 3.4 },
+  thorn_citadel_7: { height: 0.76, maxWidth: 0.84, glow: '#f87171', breathSec: 3.4 },
+  thorn_citadel_9: { height: 0.62, maxWidth: 0.96, glow: '#ef4444', breathSec: 3.4 },
+  amber_dunes_5: { height: 0.56, maxWidth: 0.96, glow: '#fbbf24', breathSec: 3.4 },
+  amber_dunes_7: { height: 0.74, maxWidth: 0.94, glow: '#ef4444', breathSec: 3.4 },
+  amber_dunes_9: { height: 0.66, maxWidth: 0.96, glow: '#fb923c', breathSec: 3.4 },
+  sunken_archive_5: { height: 0.76, maxWidth: 0.7, glow: '#a78bfa', breathSec: 3.4, float: 0.04, bob: 0.012 },
+  sunken_archive_7: { height: 0.76, maxWidth: 0.78, glow: '#2dd4bf', breathSec: 3.4 },
   glass_forest_5: { height: 0.74, maxWidth: 0.82, glow: '#6ee7b7', breathSec: 3.4 },
   glass_forest_7: { height: 0.58, maxWidth: 0.96, glow: '#34d399', breathSec: 3.4 },
   glass_forest_9: { height: 0.76, maxWidth: 0.9, glow: '#4ade80', breathSec: 3.4 },

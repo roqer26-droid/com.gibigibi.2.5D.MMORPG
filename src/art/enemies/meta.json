@@ -538,5 +538,45 @@
  "mist_aqueduct_5": {
   "aspect": 0.8926,
   "footFrac": 0.998
+ },
+ "mist_aqueduct_7": {
+  "aspect": 1.0,
+  "footFrac": 0.9961
+ },
+ "mist_aqueduct_9": {
+  "aspect": 0.9805,
+  "footFrac": 0.9941
+ },
+ "thorn_citadel_5": {
+  "aspect": 1.0535,
+  "footFrac": 0.9959
+ },
+ "thorn_citadel_7": {
+  "aspect": 0.9102,
+  "footFrac": 0.9902
+ },
+ "thorn_citadel_9": {
+  "aspect": 1.2104,
+  "footFrac": 0.9882
+ },
+ "amber_dunes_5": {
+  "aspect": 1.2611,
+  "footFrac": 0.9532
+ },
+ "amber_dunes_7": {
+  "aspect": 1.0,
+  "footFrac": 0.9961
+ },
+ "amber_dunes_9": {
+  "aspect": 1.0894,
+  "footFrac": 0.9553
+ },
+ "sunken_archive_5": {
+  "aspect": 0.6602,
+  "footFrac": 1.0
+ },
+ "sunken_archive_7": {
+  "aspect": 0.7422,
+  "footFrac": 0.998
  }
 }
