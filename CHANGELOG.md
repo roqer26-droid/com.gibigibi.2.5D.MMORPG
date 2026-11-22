@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.38.1 — Ekipman geliştirmede alt bildirim kaldırıldı
+- Ekipman her geliştirildiğinde altta çıkan "… +N seviyesine yükseltildi!" bildirimi kaldırıldı (ekranı kalabalıklaştırıyordu). Geri bildirim ses ve eşyanın seviye rozetiyle sürer.
+  Yetersiz altın/kristal uyarısı ve nadir "Büyü Aurası yükseldi" bildirimi korunur.
+
 ## v1.38.0 — Elit karşılaşmalar 21–30
 - Sarnıç Yazmanı (`sunken_archive_9`), Tuz Ağzı, Gül Tuzu Golemi, Tuz Zırhlı Kral (`salt_bastion_5/7/9`), Rıhtım Celladı, Gece Korsanı, Islak Cam Pençesi (`obsidian_harbor_5/7/9`),
   Köpük Dişi, Karanlık Dalgıç, Gelgit Pençesi (`black_tide_5/7/9`) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 155 çizim, 267 düşman kimliği.

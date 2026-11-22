@@ -141,3 +141,18 @@ describe('En İyilerini Kuşan: yüzük takası', () => {
     }
   });
 });
+
+describe('ekipman geliştirme bildirimi', () => {
+  it('başarılı yükseltmede alt bildirim yok; yetersiz kaynakta uyarı korunur', async () => {
+    const { enhanceItem: upgradeItem } = await import('../src/state/saveActions');
+    const s: any = createInitialSaveState();
+    s.gold = 1e6; s.crystals = 1e6;
+    const it = Object.values<any>(s.heroes[s.activeHeroClass].equipped)[0];
+    const r = upgradeItem(s, it.id, true, it.slot);
+    expect(r.save.heroes[s.activeHeroClass].equipped[it.slot].upgradeLevel).toBe(it.upgradeLevel + 1);
+    expect(r.toast).toBeUndefined();
+    const poor: any = createInitialSaveState(); poor.gold = 0; poor.crystals = 0;
+    const it2 = Object.values<any>(poor.heroes[poor.activeHeroClass].equipped)[0];
+    expect(upgradeItem(poor, it2.id, true, it2.slot).toast).toMatch(/yeterli/);
+  });
+});

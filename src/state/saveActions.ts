@@ -149,8 +149,8 @@ export function enhanceItem(
 
   return {
     save: recordQuestActivity(next, { upgrade: true }),
+    // Başarılı yükseltmede alt bildirim gösterilmez (ekranı kalabalıklaştırıyordu); ses ve eşya rozeti geri bildirimdir.
     sound: 'levelUp',
-    toast: `${upgraded.name} +${upgraded.upgradeLevel} seviyesine yükseltildi!`,
   };
 }
 
