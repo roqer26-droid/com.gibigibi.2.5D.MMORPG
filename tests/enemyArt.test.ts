@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMY_ART_BY_ID, ENEMY_ART_LAYOUT, ENEMY_ART_META, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtKey } from '../src/data/enemyArt';
+import { NORMAL_ENEMY_POOL } from '../src/data/enemyArtPool';
 import { WORLD_REGIONS } from '../src/data/world';
 
 const allEnemies = WORLD_REGIONS.flatMap((r) => r.stages.map((s) => s.enemy));
@@ -78,7 +79,12 @@ describe('v1.22.0: genişleme 20 düşman', () => {
     const arch = new Set(Object.keys(ENEMY_ART_BY_ID).map((id) => allEnemies.find((e) => e.id === id)!.visualArchetype));
     const outsiders = allEnemies.filter((e) => arch.has(e.visualArchetype) && !ENEMY_ART_BY_ID[e.id]);
     expect(outsiders.length).toBeGreaterThan(100);
-    for (const e of outsiders.slice(0, 50)) expect(enemyArtKey(e.id)).toBeNull();
+    // v1.43.0: özel çizimsiz NORMAL aşamalar ortak havuzdan görsel alır; elit/boss/hazine eski çizimini (null = vektör) korur
+    const normalIds = new Set(WORLD_REGIONS.flatMap((r) => r.stages).filter((st) => st.type === 'normal').map((st) => st.enemy.id));
+    for (const e of outsiders) {
+      if (normalIds.has(e.id)) expect(NORMAL_ENEMY_POOL.map((p) => p.key), e.id).toContain(enemyArtKey(e.id));
+      else expect(enemyArtKey(e.id), e.id).toBeNull();
+    }
   });
   it('havadakiler süzülür, gerçek bosslar bu pakette değil', () => {
     for (const k of ['bulut_kartali', 'gok_hazine_kartali', 'kan_yarasasi', 'sis_cadisi']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);

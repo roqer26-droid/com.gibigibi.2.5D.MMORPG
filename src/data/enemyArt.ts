@@ -1,4 +1,6 @@
 import meta from '../art/enemies/meta.json';
+import { NORMAL_ENEMY_POOL, POOL_BY_KEY, assignPoolArt } from './enemyArtPool';
+import { WORLD_REGIONS } from './world';
 
 /**
  * Düşmana özel şeffaf çizimler. Anahtar düşman KİMLİĞİDİR (arketip değil): aynı arketipi paylaşan diğer düşmanlar
@@ -580,7 +582,23 @@ export const clampBreathSec = (sec: number): number => Math.min(4, Math.max(2.5,
 /** Eski vektör çizimli düşmanlarda havada duran türler: nefese hafif süzülme eşlik eder. */
 export const ENEMY_FLOATING_ARCHETYPES = new Set(['celestial', 'void_stalker', 'fire_elemental']);
 
-export const enemyArtKey = (enemyId: string): EnemyArtKey | null => ENEMY_ART_BY_ID[enemyId] ?? null;
+// Ortak normal düşman havuzunun yerleşimleri (tek veri tanımı: enemyArtPool.ts)
+for (const p of NORMAL_ENEMY_POOL) ENEMY_ART_LAYOUT[p.key] = p.layout;
+
+let poolAssignments: Record<string, string> | null = null;
+/** Özel çizimi olmayan NORMAL aşamaların havuzdan aldığı çizim: düşman kimliği → çizim anahtarı (deterministik, aşama kimliğinden türetilir). */
+export function poolArtAssignments(): Record<string, string> {
+  return (poolAssignments ??= assignPoolArt(WORLD_REGIONS, (id) => ENEMY_ART_BY_ID[id] ?? null));
+}
+
+/** Özel çizim her zaman önceliklidir; yoksa ve düşman normal bir aşamaya aitse havuz çizimi; aksi halde null (eski vektör çizim). */
+export const enemyArtKey = (enemyId: string): EnemyArtKey | null => ENEMY_ART_BY_ID[enemyId] ?? poolArtAssignments()[enemyId] ?? null;
+
+/** Havuz çiziminin etiketi (paket adı); özel çizimlerde null. */
+export const enemyPoolLabel = (enemyId: string): string | null => {
+  const k = ENEMY_ART_BY_ID[enemyId] ? null : poolArtAssignments()[enemyId];
+  return k ? POOL_BY_KEY[k]?.label ?? null : null;
+};
 
 const cache = new Map<string, HTMLImageElement>();
 

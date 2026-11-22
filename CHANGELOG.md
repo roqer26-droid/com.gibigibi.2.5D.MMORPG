@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.43.0 — Ortak normal düşman görsel havuzu
+- 10 görsellik havuz (`src/data/enemyArtPool.ts`, tek veri tanımı): Obsidyen Köpeği, Yosun Tırtılı, Kırağı Kirpisi, Paslı Maden Örümceği, Sis Güvesi (süzülür), Kum Kertenkelesi, Kaya Yengeci, Gölge Kuzgunu (süzülür), Kristal Kobold, Kor Mantarı.
+- Özel çizimi olmayan NORMAL aşamalar (şu an 77, 23 bölge) çözümleyici üzerinden otomatik havuzdan görsel alır: bölge temasına uyan adaylar, aşama kimliğinden türetilen sabit seçim (FNV-1a), bölgede art arda aynı görsel tekrarlanmaz. Özel çizim her zaman önceliklidir; elit/boss/hazine değişmez. Yeni aşama/bölge eklemek mevcut atamaları değiştirmez; tanınmayan bölgeler anahtar kelimeyle ya da tüm havuzla eşleşir.
+- Tüm düşman WebP'leri yeniden kodlandı (alfa kalitesi 60, renk q72): görsel fark yok (alfa farkı ≤%5), dosya boyutu −2,5 MB; Artifact 16 MB sınırının altında kalır.
+
 ## v1.42.0 — Elit karşılaşmalar 71–75 (son 5)
 - Sıfır Nöbetçisi, Yokluk Kılıcı (süzülür; `zero_threshold_7/9`), Kor Nöbetçisi, Şafak Devriyesi ve Güneş Omurgası (`dawn_core_5/7/9`) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 190 çizim.
 - Genişleme bölgelerindeki 75 elit aşamanın 65'i özel çizimli; 10'u (prism_labyrinth_7/9, iron_orbit_5/7/9, aurora_vault_5/7/9, dream_marsh_5/7) henüz çizimsiz.

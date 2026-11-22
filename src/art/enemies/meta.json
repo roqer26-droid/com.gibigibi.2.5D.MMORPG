@@ -758,5 +758,45 @@
  "dawn_core_9": {
   "aspect": 1.2232,
   "footFrac": 0.9633
+ },
+ "obsidyen_kopegi": {
+  "aspect": 1.3333,
+  "footFrac": 0.97
+ },
+ "yosun_tirtir": {
+  "aspect": 1.7167,
+  "footFrac": 0.97
+ },
+ "kiragi_kirpi": {
+  "aspect": 1.0667,
+  "footFrac": 0.9947
+ },
+ "pasli_maden_orumcegi": {
+  "aspect": 1.5209,
+  "footFrac": 0.9202
+ },
+ "sis_guvesi": {
+  "aspect": 1.2085,
+  "footFrac": 1.0
+ },
+ "kum_kertenkele": {
+  "aspect": 1.8433,
+  "footFrac": 0.9677
+ },
+ "kaya_yengeci": {
+  "aspect": 1.5936,
+  "footFrac": 0.988
+ },
+ "golge_kuzgunu": {
+  "aspect": 1.0471,
+  "footFrac": 1.0
+ },
+ "kristal_kobold": {
+  "aspect": 1.0178,
+  "footFrac": 0.9822
+ },
+ "kor_mantari": {
+  "aspect": 1.0753,
+  "footFrac": 0.9919
  }
 }
