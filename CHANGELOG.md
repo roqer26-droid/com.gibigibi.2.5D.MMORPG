@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.39.0 — Elit karşılaşmalar 31–40
+- Çan Döven, Yankı Golemi, Suskun Rahip (`echo_terrace_5/7/9`), Kalıp Bekçisi, Akışkan Zırh (süzülür), Gümüş Omurga (`mercury_foundry_5/7/9`), Alev Salyangozu, Kömür Çiçeği, Kızıl Polen Devi
+  (`cinder_garden_5/7/9`) ve Kırılım Bekçisi (`prism_labyrinth_5`, süzülür) çizimleri; elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 165 çizim, 277 düşman kimliği.
+
 ## v1.38.1 — Ekipman geliştirmede alt bildirim kaldırıldı
 - Ekipman her geliştirildiğinde altta çıkan "… +N seviyesine yükseltildi!" bildirimi kaldırıldı (ekranı kalabalıklaştırıyordu). Geri bildirim ses ve eşyanın seviye rozetiyle sürer.
   Yetersiz altın/kristal uyarısı ve nadir "Büyü Aurası yükseldi" bildirimi korunur.

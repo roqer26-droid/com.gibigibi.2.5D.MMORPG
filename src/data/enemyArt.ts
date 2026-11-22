@@ -276,6 +276,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   black_tide_5_enemy: 'black_tide_5',
   black_tide_7_enemy: 'black_tide_7',
   black_tide_9_enemy: 'black_tide_9',
+  // v1.39.0: elit karşılaşmalar 31–40 (kimlik = aşama kimliği + _enemy)
+  echo_terrace_5_enemy: 'echo_terrace_5',
+  echo_terrace_7_enemy: 'echo_terrace_7',
+  echo_terrace_9_enemy: 'echo_terrace_9',
+  mercury_foundry_5_enemy: 'mercury_foundry_5',
+  mercury_foundry_7_enemy: 'mercury_foundry_7',
+  mercury_foundry_9_enemy: 'mercury_foundry_9',
+  cinder_garden_5_enemy: 'cinder_garden_5',
+  cinder_garden_7_enemy: 'cinder_garden_7',
+  cinder_garden_9_enemy: 'cinder_garden_9',
+  prism_labyrinth_5_enemy: 'prism_labyrinth_5',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -422,6 +433,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   // v1.36.0 elit karşılaşmalar (240'lık doku; elitler normal düşmandan büyük çizilir)
   // v1.37.0 elit karşılaşmalar (240'lık doku)
   // v1.38.0 elit karşılaşmalar (240'lık doku)
+  // v1.39.0 elit karşılaşmalar (240'lık doku)
+  echo_terrace_5: { height: 0.76, maxWidth: 0.92, glow: '#fbbf24', breathSec: 3.4 },
+  echo_terrace_7: { height: 0.64, maxWidth: 0.94, glow: '#c084fc', breathSec: 3.4 },
+  echo_terrace_9: { height: 0.76, maxWidth: 0.6, glow: '#c4b5fd', breathSec: 3.4 },
+  mercury_foundry_5: { height: 0.76, maxWidth: 0.9, glow: '#fb923c', breathSec: 3.4 },
+  mercury_foundry_7: { height: 0.7, maxWidth: 0.78, glow: '#cbd5e1', breathSec: 3.4, float: 0.04, bob: 0.012 },
+  mercury_foundry_9: { height: 0.5, maxWidth: 0.96, glow: '#94a3b8', breathSec: 3.4 },
+  cinder_garden_5: { height: 0.56, maxWidth: 0.96, glow: '#f97316', breathSec: 3.4 },
+  cinder_garden_7: { height: 0.76, maxWidth: 0.84, glow: '#fb923c', breathSec: 3.4 },
+  cinder_garden_9: { height: 0.76, maxWidth: 0.9, glow: '#ef4444', breathSec: 3.4 },
+  prism_labyrinth_5: { height: 0.7, maxWidth: 0.86, glow: '#67e8f9', breathSec: 3.4, float: 0.04, bob: 0.012 },
   sunken_archive_9: { height: 0.76, maxWidth: 0.88, glow: '#2dd4bf', breathSec: 3.4 },
   salt_bastion_5: { height: 0.44, maxWidth: 0.96, glow: '#e5e7eb', breathSec: 3.4 },
   salt_bastion_7: { height: 0.74, maxWidth: 0.94, glow: '#f9a8d4', breathSec: 3.4 },
