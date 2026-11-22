@@ -1,5 +1,7 @@
 import type { HeroClassId } from '../types/game';
 import meta from '../art/heroes/meta.json';
+import costumeMeta from '../art/costumes/meta.json';
+import { isValidCostume } from './costumes';
 
 /**
  * Şeffaf tam boy kahraman çizimleri (dosya adı = sınıf kimliği). Çizimler şeffaf kenarlarından kırpılmıştır;
@@ -8,14 +10,33 @@ import meta from '../art/heroes/meta.json';
  */
 const URLS = import.meta.glob('../art/heroes/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 
-export const HERO_ART_URL: Partial<Record<HeroClassId, string>> = {};
+const COSTUME_URLS = import.meta.glob('../art/costumes/*.webp', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
+
+/** Çizim anahtarı → görsel adresi. Anahtar: sınıf kimliği (varsayılan görünüm) ya da kostüm kimliği. */
+export const HERO_ART_URL: Record<string, string> = {};
 for (const [path, url] of Object.entries(URLS)) {
-  HERO_ART_URL[path.split('/').pop()!.replace(/\.webp$/, '') as HeroClassId] = url;
+  HERO_ART_URL[path.split('/').pop()!.replace(/\.webp$/, '')] = url;
+}
+for (const [path, url] of Object.entries(COSTUME_URLS)) {
+  HERO_ART_URL[path.split('/').pop()!.replace(/\.webp$/, '')] = url;
 }
 
-export const HERO_ART_META = meta as Record<string, { aspect: number; footFrac: number }>;
+export const HERO_ART_META = { ...meta, ...costumeMeta } as Record<string, { aspect: number; footFrac: number }>;
 
-export const hasHeroArt = (id: string): boolean => !!HERO_ART_URL[id as HeroClassId] && !!HERO_ART_META[id];
+export const hasHeroArt = (id: string): boolean => !!HERO_ART_URL[id] && !!HERO_ART_META[id];
+
+/** Yüklenemeyen çizim anahtarları: bunlar için varsayılan görsele dönülür. */
+const failed = new Set<string>();
+export const heroArtFailed = (key: string): boolean => failed.has(key);
+
+/**
+ * Şampiyonun gösterilecek çizim anahtarı: geçerli ve yüklenebilir bir kostüm seçiliyse kostüm kimliği, aksi halde (kostüm yok, geçersiz kimlik,
+ * dosya yok ya da yükleme hatası) sınıfın varsayılan görseli. Yerleşim her zaman sınıfa göre (`HERO_ART_LAYOUT[classId]`) yapılır.
+ */
+export function heroArtKey(classId: string, costumeId?: string | null): string {
+  if (costumeId && isValidCostume(classId, costumeId) && hasHeroArt(costumeId) && !failed.has(costumeId)) return costumeId;
+  return classId;
+}
 
 export interface HeroArtLayout {
   /** Ayak çizgisinden çizimin tepesine kadar yükseklik (kahraman dokusu birimi; ortak zemin çizgisi y=+74) */
@@ -71,6 +92,7 @@ function load(id: string): HTMLImageElement | null {
   if (!img) {
     img = new Image();
     img.decoding = 'async';
+    img.addEventListener('error', () => failed.add(id), { once: true });
     img.src = url;
     cache.set(id, img);
   }
@@ -93,3 +115,14 @@ export function heroImageReady(id: string): Promise<void> {
   });
 }
 
+
+/**
+ * Şampiyonun (kostümüyle) görseli hazır olunca çözülür: kostüm yüklenemezse varsayılan görsel de beklenir.
+ * Kostüm görselleri yalnızca gösterildiklerinde istenir.
+ */
+export async function heroArtReady(classId: string, costumeId?: string | null): Promise<void> {
+  const key = heroArtKey(classId, costumeId);
+  await heroImageReady(key);
+  const after = heroArtKey(classId, costumeId);
+  if (after !== key) await heroImageReady(after);
+}

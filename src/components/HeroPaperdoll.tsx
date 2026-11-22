@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { HeroProgress } from '../types/game';
 import { computeEnchantAura, drawHeroToCanvas } from '../phaser/HeroRenderer';
-import { hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
+import { hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
 
 interface HeroPaperdollProps {
   hero: HeroProgress;
@@ -48,8 +48,8 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
       // Görsel henüz yüklenmediyse (kartlar ilk açılışta) yüklenince yeniden çiz; aksi halde kart boş kalırdı
       let alive = true;
       const id = heroRef.current.classId;
-      if (hasHeroArt(id) && !heroImage(id)) {
-        void heroImageReady(id).then(() => {
+      if (hasHeroArt(id) && !heroImage(heroArtKey(id, heroRef.current.costumeId))) {
+        void heroArtReady(id, heroRef.current.costumeId).then(() => {
           if (alive) render(0.6);
         });
       }
@@ -74,7 +74,7 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [size, staticRender, hero.equipped, hero.classId, hero.level]);
+  }, [size, staticRender, hero.equipped, hero.classId, hero.level, hero.costumeId]);
 
   const aura = computeEnchantAura(hero);
 

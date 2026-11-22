@@ -21,7 +21,7 @@ import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTextu
 import { createGemTextures } from './GemTextures';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
-import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
+import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
 import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtAttack, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
 import { ATTACK_TIMING, enemyAttackProfile, heroAttackProfile, shouldPlayAttackAnim, skillAttackProfile, type AttackProfile } from '../game/attackAnimation';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
@@ -396,8 +396,8 @@ export class BattleScene extends Phaser.Scene {
       this.artIdleKey = this.heroIdleKey;
       this.artAttackKey = this.heroAttackKey;
     }
-    if (artHero && !heroImage(this.initData.hero.classId)) {
-      void heroImageReady(this.initData.hero.classId).then(() => {
+    if (artHero && !heroImage(heroArtKey(this.initData.hero.classId, this.initData.hero.costumeId))) {
+      void heroArtReady(this.initData.hero.classId, this.initData.hero.costumeId).then(() => {
         if (!this.heroSprite || !this.heroSprite.active) return;
         this.heroIdleKey = this.artIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
         this.heroAttackKey = this.artAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
@@ -605,7 +605,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Kahramanın canlı büyü aurası — ekipman + seviyesi arttıkça kat kat güçlenir
     if (this.heroAuraFrontGraphics) this.heroAuraFrontGraphics.clear();
-    const auraGeo = heroAuraGeometry(this.initData.hero.classId);
+    const auraGeo = heroAuraGeometry(this.initData.hero.classId, heroArtKey(this.initData.hero.classId, this.initData.hero.costumeId));
     const inDragonForm = this.dragonFormTurns > 0 && this.initData.hero.classId === 'dragonheart';
     if (this.heroAuraGraphics && this.heroAura.tier > 0 && auraGeo && !inDragonForm) {
       this.drawArtAura(auraGeo, _time / 1000);

@@ -6,6 +6,7 @@ import { emptyPotions, sanitizePotions } from '../data/potions';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
+import { isValidCostume } from '../data/costumes';
 import { isSetSlot, SET_IDS } from '../data/sets';
 import { createLeagueSave } from '../data/league';
 import { GameSaveState, HeroClassId, HeroProgress, HuntId, HuntRecord } from '../types/game';
@@ -123,6 +124,8 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
             ) as typeof h.equipped)
           : {},
     };
+    // Kostümler yalnızca kozmetiktir: geçersiz/yabancı kimlik varsayılan görünüme düşer (eski kayıtlarda alan yoktur)
+    if (heroes[id].costumeId !== undefined && !isValidCostume(id, heroes[id].costumeId)) delete heroes[id].costumeId;
   });
   const sanitized: GameSaveState = {
     ...save,

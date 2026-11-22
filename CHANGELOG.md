@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.45.0 — Kostümler
+- 22 şampiyonun her biri için alternatif görünüm (`src/art/costumes/*.webp`, şeffaf WebP, ≤560 px). Veri tabanlı yapı: `src/data/costumes.ts` (kimlik = dosya adı = çizim anahtarı; şampiyon başına birden fazla kostüm eklenebilir). Yeni kostüm = dosya + `meta.json` satırı + tek liste satırı.
+- Kahramanlar ekranı: detayda küçük **Kostümler** düğmesi → alt çekmece (Varsayılan Görünüm + kostümler). Karta dokununca önizleme değişir, **Kullan** ile kaydedilir, takılı görünümde **Kullanılıyor** etiketi çıkar, **Varsayılana dön** ile geri dönülür. Esc yalnızca çekmeceyi kapatır.
+- Kostüm kahraman detayında, listede, ana menüde ve savaşta görünür. Yerleşim (boy/genişlik sınırı, ayak çizgisi, süzülme) sınıfa göre aynıdır; nefes, parlama, aura ve mevcut saldırı efektleri değişmeden çalışır. Kostüm görselleri yalnızca gösterildiğinde yüklenir.
+- Kayıt: tercih `HeroProgress.costumeId` ile şampiyon kimliğine göre saklanır (isteğe bağlı alan; kayıt sürümü değişmedi, eski kayıtlar varsayılanla açılır). Geçersiz/yabancı kimlik varsayılana düşer; görsel yüklenemezse varsayılan görsel kullanılır. Tamamen kozmetik: güç, yetenek, ekipman ve hasar hesabı aynı.
+- Açma kuralı: ayrı bir kostüm açma sistemi yoktu; kostüm, şampiyon açıldığında kullanıma açılır (`isCostumeUnlocked`).
+
 ## v1.44.0 — Ortak saldırı animasyonları
 - Dört animasyon tipi (`src/game/attackAnimation.ts`, saf karar katmanı): silahlı yakın dövüş (hamle + gövde dönüşü + kavisli savurma izi; kılıç/hançer/mızrak ince, balta/tırpan/çekiç geniş), silahsız yakın dövüş (yumruk, pençe, ısırık, kıskaç temas efekti), büyü (el ışığı + küçük atış, element rengi), menzilli (geri çekilme + ok izi). Süreler 1× hızda: yakın dövüş 280/240 ms, büyü 360 ms, menzilli 340 ms; sahne zamanı çarpanıyla 2×'te yarıya iner.
 - Tip seçimi: kahraman çizimine göre sınıf tablosu (kuşanılan silah türü yalnızca iz genişliğini seçer), yetenek etkisi/`anim` alanı (kılıçlı kahraman Ateş Topu atınca büyü), düşman için eylem türü > çizime özel tanım (havuz) > ad > arketip > varsayılan kısa hamle + temas.

@@ -11,6 +11,7 @@ import {
   Flame,
   X,
   Maximize2,
+  Shirt,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { GameSaveState, HeroClassId } from '../types/game';
@@ -19,6 +20,8 @@ import { CLASS_SKILLS } from '../data/skills';
 import { heroConditionMet } from '../data/heroUnlocks';
 import { computeHeroBuild, xpRequiredForLevel } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
+import { CostumeDrawer } from './CostumeDrawer';
+import { costumesForHero } from '../data/costumes';
 import { POTION_META, POTION_SIZES, previewPotion, type PotionSize } from '../data/potions';
 
 interface HeroesScreenProps {
@@ -26,6 +29,7 @@ interface HeroesScreenProps {
   onBack: () => void;
   onSelectHero: (classId: HeroClassId) => void;
   onUnlockHero: (classId: HeroClassId) => void;
+  onSetCostume: (classId: HeroClassId, costumeId: string | null) => void;
   onOpenSkillTree: () => void;
   onUsePotion: (size: PotionSize) => void;
 }
@@ -35,12 +39,16 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
   onBack,
   onSelectHero,
   onUnlockHero,
+  onSetCostume,
   onOpenSkillTree,
   onUsePotion,
 }) => {
   const [inspectId, setInspectId] = useState<HeroClassId>(save.activeHeroClass);
   /** Kart tıklanınca açılan tam ekran kahraman görünümü (tekrar basınca kapanır) */
   const [expandedId, setExpandedId] = useState<HeroClassId | null>(null);
+
+  /** Kostümler alt çekmecesi: `preview` seçilen (henüz kullanılmayan) görünüm, null = varsayılan */
+  const [costumeFor, setCostumeFor] = useState<{ id: HeroClassId; preview: string | null } | null>(null);
 
   const toggleExpand = (classId: HeroClassId) => {
     setInspectId(classId);
@@ -58,7 +66,9 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
 
   /** Tek parça detay görünümü: yan panelde ve açılır ekranda aynı içerik kullanılır */
   const HeroDetail: React.FC<{ id: HeroClassId; inModal?: boolean }> = ({ id, inModal }) => {
-    const hero = save.heroes[id];
+    const savedHero = save.heroes[id];
+    // Çekmece açıkken detaydaki önizleme seçilen kostümü gösterir (kayıt yalnızca Kullan ile değişir)
+    const hero = costumeFor?.id === id ? { ...savedHero, costumeId: costumeFor.preview ?? undefined } : savedHero;
     const cls = HERO_CLASSES[id];
     const build = computeHeroBuild(hero);
     const aura = computeEnchantAura(hero);
@@ -105,6 +115,17 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
               </>
             ) : (
               <HeroPaperdoll hero={hero} size={230} />
+            )}
+            {costumesForHero(id).length > 0 && (
+              <button
+                type="button"
+                onClick={() => setCostumeFor({ id, preview: savedHero.costumeId ?? null })}
+                data-testid={`costume-btn-${id}`}
+                className="mt-2 flex items-center gap-1.5 rounded-full border border-fuchsia-400/50 bg-fuchsia-950/40 px-3 py-1 text-[11px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-900/50 active:scale-95"
+              >
+                <Shirt className="h-3.5 w-3.5" />
+                Kostümler
+              </button>
             )}
           </div>
 
@@ -540,6 +561,16 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {costumeFor && (
+        <CostumeDrawer
+          hero={save.heroes[costumeFor.id]}
+          unlocked={save.heroUnlocks.includes(costumeFor.id)}
+          preview={costumeFor.preview}
+          onPreview={(preview) => setCostumeFor({ id: costumeFor.id, preview })}
+          onApply={(costumeId) => onSetCostume(costumeFor.id, costumeId)}
+          onClose={() => setCostumeFor(null)}
+        />
       )}
     </div>
   );

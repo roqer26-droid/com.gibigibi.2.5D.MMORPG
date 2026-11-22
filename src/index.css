@@ -187,3 +187,10 @@
 @media (prefers-reduced-motion: reduce) {
   .intent-urgent, .intent-notice { animation: none; }
 }
+
+@keyframes costumeSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.costume-sheet { animation: costumeSlideUp 0.22s ease-out; }
+@media (prefers-reduced-motion: reduce) { .costume-sheet { animation: none; } }

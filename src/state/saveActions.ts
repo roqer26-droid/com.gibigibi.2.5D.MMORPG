@@ -1,4 +1,5 @@
 import { HERO_CLASSES } from '../data/classes';
+import { costumeById, isCostumeUnlocked } from '../data/costumes';
 import { getHunt, isHuntUnlocked } from '../data/hunts';
 import type {
   EquipmentItem,
@@ -39,6 +40,25 @@ export function selectHero(save: GameSaveState, classId: HeroClassId): ActionRes
     save: { ...save, activeHeroClass: classId },
     toast: `${HERO_CLASSES[classId].name} aktif kahraman seçildi!`,
   };
+}
+
+/**
+ * Kostüm giy / varsayılan görünüme dön (`costumeId = null`). Tamamen kozmetik: yalnızca `HeroProgress.costumeId` değişir.
+ * Kostüm şampiyon açıldığında kullanıma açılır (`isCostumeUnlocked`); geçersiz kimlik ya da kilitli şampiyon değişiklik yapmaz.
+ */
+export function setHeroCostume(save: GameSaveState, classId: HeroClassId, costumeId: string | null): ActionResult {
+  const hero = save.heroes[classId];
+  if (!hero || !save.heroUnlocks.includes(classId)) return unchanged(save);
+  if (costumeId === null) {
+    if (hero.costumeId === undefined) return unchanged(save);
+    const { costumeId: _drop, ...rest } = hero;
+    void _drop;
+    return { save: { ...save, heroes: { ...save.heroes, [classId]: rest } }, toast: 'Varsayılan görünüme dönüldü.' };
+  }
+  const costume = costumeById(costumeId);
+  if (!costume || costume.heroId !== classId || !isCostumeUnlocked(save.heroUnlocks, costume)) return unchanged(save);
+  if (hero.costumeId === costumeId) return unchanged(save);
+  return { save: { ...save, heroes: { ...save.heroes, [classId]: { ...hero, costumeId } } }, toast: `${costume.name} kostümü kullanılıyor.` };
 }
 
 export function unlockHero(save: GameSaveState, classId: HeroClassId): ActionResult {

@@ -1130,7 +1130,7 @@ export function createHeroPhaserTexture(
   /** true: çizim yerine eski vektör çizimi (Rhogar'ın Ejder Formu) */
   procedural = false
 ): string {
-  const key = `hero_tex_${hero.classId}_${pose}_${heroAuraKey(hero)}${procedural ? '_form' : ''}`;
+  const key = `hero_tex_${hero.classId}_${hero.costumeId ?? 'base'}_${pose}_${heroAuraKey(hero)}${procedural ? '_form' : ''}`;
   if (scene.textures.exists(key)) {
     scene.textures.remove(key);
   }

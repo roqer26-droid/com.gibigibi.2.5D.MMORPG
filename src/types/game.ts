@@ -578,6 +578,8 @@ export interface HeroProgress {
   skillPoints: number;
   skillRanks: Record<string, number>;
   equipped: Partial<Record<EquipmentSlot, EquipmentItem>>;
+  /** Seçili kostüm (yalnızca kozmetik; yoksa varsayılan görünüm). Geçersiz kimlik varsayılana düşer. */
+  costumeId?: string;
 }
 
 export type HuntId = 'frozen_throne' | 'ash_arena';

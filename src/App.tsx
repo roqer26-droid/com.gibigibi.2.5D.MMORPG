@@ -56,6 +56,7 @@ import {
   equipItem,
   resetSkills,
   selectHero,
+  setHeroCostume,
   sellItem,
   sellItems,
   unequipSlot,
@@ -244,6 +245,7 @@ export function App() {
 
   const handleSelectHero = (classId: HeroClassId) => runAction((s) => selectHero(s, classId));
   const handleUnlockHero = (classId: HeroClassId) => runAction((s) => unlockHero(s, classId));
+  const handleSetCostume = (classId: HeroClassId, costumeId: string | null) => runAction((s) => setHeroCostume(s, classId, costumeId));
   const handleEquipItem = useCallback(
     (item: EquipmentItem, slot?: EquipmentSlot) => runAction((s) => equipItem(s, item, slot)),
     [runAction]
@@ -724,6 +726,7 @@ export function App() {
           onBack={() => setRoute('menu')}
           onSelectHero={handleSelectHero}
           onUnlockHero={handleUnlockHero}
+          onSetCostume={handleSetCostume}
           onOpenSkillTree={() => setRoute('skills')}
           onUsePotion={handleUsePotion}
         />

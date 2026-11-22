@@ -1,0 +1,90 @@
+{
+ "assassin_kizil_golge": {
+  "aspect": 0.5536,
+  "footFrac": 0.9964
+ },
+ "bigfoot_kiragi_gezgini": {
+  "aspect": 0.9089,
+  "footFrac": 0.9982
+ },
+ "demon_obsidyen_yemini": {
+  "aspect": 0.7054,
+  "footFrac": 0.9821
+ },
+ "djinn_kum_sarayi": {
+  "aspect": 0.6375,
+  "footFrac": 1.0
+ },
+ "dragonheart_safir_ejder": {
+  "aspect": 0.6875,
+  "footFrac": 0.9982
+ },
+ "fairy_ciy_bahcesi": {
+  "aspect": 0.7768,
+  "footFrac": 1.0
+ },
+ "golem_ametist_cekirdek": {
+  "aspect": 0.8589,
+  "footFrac": 0.9982
+ },
+ "kitsune_sonbahar_ruhu": {
+  "aspect": 1.1618,
+  "footFrac": 0.9855
+ },
+ "mage_ay_kristali": {
+  "aspect": 0.6393,
+  "footFrac": 0.9946
+ },
+ "minotaur_bronz_labirent": {
+  "aspect": 0.7161,
+  "footFrac": 0.9982
+ },
+ "naga_zumrut_taht": {
+  "aspect": 0.7696,
+  "footFrac": 1.0
+ },
+ "necromancer_mezar_ayazi": {
+  "aspect": 0.7893,
+  "footFrac": 1.0
+ },
+ "night_screecher_firtina_cigligi": {
+  "aspect": 1.039,
+  "footFrac": 1.0
+ },
+ "paladin_gumus_safak": {
+  "aspect": 0.7143,
+  "footFrac": 0.9929
+ },
+ "phoenix_gunes_taci": {
+  "aspect": 0.8714,
+  "footFrac": 1.0
+ },
+ "ranger_sonbahar_avcisi": {
+  "aspect": 0.7143,
+  "footFrac": 0.9964
+ },
+ "seraph_gece_mabedi": {
+  "aspect": 0.9393,
+  "footFrac": 1.0
+ },
+ "siren_ay_gelgiti": {
+  "aspect": 0.6732,
+  "footFrac": 0.9893
+ },
+ "stormcaller_kara_bulut": {
+  "aspect": 0.6071,
+  "footFrac": 0.9982
+ },
+ "vampire_kizil_kadife": {
+  "aspect": 0.7036,
+  "footFrac": 0.9911
+ },
+ "warrior_koz_muhafizi": {
+  "aspect": 0.6732,
+  "footFrac": 0.9982
+ },
+ "werewolf_ay_pencesi": {
+  "aspect": 0.8018,
+  "footFrac": 0.9821
+ }
+}

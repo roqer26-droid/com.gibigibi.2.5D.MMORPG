@@ -1,6 +1,6 @@
 import { CoreHeroClassId, CreatureClassId, EquipmentSlot, HeroClassId, HeroProgress, ItemCategory } from '../types/game';
 import { CREATURE_SPECS, drawCreature } from './CreatureRenderer';
-import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroImage } from '../data/heroArt';
+import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroArtKey, heroImage } from '../data/heroArt';
 import { HERO_CLASSES } from '../data/classes';
 
 /* ================================================================== */
@@ -744,9 +744,10 @@ function drawClassGlow(ctx: CanvasRenderingContext2D, color: string, time: numbe
  * Silah ve zırh çizimin üzerindedir; ek ekipman katmanı çizilmez.
  */
 /** Çizimin kahraman dokusu birimindeki boyutu (en-boy oranı korunur, genişlik sınırı uygulanır). */
-export function heroArtSize(id: HeroClassId, aspectOverride?: number): { w: number; h: number } {
+export function heroArtSize(id: HeroClassId, aspectOverride?: number, artKey: string = id): { w: number; h: number } {
+  // Yerleşim sınıfa göre (kostüm değişse de hiza/boy değişmez); en-boy oranı ve ayak çizgisi çizime göre
   const L = HERO_ART_LAYOUT[id]!;
-  const m = HERO_ART_META[id];
+  const m = HERO_ART_META[artKey] ?? HERO_ART_META[id];
   const aspect = aspectOverride ?? m.aspect;
   // Ayak çizgisinden tepeye `above` birim; silah uçları ayak çizgisinin altına uzanıyorsa kırpılmadan çizilir
   let h = L.above / m.footFrac;
@@ -772,9 +773,9 @@ export interface AuraGeometry {
   float: number;
 }
 
-export function heroAuraGeometry(classId: HeroClassId): AuraGeometry | null {
+export function heroAuraGeometry(classId: HeroClassId, artKey: string = classId): AuraGeometry | null {
   if (!hasHeroArt(classId)) return null;
-  const { w, h } = heroArtSize(classId);
+  const { w, h } = heroArtSize(classId, undefined, artKey);
   return { k: h / 146, h, w, float: HERO_ART_LAYOUT[classId]!.float };
 }
 
@@ -784,11 +785,12 @@ function drawHeroArt(
   id: HeroClassId,
   pose: 'idle' | 'attack',
   time: number,
-  noGlow = false
+  noGlow = false,
+  artKey: string = id
 ) {
   const L = HERO_ART_LAYOUT[id]!;
-  const m = HERO_ART_META[id];
-  const { w, h } = heroArtSize(id, img.naturalWidth / img.naturalHeight);
+  const m = HERO_ART_META[artKey] ?? HERO_ART_META[id];
+  const { w, h } = heroArtSize(id, img.naturalWidth / img.naturalHeight, artKey);
   const ground = 74;
   const bob = L.bob ? Math.sin(time * 2.1) * L.bob : 0;
   if (!noGlow) drawClassGlow(ctx, HERO_CLASSES[id].themeColor, time, ground - L.float - h * 0.5, Math.max(w, h) * 0.62);
@@ -841,7 +843,8 @@ export function drawHeroToCanvas(
   ctx.restore();
 
   // Aura katmanları (karakterin arkasında); çizimli kahramanlarda çizimin boyuna göre ölçeklenir, ön katman çizimin önüne biner
-  const auraGeo = !proceduralOnly ? heroAuraGeometry(hero.classId) : null;
+  const artKey = heroArtKey(hero.classId, hero.costumeId);
+  const auraGeo = !proceduralOnly ? heroAuraGeometry(hero.classId, artKey) : null;
   // noGlow (savaş dokusu): çizimli kahramanlarda aura sahnede canlı çizilir, dokuya gömülmez
   if (!(auraGeo && noGlow)) drawEnchantAura(ctx, aura, time, auraGeo, 'back');
 
@@ -856,9 +859,9 @@ export function drawHeroToCanvas(
   else ctx.scale(1 + breath * 0.012, 1 + breath * 0.024);
   ctx.translate(0, -74);
 
-  const art = !proceduralOnly && hasHeroArt(hero.classId) ? heroImage(hero.classId) : null;
+  const art = !proceduralOnly && hasHeroArt(hero.classId) ? heroImage(artKey) : null;
   if (art) {
-    drawHeroArt(ctx, art, hero.classId, pose, time, noGlow);
+    drawHeroArt(ctx, art, hero.classId, pose, time, noGlow, artKey);
     if (auraGeo && !noGlow) drawEnchantAura(ctx, aura, time, auraGeo, 'front');
   } else if (usesArt) {
     // Çizim henüz yüklenmedi (yalnızca gösterilen kahramanın görseli istenir): eski çizim yanıp sönmesin
