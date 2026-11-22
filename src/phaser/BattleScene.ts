@@ -22,7 +22,8 @@ import { createGemTextures } from './GemTextures';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroImage, heroImageReady } from '../data/heroArt';
-import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
+import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtAttack, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
+import { ATTACK_TIMING, enemyAttackProfile, heroAttackProfile, shouldPlayAttackAnim, skillAttackProfile, type AttackProfile } from '../game/attackAnimation';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
 import {
   bigfootSkillShield,
@@ -161,6 +162,19 @@ export class BattleScene extends Phaser.Scene {
   private idleTimer = 0;
   private hintShown = false;
   private heroHome = { x: 0, y: 0 };
+  private enemyHome = { x: 0, y: 0 };
+  // Ortak saldırı animasyonları: eylem kimliği (aynı eylemin ikinci hasar kaydı görseli tekrar oynatmaz) ve kilitler
+  private attackActionSeq = 0;
+  /** Bir sonraki dealHeroAttackToEnemy çağrısının ait olduğu eylem (çağıran ayarlar, çağrı tüketir) */
+  private attackActionId = 0;
+  /** Geçerli taş eşleşmesi adımının (kaskad) eylem kimliği */
+  private stepActionId = 0;
+  private lastAttackActionId = 0;
+  private heroAnimBusy = false;
+  /** Yetenek kendi pozunu/efektini oynuyor: taş eşleşmesi saldırı animasyonu bastırılır */
+  private heroSkillLock = false;
+  /** Doğrulama/teşhis için son oynatılan saldırı animasyonları */
+  public attackAnimLog: { side: 'hero' | 'enemy'; type: string; style?: string; trail?: string; action: number; skill: boolean; at: number }[] = [];
   private heroBaseScale = 1;
   private summonLabel = 'İSKELET ORDUSU';
 
@@ -721,6 +735,7 @@ export class BattleScene extends Phaser.Scene {
       this.stageArea.y + this.stageArea.h * (isPortrait ? 0.54 : 0.56)
     );
     this.enemyContainer.setScale(enemyScale);
+    this.enemyHome = { x: this.enemyContainer.x, y: this.enemyContainer.y };
     this.layoutArena();
   }
 
@@ -1282,6 +1297,9 @@ export class BattleScene extends Phaser.Scene {
       const { matchedSet, spawns, squares } = this.findMatches();
       if (matchedSet.size === 0) break;
 
+      // Her kaskad adımı tek bir saldırı eylemidir: aynı adımdaki tüm taş türleri/hasar kayıtları saldırı görselini bir kez oynatır
+      this.stepActionId = ++this.attackActionSeq;
+      this.heroSkillLock = false;
       this.comboCount += 1;
       SoundEngine.setIntensity(this.comboCount);
       if (this.comboCount >= 2) {
@@ -1325,14 +1343,17 @@ export class BattleScene extends Phaser.Scene {
       this.spawnBannerText('KOMBO x2! (+%35 Hasar)', '#facc15');
     } else if (combo === 3) {
       this.spawnBannerText('KOMBO x3! EKSTRA SALDIRI!', '#fb923c');
+      this.attackActionId = this.stepActionId;
       this.dealHeroAttackToEnemy(Math.round(this.initData.build.stats.attack * 1.35), 'fire', true);
     } else if (combo === 5) {
       this.spawnBannerText('KOMBO x5! GÜÇ PATLAMASI!', '#e879f9');
+      this.attackActionId = this.stepActionId;
       this.dealHeroAttackToEnemy(Math.round(this.initData.build.stats.attack * 2.4), 'arcane', true);
       this.heroMana = Math.min(this.heroMaxMana, this.heroMana + 20);
     } else if (combo >= 8) {
       this.spawnBannerText('EFSANEVİ KOMBO x8! TAM ULTİ!', '#f43f5e');
       this.heroUlti = this.heroMaxUlti;
+      this.attackActionId = this.stepActionId;
       this.dealHeroAttackToEnemy(Math.round(this.initData.build.stats.attack * 3.5), 'golden', true);
     } else {
       this.spawnBannerText(`KOMBO x${combo}!`, '#fde047');
@@ -1561,6 +1582,7 @@ export class BattleScene extends Phaser.Scene {
   ) {
     const build = this.initData.build;
     const classId = this.initData.hero.classId;
+    const actionId = this.stepActionId;
     // Fırtına Çağıran: kombo 3+ iken yıldırımlar aşırı yüklenir
     const stormBonus =
       classId === 'stormcaller' && this.comboCount >= 3
@@ -1595,6 +1617,7 @@ export class BattleScene extends Phaser.Scene {
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + scaleHeal);
       }
       this.launchOrbs(centers.fire, this.enemyContainer.x, this.enemyContainer.y, 0xef4444, () => {
+        this.attackActionId = actionId;
         this.dealHeroAttackToEnemy(dmg, 'fire', critFire);
       });
     }
@@ -1617,6 +1640,7 @@ export class BattleScene extends Phaser.Scene {
           this.enemyFrozenTurns = 1;
           this.spawnFloatingText(this.enemyContainer.x, this.enemyContainer.y - 60, 'YAVAŞLADI!', '#7dd3fc');
         }
+        this.attackActionId = actionId;
         this.dealHeroAttackToEnemy(dmg, 'frost', critFrost);
       });
     }
@@ -1671,6 +1695,7 @@ export class BattleScene extends Phaser.Scene {
       const dmg = Math.round(atk * 0.31 * counts.lightning * elemBoost * comboMult * bonus);
       const critLightning = counts.lightning < 4 && this.rollCrit('lightning');
       this.launchOrbs(centers.lightning, this.enemyContainer.x, this.enemyContainer.y, 0xfacc15, () => {
+        this.attackActionId = actionId;
         this.dealHeroAttackToEnemy(dmg, 'lightning', counts.lightning >= 4 || critLightning);
       });
     }
@@ -1690,6 +1715,7 @@ export class BattleScene extends Phaser.Scene {
       this.launchOrbs(centers.arcane, this.heroContainer.x, this.heroContainer.y, 0xa855f7, () => {
         this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + ultiGain);
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 65, `+${ultiGain} Ulti`, '#d8b4fe');
+        this.attackActionId = actionId;
         this.dealHeroAttackToEnemy(dmg, 'arcane', critArcane, true);
       });
     }
@@ -1706,6 +1732,7 @@ export class BattleScene extends Phaser.Scene {
         this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + ultiGain);
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
         this.heroShield = Math.max(this.heroShield, capGemShield(this.heroShield + 35 * counts.golden, this.heroMaxHp));
+        this.attackActionId = actionId;
         this.dealHeroAttackToEnemy(dmg, 'golden', true, true);
         this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 78, 'ALTIN BEREKET!', '#fde047');
       });
@@ -1726,6 +1753,8 @@ export class BattleScene extends Phaser.Scene {
     forceCrit = false,
     pierceDefense = false
   ) {
+    const actionId = this.attackActionId;
+    this.attackActionId = 0;
     if (this.enemyHp <= 0) return;
 
     const build = this.initData.build;
@@ -1782,26 +1811,44 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Hero attack lunge + weapon slash!
-    this.playHeroAttackAnim(isCrit, GEM_COLOR_NUM[element]);
-
-    // Enemy hit flash + knockback
-    this.holdEnemyIdle(380);
-    SoundEngine.playWeaponHit(isCrit);
-    this.enemySprite.setTintFill(0xffffff);
-    this.time.delayedCall(95, () => {
-      if (this.enemySprite && this.enemySprite.active) this.enemySprite.clearTint();
-    });
-    this.tweens.add({
-      targets: this.enemyContainer,
-      x: this.enemyContainer.x + (isCrit ? 16 : 8),
-      duration: 75,
-      yoyo: true,
-    });
-
-    if (isCrit && this.initData.settings.screenShake) {
-      this.cameras.main.shake(this.d(140), 0.009);
+    // Saldırı animasyonu: eylem başına bir kez (aynı adımın diğer hasar kayıtları ve yetenekler tekrar oynatmaz)
+    let contactMs = 0;
+    if (shouldPlayAttackAnim({ lastActionId: this.lastAttackActionId, busy: this.heroAnimBusy, skillLock: this.heroSkillLock }, actionId)) {
+      if (actionId > 0) this.lastAttackActionId = actionId;
+      const profile = heroAttackProfile(this.initData.hero.classId, this.initData.hero.equipped.weapon?.category);
+      contactMs = this.playAttackAnim('hero', profile, { color: GEM_COLOR_NUM[element], crit: isCrit, action: actionId });
     }
+
+    // Düşman hasar tepkisi temas anında gösterilir (hasar hesabı ve durum değişimi anında yapılmıştır)
+    this.holdEnemyIdle(380);
+    const showHit = () => {
+      if (!this.enemySprite || !this.enemySprite.active) return;
+      SoundEngine.playWeaponHit(isCrit);
+      this.enemySprite.setTintFill(0xffffff);
+      this.time.delayedCall(95, () => {
+        if (this.enemySprite && this.enemySprite.active) this.enemySprite.clearTint();
+      });
+      // Geri tepme her zaman başlangıç konumuna göre yapılır (art arda vuruşlarda konum kaymaz)
+      this.tweens.add({
+        targets: this.enemyContainer,
+        x: this.enemyHome.x + (isCrit ? 16 : 8),
+        duration: 75,
+        ease: 'Quad.easeOut',
+        onComplete: () => {
+          if (this.enemyContainer?.active) this.tweens.add({ targets: this.enemyContainer, x: this.enemyHome.x, duration: 75, ease: 'Quad.easeIn' });
+        },
+      });
+      if (isCrit && this.initData.settings.screenShake) {
+        this.cameras.main.shake(this.d(140), 0.009);
+      }
+      this.spawnFloatingText(
+        this.enemyContainer.x + (Math.random() - 0.5) * 32,
+        this.enemyContainer.y - 40,
+        label,
+        col,
+        isCrit ? 22 : 17
+      );
+    };
 
     const label = isCrit
       ? `KRİTİK! -${dmg}`
@@ -1809,13 +1856,8 @@ export class BattleScene extends Phaser.Scene {
         ? `ZAYIFLIK! -${dmg}`
         : `-${dmg}`;
     const col = isCrit ? '#fde047' : isWeak ? '#fb923c' : '#ffffff';
-    this.spawnFloatingText(
-      this.enemyContainer.x + (Math.random() - 0.5) * 32,
-      this.enemyContainer.y - 40,
-      label,
-      col,
-      isCrit ? 22 : 17
-    );
+    if (contactMs > 0 && this.enemyHp > 0) this.time.delayedCall(contactMs, showHit);
+    else showHit();
 
     this.handlePhaseChange();
 
@@ -1826,38 +1868,276 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private playHeroAttackAnim(isHeavy: boolean, slashCol: number) {
-    this.holdHeroBreath(380);
-    this.heroSprite.setTexture(this.heroAttackKey);
-    const startX = this.heroContainer.x;
-    this.tweens.add({
-      targets: this.heroContainer,
-      x: startX + (isHeavy ? 32 : 18),
-      duration: 110,
-      yoyo: true,
-      onComplete: () => {
-        if (this.heroSprite && this.heroSprite.active) {
-          this.heroSprite.setTexture(this.heroIdleKey);
-        }
-      },
+  // ---------------------------------------------------------------------------------------------------------------
+  // Ortak saldırı animasyonları (kahraman ve düşman). Tek parça PNG'lerde hareket küçük konum/dönüş değişimidir; silah izi ve
+  // temas/atış efektleri ayrı grafiklerdir. Süreler 1× hızdadır: sahne zamanlayıcıları hız çarpanıyla ölçeklenir (2×'te yarı süre).
+  // ---------------------------------------------------------------------------------------------------------------
+
+  /** Düşmanın saldırı efekt rengi: çizimin parıltı rengi, yoksa kırmızımsı. */
+  private enemyAttackColor(): number {
+    const k = enemyArtKey(this.enemy.id);
+    const glow = k ? ENEMY_ART_LAYOUT[k]?.glow : undefined;
+    return glow ? parseInt(glow.slice(1), 16) : 0xf87171;
+  }
+
+  /**
+   * Bir saldırı animasyonunu oynatır ve temas anına kadar geçen süreyi (1× ms) döndürür; çağıran hasar tepkisini bu süreye hizalar.
+   * `ownVfx`: yetenek kendi efektini çiziyor; yalnızca poz verilir (hamle yok, iz/temas/atış yok) ve çift oynatma olmaz.
+   */
+  private playAttackAnim(
+    side: 'hero' | 'enemy',
+    profile: AttackProfile,
+    opts: { color: number; crit?: boolean; ownVfx?: boolean; action?: number; holdMs?: number }
+  ): number {
+    const hero = side === 'hero';
+    const cont = hero ? this.heroContainer : this.enemyContainer;
+    const sprite = hero ? this.heroSprite : this.enemySprite;
+    const foe = hero ? this.enemyContainer : this.heroContainer;
+    if (!cont || !sprite || !sprite.active || !foe) return 0;
+    const dir = hero ? 1 : -1;
+    const T = ATTACK_TIMING[profile.type];
+    const own = !!opts.ownVfx;
+    const crit = !!opts.crit;
+    const homeOf = () => (hero ? this.heroHome : this.enemyHome); // yerleşim yenilenirse güncel konum kullanılır
+    const flip = Math.sign(cont.scaleX) || 1;
+    const col = opts.color;
+
+    this.attackAnimLog.push({ side, type: profile.type, style: profile.style, trail: profile.trail, action: opts.action ?? 0, skill: own, at: this.time.now });
+    if (this.attackAnimLog.length > 80) this.attackAnimLog.shift();
+
+    const hold = opts.holdMs ?? T.total + 140;
+    if (hero) {
+      this.holdHeroBreath(hold);
+      this.heroAnimBusy = true;
+    } else {
+      this.holdEnemyIdle(hold);
+    }
+    const swapTexture = hero && !own;
+    if (swapTexture) this.heroSprite.setTexture(this.heroAttackKey);
+
+    // --- Gövde hareketi: küçük konum + dönüş (yakın dövüşte hedefe hamle, menzilli saldırıda geri çekilme, büyüde yerinde duruş) ---
+    const dist = Math.abs(foe.x - cont.x);
+    const lunge = profile.type === 'melee_weapon' ? 26 : profile.type === 'melee_unarmed' ? 20 : 0;
+    const recoil = profile.type === 'ranged' ? -9 : 0;
+    const home = homeOf();
+    const dx = own ? 0 : dir * Math.min(lunge * (crit ? 1.3 : 1), dist * 0.2) + dir * recoil;
+    const tiltDeg = ({ melee_weapon: 6, melee_unarmed: 5, spell: 3, ranged: -3 } as const)[profile.type] * dir * flip;
+    const fwdMs = Math.max(40, T.contact * 0.8);
+    const backMs = Math.max(60, T.total - fwdMs);
+    const finish = () => {
+      if (cont.active && !own) cont.x = homeOf().x;
+      if (sprite.active) sprite.angle = 0;
+      if (hero) {
+        this.heroAnimBusy = false;
+        if (swapTexture && this.heroSprite?.active) this.heroSprite.setTexture(this.heroIdleKey);
+      }
+    };
+    this.tweens.add({ targets: sprite, angle: tiltDeg, duration: fwdMs, ease: 'Cubic.easeOut' });
+    if (!own && dx !== 0) this.tweens.add({ targets: cont, x: home.x + dx, duration: fwdMs, ease: 'Cubic.easeOut' });
+    this.time.delayedCall(fwdMs, () => {
+      if (!sprite.active) return finish();
+      this.tweens.add({ targets: sprite, angle: 0, duration: backMs, ease: 'Sine.easeInOut' });
+      if (!own && cont.active) this.tweens.add({ targets: cont, x: homeOf().x, duration: backMs, ease: 'Sine.easeInOut', onComplete: finish });
+      else this.time.delayedCall(backMs, finish);
     });
 
-    // Draw Slash Arc over Enemy
+    // --- Efektler (yetenek kendi efektini çiziyorsa yalnızca büyü ışığı) ---
+    const sc = Math.abs(cont.scaleX) || 1;
+    const hx = cont.x + dir * 58 * sc;
+    const hy = cont.y - 8 * sc;
+    const tx = foe.x - dir * 14;
+    const ty = foe.y - 20;
+    const at = (ms: number, fn: () => void) => this.time.delayedCall(ms, () => cont.active && fn());
+
+    if (profile.type === 'melee_weapon') {
+      if (!own) at(T.contact * 0.35, () => this.drawSweepTrail(tx - dir * 6, ty + 4, dir, profile.trail ?? 'thin', col, crit, T.contact * 0.65));
+    } else if (profile.type === 'melee_unarmed') {
+      if (!own) at(T.contact * 0.8, () => this.drawContactBurst(profile.style ?? 'fist', tx, ty, dir, col));
+    } else if (profile.type === 'spell') {
+      const glowMs = T.contact * 0.5;
+      this.drawSpellGlow(hx, hy, col, glowMs, T.total - 40);
+      if (!own) at(glowMs, () => this.launchSmallBolt(hx, hy, tx, ty, col, T.contact - glowMs));
+    } else if (!own) {
+      at(T.contact * 0.45, () => this.launchArrow(hx, hy, tx, ty, col, T.contact * 0.55));
+    }
+    return T.contact;
+  }
+
+  /** Kavisli savurma izi: kuyruktan başa doğru incelen/kalınlaşan, açılarak çizilen yay. `thin` kılıç, `wide` balta/çekiç. */
+  private drawSweepTrail(cx: number, cy: number, dir: number, kind: 'thin' | 'wide', color: number, crit: boolean, sweepMs: number) {
     const g = this.add.graphics();
-    g.lineStyle(isHeavy ? 6 : 3.5, slashCol, 0.95);
-    const ex = this.enemyContainer.x;
-    const ey = this.enemyContainer.y;
-    g.beginPath();
-    g.arc(ex, ey, isHeavy ? 64 : 46, -Math.PI * 0.75, Math.PI * 0.25);
-    g.strokePath();
+    this.vfxContainer.add(g);
+    const wide = kind === 'wide';
+    const r = (wide ? 60 : 48) * (crit ? 1.12 : 1);
+    const w0 = (wide ? 9 : 3.6) * (crit ? 1.2 : 1);
+    const a0 = (-150 * Math.PI) / 180;
+    const a1 = (22 * Math.PI) / 180;
+    const pt = (t: number) => {
+      const th = a0 + (a1 - a0) * t;
+      return { x: cx + dir * r * Math.cos(th), y: cy + r * 0.9 * Math.sin(th) };
+    };
+    const draw = (p: number) => {
+      g.clear();
+      const n = 12;
+      for (let i = 0; i < n; i++) {
+        const t0 = (p * i) / n;
+        const t1 = (p * (i + 1)) / n;
+        const k = (i + 1) / n;
+        const q0 = pt(t0);
+        const q1 = pt(t1);
+        g.lineStyle(w0 * (0.25 + 0.75 * k) + (wide ? 5 : 3), color, 0.18 + 0.3 * k);
+        g.lineBetween(q0.x, q0.y, q1.x, q1.y);
+        g.lineStyle(w0 * (0.25 + 0.75 * k), 0xf8fafc, 0.35 + 0.6 * k);
+        g.lineBetween(q0.x, q0.y, q1.x, q1.y);
+      }
+    };
+    const st = { p: 0.02 };
+    draw(st.p);
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, sweepMs),
+      ease: 'Cubic.easeOut',
+      onUpdate: () => draw(st.p),
+      onComplete: () =>
+        this.tweens.add({ targets: g, alpha: 0, duration: 110, onComplete: () => g.destroy() }),
+    });
+  }
+
+  /** Silahsız temas efekti: yumruk halkası, pençe izi, ısırık dişleri veya kıskaç yayları. */
+  private drawContactBurst(style: 'fist' | 'claw' | 'bite' | 'pincer', x: number, y: number, dir: number, color: number) {
+    const g = this.add.graphics();
+    this.vfxContainer.add(g);
+    const draw = (p: number) => {
+      g.clear();
+      const a = 1 - p * 0.75;
+      if (style === 'fist') {
+        g.lineStyle(3.2, 0xf8fafc, a);
+        g.strokeCircle(x, y, 6 + 16 * p);
+        g.lineStyle(2.2, color, a);
+        for (let i = 0; i < 6; i++) {
+          const th = (i / 6) * Math.PI * 2 + 0.3;
+          g.lineBetween(x + Math.cos(th) * (9 + 9 * p), y + Math.sin(th) * (9 + 9 * p), x + Math.cos(th) * (15 + 15 * p), y + Math.sin(th) * (15 + 15 * p));
+        }
+      } else if (style === 'claw') {
+        for (let k = -1; k <= 1; k++) {
+          const x0 = x - dir * 15 + k * 9 * dir;
+          const y0 = y - 20 + k * 2;
+          g.lineStyle(3, color, a * 0.5);
+          g.lineBetween(x0, y0, x0 + dir * 22 * p, y0 + 40 * p);
+          g.lineStyle(1.6, 0xf8fafc, a);
+          g.lineBetween(x0, y0, x0 + dir * 22 * p, y0 + 40 * p);
+        }
+      } else if (style === 'bite') {
+        const gap = 20 * (1 - p) + 3;
+        g.fillStyle(0xf8fafc, a);
+        g.fillTriangle(x - 9, y - gap - 13, x + 9, y - gap - 13, x, y - gap + 3);
+        g.fillTriangle(x - 9, y + gap + 13, x + 9, y + gap + 13, x, y + gap - 3);
+        g.lineStyle(2, color, a * 0.7);
+        g.strokeTriangle(x - 9, y - gap - 13, x + 9, y - gap - 13, x, y - gap + 3);
+        g.strokeTriangle(x - 9, y + gap + 13, x + 9, y + gap + 13, x, y + gap - 3);
+      } else {
+        const gx = 22 * (1 - p) + 5;
+        g.lineStyle(4, color, a * 0.7);
+        g.beginPath();
+        g.arc(x - gx - 10, y, 14, -1.1, 1.1);
+        g.strokePath();
+        g.beginPath();
+        g.arc(x + gx + 10, y, 14, Math.PI - 1.1, Math.PI + 1.1);
+        g.strokePath();
+        g.lineStyle(2, 0xf8fafc, a);
+        g.beginPath();
+        g.arc(x - gx - 10, y, 14, -1.1, 1.1);
+        g.strokePath();
+        g.beginPath();
+        g.arc(x + gx + 10, y, 14, Math.PI - 1.1, Math.PI + 1.1);
+        g.strokePath();
+      }
+    };
+    const st = { p: 0 };
+    draw(0);
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: 130,
+      ease: 'Quad.easeOut',
+      onUpdate: () => draw(st.p),
+      onComplete: () => g.destroy(),
+    });
+  }
+
+  /** El/asa hizasında kısa büyü ışığı: büyür, sonra solar. */
+  private drawSpellGlow(x: number, y: number, color: number, growMs: number, lifeMs: number) {
+    const core = this.add.circle(x, y, 5, 0xf8fafc, 0.95);
+    const halo = this.add.circle(x, y, 9, color, 0.55);
+    this.vfxContainer.add(halo);
+    this.vfxContainer.add(core);
+    this.tweens.add({ targets: [halo, core], scale: 1.8, duration: Math.max(40, growMs), ease: 'Quad.easeOut' });
+    this.tweens.add({
+      targets: [halo, core],
+      alpha: 0,
+      delay: Math.max(40, growMs),
+      duration: Math.max(60, lifeMs - growMs),
+      onComplete: () => {
+        halo.destroy();
+        core.destroy();
+      },
+    });
+  }
+
+  /** Hedefe giden küçük büyü atışı (mevcut büyük yetenek mermisinden ayrı, hafif). */
+  private launchSmallBolt(sx: number, sy: number, tx: number, ty: number, color: number, flightMs: number) {
+    const halo = this.add.circle(sx, sy, 8, color, 0.4);
+    const core = this.add.circle(sx, sy, 4.5, 0xf8fafc, 0.95);
+    this.vfxContainer.add(halo);
+    this.vfxContainer.add(core);
+    this.tweens.add({
+      targets: [halo, core],
+      x: tx,
+      y: ty,
+      duration: Math.max(40, flightMs),
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        this.drawShockwave(tx, ty, color, 38);
+        halo.destroy();
+        core.destroy();
+      },
+    });
+  }
+
+  /** Menzilli atış izi: hedefe dönük ince ok (gövde + uç). */
+  private launchArrow(sx: number, sy: number, tx: number, ty: number, color: number, flightMs: number) {
+    const g = this.add.graphics();
+    g.lineStyle(2.4, 0xe2e8f0, 1);
+    g.lineBetween(-13, 0, 11, 0);
+    g.lineStyle(1.6, color, 0.9);
+    g.lineBetween(-13, -2.5, -9, 0);
+    g.lineBetween(-13, 2.5, -9, 0);
+    g.fillStyle(0xf8fafc, 1);
+    g.fillTriangle(11, 0, 5, -3.5, 5, 3.5);
+    g.setPosition(sx, sy);
+    g.setRotation(Math.atan2(ty - sy, tx - sx));
     this.vfxContainer.add(g);
     this.tweens.add({
       targets: g,
-      alpha: 0,
-      scale: 1.25,
-      duration: 240,
-      onComplete: () => g.destroy(),
+      x: tx,
+      y: ty,
+      duration: Math.max(40, flightMs),
+      ease: 'Linear',
+      onComplete: () => {
+        this.drawShockwave(tx, ty, color, 30);
+        g.destroy();
+      },
     });
+  }
+
+  /** Yetenek başlarken: yeteneğin tipine göre yalnızca poz (kendi efektleri zaten çiziliyor, taş eşleşmesi animasyonu bastırılır). */
+  private beginSkillAnim(skill: ActiveSkillDef) {
+    const base = heroAttackProfile(this.initData.hero.classId, this.initData.hero.equipped.weapon?.category);
+    const profile = skillAttackProfile(skill, base);
+    this.heroSkillLock = true;
+    const color = skill.fx?.color ?? (skill.element in GEM_COLOR_NUM ? GEM_COLOR_NUM[skill.element as GemType] : 0xfde047);
+    this.playAttackAnim('hero', profile, { color, ownVfx: true, action: -1, holdMs: 900 });
   }
 
   /**
@@ -2029,6 +2309,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async endPlayerTurn() {
+    this.heroSkillLock = false;
     if (this.enemyHp <= 0) return;
 
     // Tick down frozen tiles naturally
@@ -2194,15 +2475,15 @@ export class BattleScene extends Phaser.Scene {
 
   private async executeEnemyAttack() {
     this.holdEnemyIdle(620);
-    const startX = this.enemyContainer.x;
-    this.tweens.add({
-      targets: this.enemyContainer,
-      x: startX - 42,
-      duration: 160,
-      yoyo: true,
-    });
+    // Düşman saldırı animasyonu: tip eylemden/çizimden seçilir; hasar temas anında uygulanır (yakın dövüşte ≈90–110 ms, büyü/menzilli ≈200–240 ms)
+    const enemyProfile = enemyAttackProfile(
+      { name: this.enemy.name, visualArchetype: this.enemy.visualArchetype, isBoss: this.enemy.isBoss },
+      this.plannedAction.kind,
+      enemyArtAttack(this.enemy.id)
+    );
+    const contactMs = this.playAttackAnim('enemy', enemyProfile, { color: this.enemyAttackColor(), action: 0, holdMs: 620 });
 
-    await this.waitMs(140);
+    await this.waitMs(contactMs);
 
     // Kahraman sıyrılma kontrolü (Duman Bombası buffı +%45 ekler)
     const dodgeChance =
@@ -2343,6 +2624,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.inputLocked = true;
     this.holdHeroBreath(isUlti ? 2600 : 900);
+    this.beginSkillAnim(skill);
     this.mastery = setMoveKind(this.mastery, false);
     this.initData.onMatchStats({}, 0, true);
     // Yetenekle patlatılan taşlar da en az x1 kombo çarpanından faydalanır
@@ -2868,6 +3150,7 @@ export class BattleScene extends Phaser.Scene {
     // Bazı yetenekler TUR HARCAMAZ — ekstra tur verir!
     if (skill.grantsExtraTurn) {
       this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 86, 'EKSTRA TUR!', '#fde047', 19);
+      this.heroSkillLock = false;
       this.inputLocked = false;
       this.emitSnapshot();
       return;

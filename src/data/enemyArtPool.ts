@@ -9,6 +9,7 @@
  * yalnızca temasına uyan aşamalardaki seçimi etkiler; atamaların tamamen sabit kalması gerekiyorsa mevcut sıra korunmalıdır.
  */
 import type { EnemyArtLayout } from './enemyArt';
+import type { AttackProfile } from '../game/attackAnimation';
 
 export interface PoolEntry {
   /** Dosya adı (uzantısız) ve çizim anahtarı */
@@ -19,21 +20,23 @@ export interface PoolEntry {
   themes: readonly string[];
   /** Savaş yerleşimi (havada duranlarda `float` + `bob`) */
   layout: EnemyArtLayout;
+  /** Saldırı animasyonu (çizime göre: pençe/ısırık/kıskaç/yumruk/büyü/silah) */
+  attack: AttackProfile;
 }
 
 const FLOAT = { float: 0.04, bob: 0.012 } as const;
 
 export const NORMAL_ENEMY_POOL: readonly PoolEntry[] = [
-  { key: 'obsidyen_kopegi', label: 'Obsidyen Köpeği', themes: ['volcano', 'rock', 'ember'], layout: { height: 0.5, maxWidth: 0.94, glow: '#fb923c', breathSec: 3.0 } },
-  { key: 'yosun_tirtir', label: 'Yosun Tırtılı', themes: ['forest', 'swamp'], layout: { height: 0.4, maxWidth: 0.96, glow: '#4ade80', breathSec: 3.2 } },
-  { key: 'kiragi_kirpi', label: 'Kırağı Kirpisi', themes: ['ice', 'mountain'], layout: { height: 0.58, maxWidth: 0.9, glow: '#7dd3fc', breathSec: 3.2 } },
-  { key: 'pasli_maden_orumcegi', label: 'Paslı Maden Örümceği', themes: ['mine', 'ruin'], layout: { height: 0.5, maxWidth: 0.96, glow: '#f59e0b', breathSec: 2.8 } },
-  { key: 'sis_guvesi', label: 'Sis Güvesi', themes: ['mist', 'dream', 'swamp'], layout: { height: 0.52, maxWidth: 0.96, glow: '#c4b5fd', breathSec: 3.4, ...FLOAT } },
-  { key: 'kum_kertenkele', label: 'Kum Kertenkelesi', themes: ['desert', 'sandstone'], layout: { height: 0.38, maxWidth: 0.96, glow: '#fbbf24', breathSec: 2.8 } },
-  { key: 'kaya_yengeci', label: 'Kaya Yengeci', themes: ['coast', 'cave'], layout: { height: 0.46, maxWidth: 0.96, glow: '#38bdf8', breathSec: 3.2 } },
-  { key: 'golge_kuzgunu', label: 'Gölge Kuzgunu', themes: ['night', 'dark', 'ruin'], layout: { height: 0.56, maxWidth: 0.96, glow: '#a855f7', breathSec: 3.0, ...FLOAT } },
-  { key: 'kristal_kobold', label: 'Kristal Kobold', themes: ['crystal', 'cave', 'magicforest'], layout: { height: 0.68, maxWidth: 0.82, glow: '#2dd4bf', breathSec: 2.8 } },
-  { key: 'kor_mantari', label: 'Kor Mantarı', themes: ['volcano', 'ember', 'cave'], layout: { height: 0.64, maxWidth: 0.9, glow: '#f97316', breathSec: 3.4 } },
+  { key: 'obsidyen_kopegi', label: 'Obsidyen Köpeği', themes: ['volcano', 'rock', 'ember'], layout: { height: 0.5, maxWidth: 0.94, glow: '#fb923c', breathSec: 3.0 }, attack: { type: 'melee_unarmed', style: 'bite' } },
+  { key: 'yosun_tirtir', label: 'Yosun Tırtılı', themes: ['forest', 'swamp'], layout: { height: 0.4, maxWidth: 0.96, glow: '#4ade80', breathSec: 3.2 }, attack: { type: 'melee_unarmed', style: 'bite' } },
+  { key: 'kiragi_kirpi', label: 'Kırağı Kirpisi', themes: ['ice', 'mountain'], layout: { height: 0.58, maxWidth: 0.9, glow: '#7dd3fc', breathSec: 3.2 }, attack: { type: 'melee_unarmed', style: 'claw' } },
+  { key: 'pasli_maden_orumcegi', label: 'Paslı Maden Örümceği', themes: ['mine', 'ruin'], layout: { height: 0.5, maxWidth: 0.96, glow: '#f59e0b', breathSec: 2.8 }, attack: { type: 'melee_unarmed', style: 'bite' } },
+  { key: 'sis_guvesi', label: 'Sis Güvesi', themes: ['mist', 'dream', 'swamp'], layout: { height: 0.52, maxWidth: 0.96, glow: '#c4b5fd', breathSec: 3.4, ...FLOAT }, attack: { type: 'spell' } },
+  { key: 'kum_kertenkele', label: 'Kum Kertenkelesi', themes: ['desert', 'sandstone'], layout: { height: 0.38, maxWidth: 0.96, glow: '#fbbf24', breathSec: 2.8 }, attack: { type: 'melee_unarmed', style: 'bite' } },
+  { key: 'kaya_yengeci', label: 'Kaya Yengeci', themes: ['coast', 'cave'], layout: { height: 0.46, maxWidth: 0.96, glow: '#38bdf8', breathSec: 3.2 }, attack: { type: 'melee_unarmed', style: 'pincer' } },
+  { key: 'golge_kuzgunu', label: 'Gölge Kuzgunu', themes: ['night', 'dark', 'ruin'], layout: { height: 0.56, maxWidth: 0.96, glow: '#a855f7', breathSec: 3.0, ...FLOAT }, attack: { type: 'melee_unarmed', style: 'claw' } },
+  { key: 'kristal_kobold', label: 'Kristal Kobold', themes: ['crystal', 'cave', 'magicforest'], layout: { height: 0.68, maxWidth: 0.82, glow: '#2dd4bf', breathSec: 2.8 }, attack: { type: 'melee_weapon', trail: 'wide' } },
+  { key: 'kor_mantari', label: 'Kor Mantarı', themes: ['volcano', 'ember', 'cave'], layout: { height: 0.64, maxWidth: 0.9, glow: '#f97316', breathSec: 3.4 }, attack: { type: 'melee_unarmed', style: 'fist' } },
 ];
 
 export const POOL_BY_KEY: Readonly<Record<string, PoolEntry>> = Object.fromEntries(NORMAL_ENEMY_POOL.map((p) => [p.key, p]));

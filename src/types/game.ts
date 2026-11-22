@@ -239,6 +239,8 @@ export interface ActiveSkillDef {
   iconKey: string;
   powerMultiplier: number;
   effectType: SkillEffectType;
+  /** İsteğe bağlı: yeteneğin kendi saldırı animasyonu tipi (yoksa etki türünden ve kahramanın temel tipinden seçilir) */
+  anim?: 'melee_weapon' | 'melee_unarmed' | 'spell' | 'ranged';
   /** Kahraman seviyesi gereksinimi */
   levelReq?: number;
   /** Sadece belirli sınıflar kullanabilir (tanımsız = tüm sınıflar) */

@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.44.0 — Ortak saldırı animasyonları
+- Dört animasyon tipi (`src/game/attackAnimation.ts`, saf karar katmanı): silahlı yakın dövüş (hamle + gövde dönüşü + kavisli savurma izi; kılıç/hançer/mızrak ince, balta/tırpan/çekiç geniş), silahsız yakın dövüş (yumruk, pençe, ısırık, kıskaç temas efekti), büyü (el ışığı + küçük atış, element rengi), menzilli (geri çekilme + ok izi). Süreler 1× hızda: yakın dövüş 280/240 ms, büyü 360 ms, menzilli 340 ms; sahne zamanı çarpanıyla 2×'te yarıya iner.
+- Tip seçimi: kahraman çizimine göre sınıf tablosu (kuşanılan silah türü yalnızca iz genişliğini seçer), yetenek etkisi/`anim` alanı (kılıçlı kahraman Ateş Topu atınca büyü), düşman için eylem türü > çizime özel tanım (havuz) > ad > arketip > varsayılan kısa hamle + temas.
+- Tek parça PNG'lerde hareket küçük konum/dönüş değişimidir; ayaklı/süzülen idle (nefes/bob) saldırı sonrası devam eder, karakterler başlangıç konumuna döner.
+- Aynı eylem bir kez oynar: taş eşleşmesinde her kaskad adımı tek eylemdir (adımdaki tüm taş türleri/hasar kayıtları görseli tekrarlamaz); yetenekler yalnızca poz verir (kendi efektleriyle çift oynatma yok); sürerken yenisi üst üste binmez.
+- Hasar sayısı/geri tepme temas anına hizalanır (hasar hesabı, tur sırası ve yetenek davranışı değişmedi). Düşman geri tepmesi artık başlangıca göre yapılır (art arda vuruşlarda kayma düzeltildi).
+- Havuz çizimlerine çizime özel saldırı biçimi eklendi (`attack`).
+
 ## v1.43.0 — Ortak normal düşman görsel havuzu
 - 10 görsellik havuz (`src/data/enemyArtPool.ts`, tek veri tanımı): Obsidyen Köpeği, Yosun Tırtılı, Kırağı Kirpisi, Paslı Maden Örümceği, Sis Güvesi (süzülür), Kum Kertenkelesi, Kaya Yengeci, Gölge Kuzgunu (süzülür), Kristal Kobold, Kor Mantarı.
 - Özel çizimi olmayan NORMAL aşamalar (şu an 77, 23 bölge) çözümleyici üzerinden otomatik havuzdan görsel alır: bölge temasına uyan adaylar, aşama kimliğinden türetilen sabit seçim (FNV-1a), bölgede art arda aynı görsel tekrarlanmaz. Özel çizim her zaman önceliklidir; elit/boss/hazine değişmez. Yeni aşama/bölge eklemek mevcut atamaları değiştirmez; tanınmayan bölgeler anahtar kelimeyle ya da tüm havuzla eşleşir.
