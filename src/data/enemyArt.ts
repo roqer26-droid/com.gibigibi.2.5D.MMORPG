@@ -215,6 +215,12 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   shattered_sky_10_enemy: 'gokkubbeyi_kiran_velyr',
   zero_threshold_10_enemy: 'sifirin_bekcisi',
   dawn_core_10_enemy: 'safagin_kalbi_aurel',
+  // v1.31.0: ilk beş genişleme hazine karşılaşması (aşama 3, treasure)
+  glass_forest_3_enemy: 'cam_kozasi',
+  silent_shore_3_enemy: 'fener_sandigi',
+  copper_mines_3_enemy: 'cevher_kasasi',
+  mist_aqueduct_3_enemy: 'sarnic_hazinesi',
+  thorn_citadel_3_enemy: 'dikenli_kasa',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -351,6 +357,12 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   ruya_dokuyucusu: { height: 0.56, maxWidth: 0.98, glow: '#c084fc', breathSec: 3.6 },
   cift_suretli_hukumdar: { height: 0.66, maxWidth: 0.9, glow: '#e9d5ff', breathSec: 3.6 },
   yildiz_avcisi_neros: { height: 0.64, maxWidth: 0.96, glow: '#818cf8', breathSec: 3.6 },
+  // v1.31.0 hazine karşılaşmaları (240'lık doku)
+  cam_kozasi: { height: 0.7, maxWidth: 0.78, glow: '#6ee7b7', breathSec: 3.2 },
+  fener_sandigi: { height: 0.5, maxWidth: 0.96, glow: '#22d3ee', breathSec: 3.0 },
+  cevher_kasasi: { height: 0.64, maxWidth: 0.88, glow: '#fbbf24', breathSec: 3.0 },
+  sarnic_hazinesi: { height: 0.62, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.2, float: 0.04, bob: 0.012 },
+  dikenli_kasa: { height: 0.52, maxWidth: 0.96, glow: '#f59e0b', breathSec: 3.0 },
   // v1.30.0 son beş genişleme bossu (300'lük doku; boy ≤ 0.7)
   kopru_kuyruklu_muhafiz: { height: 0.58, maxWidth: 0.98, glow: '#7dd3fc', breathSec: 3.8 },
   adsiz_mezar_krali: { height: 0.66, maxWidth: 0.9, glow: '#34d399', breathSec: 3.6, float: 0.03, bob: 0.012 },

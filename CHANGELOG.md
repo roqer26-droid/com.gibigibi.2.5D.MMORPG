@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.31.0 — İlk beş genişleme hazine karşılaşması
+- Cam Kozası (`glass_forest_3_enemy`), Fener Sandığı (`silent_shore_3_enemy`), Cevher Kasası (`copper_mines_3_enemy`), Sarnıç Hazinesi (`mist_aqueduct_3_enemy`, süzülür)
+  ve Dikenli Kasa (`thorn_citadel_3_enemy`) çizimleri; hepsi `treasure` aşamasının düşmanı. Toplam 105 çizim, 217 düşman kimliği.
+  Aynı bölgelerin normal/elit/boss eşleşmeleri korunur. Hazine ödülleri ve istatistikleri değişmedi.
+
 ## v1.30.0 — Son beş genişleme bossu (25 genişleme bossunun tamamı çizimli)
 - Köprünün Kuyruklu Muhafızı (`comet_bridge_10_enemy`), Adsız Mezar Kralı (`rune_necropolis_10_enemy`, süzülür), Gökkubbeyi Kıran Velyr (`shattered_sky_10_enemy`),
   Sıfırın Bekçisi (`zero_threshold_10_enemy`, süzülür) ve Şafağın Kalbi Aurel (`dawn_core_10_enemy`) çizimleri. Paket 1 + 2 ile birlikte 25 genişleme bossunun

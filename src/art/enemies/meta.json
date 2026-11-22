@@ -398,5 +398,25 @@
  "gokkubbeyi_kiran_velyr": {
   "aspect": 1.0127,
   "footFrac": 0.962
+ },
+ "sarnic_hazinesi": {
+  "aspect": 1.0738,
+  "footFrac": 1.0
+ },
+ "fener_sandigi": {
+  "aspect": 1.4191,
+  "footFrac": 0.9823
+ },
+ "cevher_kasasi": {
+  "aspect": 1.0579,
+  "footFrac": 0.9917
+ },
+ "dikenli_kasa": {
+  "aspect": 1.3502,
+  "footFrac": 0.9705
+ },
+ "cam_kozasi": {
+  "aspect": 0.8281,
+  "footFrac": 0.975
  }
 }

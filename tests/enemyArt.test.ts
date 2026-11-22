@@ -105,11 +105,11 @@ describe('v1.23.0: beş bölge bossu', () => {
     }
     expect(ENEMY_ART_LAYOUT['abyss_empress'].bob).toBeGreaterThan(0);
   });
-  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 100 çizim, 212 düşman kimliği', () => {
+  it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 105 çizim, 217 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(212);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(100);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(217);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(105);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -147,7 +147,7 @@ describe('v1.24.0: beş yeni bölge düşmanı + ortak nefes', () => {
     expect(new Set(GROUPS.map((g) => g[1])).size).toBe(5);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları kendi görseline sahip değildir (aynı türü paylaşsalar da)', () => {
-    for (const id of ['glass_forest_3_enemy', 'glass_forest_5_enemy', 'mist_aqueduct_5_enemy']) {
+    for (const id of ['glass_forest_5_enemy', 'mist_aqueduct_5_enemy']) {
       expect(enemyArtKey(id), id).toBeNull();
     }
   });
@@ -304,7 +304,7 @@ describe('v1.28.0: 13 görsel, 33 karşılaşma', () => {
     for (const k of ['safak_ates_ruhu', 'sisin_mimari']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);
   });
   it('aynı bölgelerin hazine/elit düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['glass_forest_3_enemy', 'glass_forest_5_enemy', 'comet_bridge_3_enemy', 'comet_bridge_7_enemy', 'zero_threshold_5_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['glass_forest_5_enemy', 'comet_bridge_3_enemy', 'comet_bridge_7_enemy', 'zero_threshold_5_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('hollow_sun_8_enemy')).toBe('sonuk_ates_ruhu');
   });
@@ -367,5 +367,28 @@ describe('v1.30.0: son beş genişleme bossu, 25 genişleme bossu tamam', () => 
     expect(enemyArtKey('comet_bridge_1_enemy')).toBe('kuyruklu_buz_golemi');
     expect(enemyArtKey('dawn_core_8_enemy')).toBe('safak_ates_ruhu');
     for (const id of ['comet_bridge_3_enemy', 'rune_necropolis_5_enemy', 'shattered_sky_7_enemy', 'zero_threshold_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
+  });
+});
+
+describe('v1.31.0: ilk beş genişleme hazine karşılaşması', () => {
+  const T: [string, string][] = [['glass_forest', 'cam_kozasi'], ['silent_shore', 'fener_sandigi'], ['copper_mines', 'cevher_kasasi'], ['mist_aqueduct', 'sarnic_hazinesi'], ['thorn_citadel', 'dikenli_kasa']];
+  it('5 hazine kimliği (aşama 3), ayrı çizimler; yalnızca Sarnıç Hazinesi süzülür', () => {
+    for (const [region, key] of T) {
+      const id = `${region}_3_enemy`;
+      const st = WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === `${region}_3`)!;
+      expect(st.type, id).toBe('treasure');
+      expect(st.enemy.id).toBe(id);
+      expect(enemyArtKey(id), id).toBe(key);
+      expect(ENEMY_ART_META[key]).toBeTruthy();
+      expect(ENEMY_ART_LAYOUT[key]).toBeTruthy();
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, key).toBe(key === 'sarnic_hazinesi');
+    }
+    expect(new Set(T.map((x) => x[1])).size).toBe(5);
+  });
+  it('aynı bölgelerin normal/elit/boss eşleşmeleri korunur', () => {
+    expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
+    expect(enemyArtKey('thorn_citadel_10_enemy')).toBe('diken_taci');
+    expect(enemyArtKey('glass_forest_5_enemy')).toBeNull();
+    expect(enemyArtKey('copper_mines_7_enemy')).toBeNull();
   });
 });
