@@ -890,5 +890,45 @@
  "time_rift_10_enemy": {
   "aspect": 0.915,
   "footFrac": 0.9875
+ },
+ "ashen_7_enemy": {
+  "aspect": 1.278,
+  "footFrac": 0.9904
+ },
+ "astral_5_enemy": {
+  "aspect": 0.985,
+  "footFrac": 1.0
+ },
+ "crystal_caves_5_enemy": {
+  "aspect": 1.7094,
+  "footFrac": 1.0
+ },
+ "desert_5_enemy": {
+  "aspect": 0.8025,
+  "footFrac": 0.9975
+ },
+ "moonlit_7_enemy": {
+  "aspect": 1.1799,
+  "footFrac": 0.9941
+ },
+ "ocean_7_enemy": {
+  "aspect": 1.0782,
+  "footFrac": 1.0
+ },
+ "ruins_6_enemy": {
+  "aspect": 0.935,
+  "footFrac": 0.9975
+ },
+ "sky_7_enemy": {
+  "aspect": 0.99,
+  "footFrac": 0.995
+ },
+ "swamp_5_enemy": {
+  "aspect": 1.7699,
+  "footFrac": 0.9823
+ },
+ "swamp_7_enemy": {
+  "aspect": 1.1019,
+  "footFrac": 0.9945
  }
 }

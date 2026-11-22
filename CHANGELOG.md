@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.48.0 — Elit çizimleri paket 1
+- 10 elit çizimi: Elit Uyanmış Rün Heykeli, Gök Okçusu, Batık Gemi Hayaleti (süzülür), Kum Solucanı, Bataklık Kurbağası, Çürümüş Golem, Gece Avcısı, Kristal Yarasası (süzülür), Lav Akrebi ve Yıldız Paraziti (süzülür) (`<aşama>_enemy.webp`; düşman kimliği = çizim anahtarı = dosya adı). Toplam 223 çizim.
+- Saldırı profilleri, zorluk, ödüller ve kayıt davranışı değişmedi.
+
 ## v1.47.0 — Bölge bossları paket 2 (aşama 10)
 - 13 boss çizimi: Yıldızların Anası Astraia (süzülür), Zaman Muhafızı Chronos, Kanlı Ay Kraliçesi Lilith, Demir İmparator Malakar, Kar Tanrıçası Skadi, Rüya Yiyici Morpheus, Işık ve Gölge Yargıcı Aion, Kadim Ejderha Kralı Bahamut, Gök Tanrısı Valorian, Anka Kraliçesi Pyria (süzülür), Fırtına Tanrısı Tempest, Ölümsüzlük Muhafızı Eternia ve Sonsuzluk İmparatoru Valdris (`<aşama>_enemy.webp`; düşman kimliği = çizim anahtarı = dosya adı). Paket 1 ile aynı işleme/ayarlar. Toplam 213 çizim.
 - Boss kimliği, fazlar, saldırı türü, zayıflık, direnç, ödül ve kayıt davranışı değişmedi.
