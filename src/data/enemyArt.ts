@@ -265,6 +265,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   amber_dunes_9_enemy: 'amber_dunes_9',
   sunken_archive_5_enemy: 'sunken_archive_5',
   sunken_archive_7_enemy: 'sunken_archive_7',
+  // v1.38.0: elit karşılaşmalar 21–30 (kimlik = aşama kimliği + _enemy)
+  sunken_archive_9_enemy: 'sunken_archive_9',
+  salt_bastion_5_enemy: 'salt_bastion_5',
+  salt_bastion_7_enemy: 'salt_bastion_7',
+  salt_bastion_9_enemy: 'salt_bastion_9',
+  obsidian_harbor_5_enemy: 'obsidian_harbor_5',
+  obsidian_harbor_7_enemy: 'obsidian_harbor_7',
+  obsidian_harbor_9_enemy: 'obsidian_harbor_9',
+  black_tide_5_enemy: 'black_tide_5',
+  black_tide_7_enemy: 'black_tide_7',
+  black_tide_9_enemy: 'black_tide_9',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -410,6 +421,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   // v1.35.0 hazine karşılaşmaları (240'lık doku)
   // v1.36.0 elit karşılaşmalar (240'lık doku; elitler normal düşmandan büyük çizilir)
   // v1.37.0 elit karşılaşmalar (240'lık doku)
+  // v1.38.0 elit karşılaşmalar (240'lık doku)
+  sunken_archive_9: { height: 0.76, maxWidth: 0.88, glow: '#2dd4bf', breathSec: 3.4 },
+  salt_bastion_5: { height: 0.44, maxWidth: 0.96, glow: '#e5e7eb', breathSec: 3.4 },
+  salt_bastion_7: { height: 0.74, maxWidth: 0.94, glow: '#f9a8d4', breathSec: 3.4 },
+  salt_bastion_9: { height: 0.76, maxWidth: 0.84, glow: '#c4b5fd', breathSec: 3.4 },
+  obsidian_harbor_5: { height: 0.76, maxWidth: 0.9, glow: '#f87171', breathSec: 3.4 },
+  obsidian_harbor_7: { height: 0.76, maxWidth: 0.86, glow: '#a78bfa', breathSec: 3.4 },
+  obsidian_harbor_9: { height: 0.54, maxWidth: 0.96, glow: '#818cf8', breathSec: 3.4 },
+  black_tide_5: { height: 0.58, maxWidth: 0.96, glow: '#2dd4bf', breathSec: 3.4 },
+  black_tide_7: { height: 0.76, maxWidth: 0.88, glow: '#4ade80', breathSec: 3.4 },
+  black_tide_9: { height: 0.6, maxWidth: 0.96, glow: '#c084fc', breathSec: 3.4 },
   mist_aqueduct_7: { height: 0.76, maxWidth: 0.9, glow: '#94a3b8', breathSec: 3.4 },
   mist_aqueduct_9: { height: 0.7, maxWidth: 0.92, glow: '#7dd3fc', breathSec: 3.4 },
   thorn_citadel_5: { height: 0.72, maxWidth: 0.92, glow: '#84cc16', breathSec: 3.4 },

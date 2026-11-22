@@ -578,5 +578,45 @@
  "sunken_archive_7": {
   "aspect": 0.7422,
   "footFrac": 0.998
+ },
+ "sunken_archive_9": {
+  "aspect": 0.9062,
+  "footFrac": 0.9777
+ },
+ "salt_bastion_5": {
+  "aspect": 1.8065,
+  "footFrac": 0.9597
+ },
+ "salt_bastion_7": {
+  "aspect": 1.0159,
+  "footFrac": 0.9932
+ },
+ "salt_bastion_9": {
+  "aspect": 0.8839,
+  "footFrac": 0.9955
+ },
+ "obsidian_harbor_5": {
+  "aspect": 1.009,
+  "footFrac": 0.9977
+ },
+ "obsidian_harbor_7": {
+  "aspect": 0.9911,
+  "footFrac": 0.9955
+ },
+ "obsidian_harbor_9": {
+  "aspect": 1.2514,
+  "footFrac": 0.9497
+ },
+ "black_tide_5": {
+  "aspect": 1.2207,
+  "footFrac": 0.9673
+ },
+ "black_tide_7": {
+  "aspect": 0.9754,
+  "footFrac": 0.9955
+ },
+ "black_tide_9": {
+  "aspect": 1.1947,
+  "footFrac": 0.9893
  }
 }
