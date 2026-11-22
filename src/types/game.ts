@@ -684,6 +684,8 @@ export interface GameSaveState {
   companions: CompanionSave;
   /** 2× savaş hızı açılışı (kalıcı) ve açılış bildiriminin gösterilip gösterilmediği */
   speed: { unlocked: boolean; noticeShown: boolean };
+  /** Seviye iksirleri (küçük/orta/büyük) */
+  potions: { small: number; medium: number; large: number };
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
@@ -758,6 +760,8 @@ export interface BattleRewardSummary {
   mastery?: import('../data/mastery').MasteryOutcome;
   /** Elit zaferinden kazanılan yoldaş parçası */
   companionParts?: { companionId: CompanionId; parts: number; partName: string };
+  /** Bu zaferde düşen seviye iksirleri */
+  potions?: { small: number; medium: number; large: number };
 }
 
 export type ScreenRoute =

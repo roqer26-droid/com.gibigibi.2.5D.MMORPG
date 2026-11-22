@@ -216,11 +216,13 @@ export function applyEquipPlan(save: GameSaveState, plan: EquipPlan): ActionResu
   if (plan.unchanged) return unchanged(save, 'Mevcut ekipmanların önerilen kombinasyonda.');
 
   const invById = new Map(save.inventory.map((i) => [i.id, i]));
+  // Kuşanılmış eşya herhangi bir yuvada olabilir (ör. Yüzük 2'deki yüzük Yüzük 1'e taşınır)
+  const wornById = new Map<string, EquipmentItem>();
+  for (const w of Object.values(hero.equipped)) if (w) wornById.set(w.id, w);
   const proposedIds = new Set<string>();
-  for (const [slot, item] of Object.entries(plan.proposed) as [EquipmentSlot, EquipmentItem | undefined][]) {
+  for (const [, item] of Object.entries(plan.proposed) as [EquipmentSlot, EquipmentItem | undefined][]) {
     if (!item) continue;
-    const worn = hero.equipped[slot];
-    const available = worn?.id === item.id || invById.has(item.id);
+    const available = wornById.has(item.id) || invById.has(item.id);
     if (!available || proposedIds.has(item.id)) {
       return unchanged(save, 'Ekipman değişti, öneriyi yeniden hesapla.');
     }
@@ -236,7 +238,7 @@ export function applyEquipPlan(save: GameSaveState, plan: EquipPlan): ActionResu
   for (const [slot, item] of Object.entries(plan.proposed) as [EquipmentSlot, EquipmentItem | undefined][]) {
     if (!item) continue;
     // Çantadaki/kuşanılmış güncel eşya nesnesini kullan (geliştirme seviyesi vb. güncel kalsın)
-    const live = hero.equipped[slot]?.id === item.id ? hero.equipped[slot]! : invById.get(item.id)!;
+    const live = wornById.get(item.id) ?? invById.get(item.id)!;
     equipped[slot] = { ...live, slot };
   }
 

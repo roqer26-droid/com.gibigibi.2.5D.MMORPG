@@ -23,6 +23,7 @@ import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
 import type { DungeonId, RegionId, RelicId } from './types/game';
 import { generateEquipmentItem } from './data/items';
+import { addPotions, emptyPotions, rollPotionDrop, usePotion, type PotionSize } from './data/potions';
 import { rollDropRarity } from './data/loot';
 import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
@@ -362,6 +363,7 @@ export function App() {
       const didDrop =
         Boolean(stage.rewards.guaranteedRarity) || Math.random() <= stage.rewards.dropChance;
 
+      const potionDrop = rollPotionDrop(stage);
       let droppedItem: EquipmentItem | null = null;
       if (didDrop) {
         // Kahraman seviye sınırı (50) üzerindeki aşamalardan düşen eşyalar
@@ -408,6 +410,7 @@ export function App() {
           mastery: withMastery.mastery,
           companions: withParts.companions,
           speed: unlocked.speed,
+          potions: addPotions(prev.potions ?? emptyPotions(), potionDrop),
           gold: prev.gold + goldGained,
           crystals: prev.crystals + crystalsGained,
           completedStages,
@@ -435,7 +438,7 @@ export function App() {
         }, 550);
       }
 
-      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome, companionParts: partsGain ?? undefined };
+      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome, companionParts: partsGain ?? undefined, potions: potionDrop };
     },
     [save.activeHeroClass, save.heroes, activeLeagueOpponent, activeStage, setSave]
   );
@@ -496,6 +499,21 @@ export function App() {
     setSave(res.save);
     SoundEngine.playLootReveal(tier === 2);
     if (res.toast) pushToast(res.toast);
+  };
+
+  const handleUsePotion = (size: PotionSize) => {
+    const res = usePotion(saveRef.current, size);
+    if (res.ok) {
+      setSave(res.save);
+      SoundEngine.playLootReveal(size === 'large');
+      if ((res.levelsGained ?? 0) > 0) {
+        window.setTimeout(() => {
+          SoundEngine.playLevelUp();
+          setLevelUpPopup({ newLevel: res.newLevel!, levelsGained: res.levelsGained! });
+        }, 400);
+      }
+    }
+    pushToast(res.toast);
   };
 
   const handleUnlockCompanion = (id: CompanionId) => {
@@ -707,6 +725,7 @@ export function App() {
           onSelectHero={handleSelectHero}
           onUnlockHero={handleUnlockHero}
           onOpenSkillTree={() => setRoute('skills')}
+          onUsePotion={handleUsePotion}
         />
       )}
 

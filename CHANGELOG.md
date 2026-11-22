@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.32.0 — "En İyilerini Kuşan" düzeltmesi + Seviye İksirleri
+- **Hata düzeltmesi:** Plan bir yüzüğü Yüzük 2'den Yüzük 1'e taşıyorsa (ör. Yüzük 2'deki güçlü yüzük + çantadan daha iyi bir yüzük) "Kuşan" "Ekipman değişti,
+  öneriyi yeniden hesapla" diyerek hiçbir şey yapmıyordu. Kuşanılmış eşya artık herhangi bir yuvadan kullanılabilir sayılıyor. 300 rastgele senaryoluk taramada
+  57 başarısızlık → 0. Regresyon testi eklendi (düzeltmeden önceki kodda başarısız oluyor).
+- **Seviye İksirleri** (`src/data/potions.ts`, kayıt v12): küçük (≈⅓ seviye), orta (≈1,2 seviye), büyük (≈4 seviye). Her aşama zaferinde küçük iksir (%90, bazen 2 adet),
+  orta iksir belli ihtimalle (normal %18, elit/hazine %30, boss %45); büyük iksir YALNIZCA boss zaferinde %30. Zafer ekranında düşenler gösterilir.
+  Kahramanlar ekranının üstündeki panelden seçili kahramana uygulanır; seviye 50'de kullanılamaz. Eski kayıtlar boş iksir stoğuyla yüklenir.
+
 ## v1.31.1 — Savaşta dairesel + parlaması, +10 ilerlemesi
 - Savaşta kahramanın arkasındaki dikdörtgen ışık sütunu kaldırıldı (kademe 3+ aurası); yalnızca dairesel parlama kalır. Karakter/ekipman ekranındaki görünüm değişmedi.
 - +10'a ulaşan her ekipman (en çok 10) dairesel parlamayı güçlendirir ve çevresinde bir ışık parçacığı ekler; 10 ekipmanın tamamı +10 olunca

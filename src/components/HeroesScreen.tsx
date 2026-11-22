@@ -19,6 +19,7 @@ import { CLASS_SKILLS } from '../data/skills';
 import { heroConditionMet } from '../data/heroUnlocks';
 import { computeHeroBuild, xpRequiredForLevel } from '../utils/rpgLogic';
 import { HeroPaperdoll } from './HeroPaperdoll';
+import { POTION_META, POTION_SIZES, potionXp, type PotionSize } from '../data/potions';
 
 interface HeroesScreenProps {
   save: GameSaveState;
@@ -26,6 +27,7 @@ interface HeroesScreenProps {
   onSelectHero: (classId: HeroClassId) => void;
   onUnlockHero: (classId: HeroClassId) => void;
   onOpenSkillTree: () => void;
+  onUsePotion: (size: PotionSize) => void;
 }
 
 export const HeroesScreen: React.FC<HeroesScreenProps> = ({
@@ -34,6 +36,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
   onSelectHero,
   onUnlockHero,
   onOpenSkillTree,
+  onUsePotion,
 }) => {
   const [inspectId, setInspectId] = useState<HeroClassId>(save.activeHeroClass);
   /** Kart tıklanınca açılan tam ekran kahraman görünümü (tekrar basınca kapanır) */
@@ -367,6 +370,40 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="mx-auto mb-4 max-w-7xl rounded-2xl border border-emerald-500/25 bg-emerald-950/15 p-3" data-testid="potion-panel">
+          <div className="mb-2 flex items-baseline justify-between gap-2">
+            <span className="text-sm font-extrabold text-emerald-300">Seviye İksirleri</span>
+            <span className="text-[11px] text-slate-400">
+              {HERO_CLASSES[save.activeHeroClass].name} Sv.{save.heroes[save.activeHeroClass].level}
+              {save.heroes[save.activeHeroClass].level >= 50 ? ' • en üst seviye' : ''}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {POTION_SIZES.map((size) => {
+              const count = save.potions?.[size] ?? 0;
+              const lvl = save.heroes[save.activeHeroClass].level;
+              const off = count <= 0 || lvl >= 50;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  disabled={off}
+                  onClick={() => onUsePotion(size)}
+                  data-testid={`potion-${size}`}
+                  className="flex flex-col items-center gap-0.5 rounded-xl border px-1 py-2 text-center transition disabled:opacity-40"
+                  style={{ borderColor: `${POTION_META[size].color}88`, background: `${POTION_META[size].color}14` }}
+                >
+                  <span className="text-xs font-extrabold" style={{ color: POTION_META[size].color }}>
+                    {POTION_META[size].name.split(' ')[0]}
+                  </span>
+                  <span className="text-lg font-black text-white">×{count}</span>
+                  <span className="text-[10px] text-slate-300">+{potionXp(size, lvl).toLocaleString('tr-TR')} XP</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10px] leading-snug text-slate-400">Her aşama zaferinde küçük, bazen orta iksir düşer; büyük iksir yalnızca bosslardan düşer. Seçili kahramana uygulanır.</p>
+        </div>
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Sınıf kartları — dokununca açılır */}
           <div className="grid grid-cols-2 gap-2.5 lg:col-span-5">
