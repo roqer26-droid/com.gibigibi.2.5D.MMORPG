@@ -930,5 +930,45 @@
  "swamp_7_enemy": {
   "aspect": 1.1019,
   "footFrac": 0.9945
+ },
+ "astral_7_enemy": {
+  "aspect": 0.9775,
+  "footFrac": 1.0
+ },
+ "chaos_5_enemy": {
+  "aspect": 0.795,
+  "footFrac": 1.0
+ },
+ "chaos_7_enemy": {
+  "aspect": 1.7167,
+  "footFrac": 0.9485
+ },
+ "spirit_5_enemy": {
+  "aspect": 0.4925,
+  "footFrac": 1.0
+ },
+ "spirit_7_enemy": {
+  "aspect": 1.0638,
+  "footFrac": 0.9973
+ },
+ "star_gate_5_enemy": {
+  "aspect": 0.9675,
+  "footFrac": 0.9975
+ },
+ "star_gate_7_enemy": {
+  "aspect": 1.3378,
+  "footFrac": 0.99
+ },
+ "star_gate_9_enemy": {
+  "aspect": 0.78,
+  "footFrac": 0.995
+ },
+ "time_rift_5_enemy": {
+  "aspect": 1.0695,
+  "footFrac": 0.9973
+ },
+ "time_rift_9_enemy": {
+  "aspect": 1.1173,
+  "footFrac": 0.9972
  }
 }

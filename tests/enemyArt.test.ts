@@ -9,7 +9,7 @@ describe('düşman görselleri', () => {
   it('dört düşman kimliği var ve aşamalarda bulunuyor', () => {
     for (const id of Object.keys(ENEMY_ART_BY_ID)) expect(allEnemies.some((e) => e.id === id), id).toBe(true);
     for (const key of Object.values(ENEMY_ART_BY_ID)) {
-      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.5);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.45);
       expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.86);
     }
   });
@@ -43,7 +43,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
   });
   it('aynı arketipi paylaşan diğer düşmanlar eski çizimini korur', () => {
-    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'spirit_5_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
+    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'dreamscape_5_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
       expect(allEnemies.some((e) => e.id === id), id).toBe(true);
       expect(enemyArtKey(id), id).toBeNull();
     }
@@ -114,8 +114,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(335);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(223);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(345);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(233);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -630,7 +630,7 @@ describe('v1.46.0: bölge bossları paket 1 (aşama 8)', () => {
   it('aynı arketipi paylaşan diğer düşmanlar, önceki paketler ve havuz değişmez', () => {
     expect(enemyArtKey('dawn_core_9_enemy')).toBe('dawn_core_9');
     expect(enemyArtKey('sky_10_enemy')).not.toBe('sky_8_enemy');
-    for (const id of ['spirit_5_enemy', 'chaos_5_enemy', 'dreamscape_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
+    for (const id of ['dreamscape_5_enemy', 'light_shadow_5_enemy', 'gods_court_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
     expect(enemyArtKey('astral_10_enemy')).toBeNull();
   });
 });
@@ -683,5 +683,33 @@ describe('v1.48.0: elit çizimleri paket 1', () => {
     expect(enemyArtKey('sky_8_enemy')).toBe('sky_8_enemy');
     expect(enemyArtKey('swamp_9_enemy')).toBeNull();
     expect(enemyArtKey('desert_9_enemy')).toBeNull();
+  });
+});
+
+describe('v1.49.0: elit çizimleri paket 2', () => {
+  const IDS = ['astral_7', 'spirit_5', 'spirit_7', 'chaos_5', 'chaos_7', 'star_gate_5', 'star_gate_7', 'star_gate_9', 'time_rift_5', 'time_rift_9'];
+  it('10 elit: kimlik = çizim anahtarı = dosya adı; yalnızca Kayıp Ruh ve Kaos Parçacığı süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      const key = `${id}_enemy`;
+      expect(st.type, id).toBe('elite');
+      expect(st.enemy.id, id).toBe(key);
+      expect(ENEMY_ART_BY_ID[key], id).toBe(key);
+      expect(enemyArtKey(key)).toBe(key);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.45);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, id).toBe(id === 'spirit_5' || id === 'chaos_5');
+    }
+  });
+  it('aynı adlı düşmanlar kimliğine göre ayrı eşlenir (Meteor Golemi ×2, Yıldız Gezgini ×2, Dişli Golem ×2)', () => {
+    const name = (id: string) => WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === id)!.enemy.name;
+    for (const [a, b] of [['astral_7', 'star_gate_7'], ['star_gate_5', 'star_gate_9'], ['time_rift_5', 'time_rift_9']]) {
+      expect(name(a)).toBe(name(b));
+      expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
+    }
+    expect(enemyArtKey('astral_5_enemy')).toBe('astral_5_enemy');
+    expect(enemyArtKey('spirit_9_enemy')).toBeNull();
+    expect(enemyArtKey('chaos_9_enemy')).toBeNull();
   });
 });
