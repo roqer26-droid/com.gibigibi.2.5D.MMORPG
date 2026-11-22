@@ -498,5 +498,45 @@
  "safak_hazinesi": {
   "aspect": 1.0139,
   "footFrac": 0.9683
+ },
+ "glass_forest_5": {
+  "aspect": 0.834,
+  "footFrac": 0.9902
+ },
+ "glass_forest_7": {
+  "aspect": 1.2249,
+  "footFrac": 0.9904
+ },
+ "glass_forest_9": {
+  "aspect": 0.9219,
+  "footFrac": 0.9883
+ },
+ "silent_shore_5": {
+  "aspect": 1.0199,
+  "footFrac": 0.998
+ },
+ "silent_shore_7": {
+  "aspect": 0.8613,
+  "footFrac": 0.9941
+ },
+ "silent_shore_9": {
+  "aspect": 0.9453,
+  "footFrac": 0.9961
+ },
+ "copper_mines_5": {
+  "aspect": 1.047,
+  "footFrac": 0.998
+ },
+ "copper_mines_7": {
+  "aspect": 1.323,
+  "footFrac": 0.9793
+ },
+ "copper_mines_9": {
+  "aspect": 1.0199,
+  "footFrac": 0.996
+ },
+ "mist_aqueduct_5": {
+  "aspect": 0.8926,
+  "footFrac": 0.998
  }
 }

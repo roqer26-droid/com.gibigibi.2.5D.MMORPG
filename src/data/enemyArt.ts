@@ -243,6 +243,17 @@ export const ENEMY_ART_BY_ID: Record<string, EnemyArtKey> = {
   shattered_sky_3_enemy: 'kubbe_kalintisi',
   zero_threshold_3_enemy: 'esik_muhuru',
   dawn_core_3_enemy: 'safak_hazinesi',
+  // v1.36.0: ilk on elit karşılaşma (kimlik = aşama kimliği + _enemy; aynı türü paylaşan diğer aşamalar etkilenmez)
+  glass_forest_5_enemy: 'glass_forest_5',
+  glass_forest_7_enemy: 'glass_forest_7',
+  glass_forest_9_enemy: 'glass_forest_9',
+  silent_shore_5_enemy: 'silent_shore_5',
+  silent_shore_7_enemy: 'silent_shore_7',
+  silent_shore_9_enemy: 'silent_shore_9',
+  copper_mines_5_enemy: 'copper_mines_5',
+  copper_mines_7_enemy: 'copper_mines_7',
+  copper_mines_9_enemy: 'copper_mines_9',
+  mist_aqueduct_5_enemy: 'mist_aqueduct_5',
   ...Object.fromEntries(
     [
       'shadow_wolf', 'moss_sentinel', 'boss_forest_guardian', 'frost_wolf', 'mountain_yeti', 'crystal_ice_golem', 'elite_ice_golem',
@@ -386,6 +397,17 @@ export const ENEMY_ART_LAYOUT: Record<EnemyArtKey, EnemyArtLayout> = {
   sarnic_hazinesi: { height: 0.62, maxWidth: 0.9, glow: '#67e8f9', breathSec: 3.2, float: 0.04, bob: 0.012 },
   // v1.34.0 hazine karşılaşmaları (240'lık doku)
   // v1.35.0 hazine karşılaşmaları (240'lık doku)
+  // v1.36.0 elit karşılaşmalar (240'lık doku; elitler normal düşmandan büyük çizilir)
+  glass_forest_5: { height: 0.74, maxWidth: 0.82, glow: '#6ee7b7', breathSec: 3.4 },
+  glass_forest_7: { height: 0.58, maxWidth: 0.96, glow: '#34d399', breathSec: 3.4 },
+  glass_forest_9: { height: 0.76, maxWidth: 0.9, glow: '#4ade80', breathSec: 3.4 },
+  silent_shore_5: { height: 0.76, maxWidth: 0.88, glow: '#5eead4', breathSec: 3.4 },
+  silent_shore_7: { height: 0.76, maxWidth: 0.84, glow: '#f87171', breathSec: 3.4 },
+  silent_shore_9: { height: 0.76, maxWidth: 0.9, glow: '#94a3b8', breathSec: 3.4 },
+  copper_mines_5: { height: 0.74, maxWidth: 0.92, glow: '#fbbf24', breathSec: 3.4 },
+  copper_mines_7: { height: 0.5, maxWidth: 0.96, glow: '#fb923c', breathSec: 3.4 },
+  copper_mines_9: { height: 0.74, maxWidth: 0.92, glow: '#f87171', breathSec: 3.4 },
+  mist_aqueduct_5: { height: 0.76, maxWidth: 0.86, glow: '#7dd3fc', breathSec: 3.4 },
   aurora_emaneti: { height: 0.6, maxWidth: 0.92, glow: '#5eead4', breathSec: 3.2 },
   ruya_kavanozu: { height: 0.64, maxWidth: 0.9, glow: '#e879f9', breathSec: 3.2 },
   ayna_kutusu: { height: 0.7, maxWidth: 0.8, glow: '#bfdbfe', breathSec: 3.2 },

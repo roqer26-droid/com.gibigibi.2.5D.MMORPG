@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.36.0 — İlk on elit karşılaşma
+- Keskin Dal Bekçisi, Kristal Boynuz, Cam Kabuklu Dev (`glass_forest_5/7/9`), Sahil Nöbetçisi, Paslı Kaptan, Dalgakıran Devi (`silent_shore_5/7/9`), Çekiç Ustası, Bakır Böcek, Vagon Kıran
+  (`copper_mines_5/7/9`) ve Buhar Nöbetçisi (`mist_aqueduct_5`) çizimleri; her biri elit aşamanın `<aşama>_enemy` kimliğine bağlı. Toplam 135 çizim, 247 düşman kimliği.
+  Aynı türü paylaşan diğer aşamalar kendi eşleşmelerini korur. Ödüller, denge ve kayıt değişmedi.
+
 ## v1.35.0 — Üçüncü hazine seti (10 karşılaşma)
 - Aurora Emaneti (`aurora_vault_3_enemy`), Rüya Kavanozu (`dream_marsh_3_enemy`), Ayna Kutusu (`mirror_court_3_enemy`), Gözlem Sandığı (`midnight_observatory_3_enemy`),
   Güneş Çentiği (`hollow_sun_3_enemy`), Kuyruk Kristali (`comet_bridge_3_enemy`, süzülür), Mühürlü Lahit (`rune_necropolis_3_enemy`), Kubbe Kalıntısı (`shattered_sky_3_enemy`, süzülür),
