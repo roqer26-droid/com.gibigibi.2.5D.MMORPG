@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.55.0 — Hazine çizimleri paket 2
+- 12 hazine çizimi: Ebedi Saatin Sandığı (×2), Kızıl Ay Sandığı (×2), Demir Hazine Sandığı (×2), Buz Çekirdeği Sandığı (×2), Rüya Sandığı (×2, süzülür) ve Denge Sandığı (×2) (`<aşama>_enemy.webp`; aynı adlı sandıklar kendi aşama kimliğiyle). Toplam 299 çizim.
+- Saldırı animasyonları, savaş değerleri, ganimet kuralları ve yedek çizim değişmedi.
+
 ## v1.54.0 — Hazine çizimleri paket 1
 - 15 hazine çizimi: Donmuş Sandık Golemi, Obsidyen Kral Sandığı, Prizma Hazine Sandığı, Kaos Hazine Bekçisi, İnci Sandığı Bekçisi, Altın Firavun Sandığı, Bataklık Hazine Ruhu (süzülür), Aytaşı Sandığı Bekçisi, Elmas Hazine Golemi, Kül Altını Sandığı, Yıldız Çekirdeği Sandığı, Ruh Sandığı Bekçisi (süzülür), Mitik Kaos Sandığı ve iki Yıldız Tozu Sandığı (`<aşama>_enemy.webp`; ikisi kendi aşama kimliğiyle). Toplam 287 çizim.
 - Saldırı animasyonları, savaş değerleri, ganimet kuralları ve yedek çizim değişmedi.

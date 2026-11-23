@@ -1186,5 +1186,53 @@
  "volcano_7_enemy": {
   "aspect": 1.1392,
   "footFrac": 0.962
+ },
+ "blood_moon_3_enemy": {
+  "aspect": 1.6038,
+  "footFrac": 0.9481
+ },
+ "blood_moon_8_enemy": {
+  "aspect": 0.7059,
+  "footFrac": 0.9971
+ },
+ "dreamscape_3_enemy": {
+  "aspect": 1.1847,
+  "footFrac": 1.0
+ },
+ "dreamscape_8_enemy": {
+  "aspect": 1.828,
+  "footFrac": 1.0
+ },
+ "eternal_winter_3_enemy": {
+  "aspect": 1.1448,
+  "footFrac": 0.9899
+ },
+ "eternal_winter_8_enemy": {
+  "aspect": 1.4655,
+  "footFrac": 0.9655
+ },
+ "iron_inferno_3_enemy": {
+  "aspect": 1.3439,
+  "footFrac": 0.9842
+ },
+ "iron_inferno_8_enemy": {
+  "aspect": 1.2593,
+  "footFrac": 0.9333
+ },
+ "light_shadow_3_enemy": {
+  "aspect": 1.4719,
+  "footFrac": 1.0
+ },
+ "light_shadow_8_enemy": {
+  "aspect": 1.1111,
+  "footFrac": 0.9575
+ },
+ "time_rift_3_enemy": {
+  "aspect": 1.3386,
+  "footFrac": 0.9567
+ },
+ "time_rift_8_enemy": {
+  "aspect": 1.1003,
+  "footFrac": 0.9838
  }
 }
