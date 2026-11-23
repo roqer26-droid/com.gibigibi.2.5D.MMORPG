@@ -45,13 +45,13 @@ export const COSTUMES: readonly CostumeDef[] = [
   { id: 'mage_kor_akademisi', heroId: 'mage', name: 'Kor Akademisi' },
   { id: 'werewolf_kanli_ay', heroId: 'werewolf', name: 'Kanlı Ay' },
   { id: 'vampire_buz_soylusu', heroId: 'vampire', name: 'Buz Soylusu' },
-  { id: 'bigfoot_yosun_bekcisi', heroId: 'bigfoot', name: 'Yosun Bekçisi' },
+  { id: 'bigfoot_yosun_bekcisi', heroId: 'bigfoot', name: 'Mürdüm Geçidi' },
   { id: 'night_screecher_bakir_tutulma', heroId: 'night_screecher', name: 'Bakır Tutulma' },
-  { id: 'assassin_mor_sis', heroId: 'assassin', name: 'Mor Sis' },
+  { id: 'assassin_mor_sis', heroId: 'assassin', name: 'Yeşil Pençe' },
   { id: 'necromancer_zehirli_lahit', heroId: 'necromancer', name: 'Zehirli Lahit' },
-  { id: 'stormcaller_mercan_firtinasi', heroId: 'stormcaller', name: 'Mercan Fırtınası' },
+  { id: 'stormcaller_mercan_firtinasi', heroId: 'stormcaller', name: 'Kehribar Yıldırımı' },
   // v1.59.0: üçüncü paket (kalan 11 şampiyon için ek kostüm; önceki kostümler ve kayıtlı seçimler korunur)
-  { id: 'dragonheart_kor_pulu', heroId: 'dragonheart', name: 'Kor Pulu' },
+  { id: 'dragonheart_kor_pulu', heroId: 'dragonheart', name: 'Firuze Pul' },
   { id: 'fairy_yildiz_tozu', heroId: 'fairy', name: 'Yıldız Tozu' },
   { id: 'kitsune_ay_tilsimi', heroId: 'kitsune', name: 'Ay Tılsımı' },
   { id: 'naga_yakut_tahti', heroId: 'naga', name: 'Yakut Tahtı' },
@@ -59,9 +59,9 @@ export const COSTUMES: readonly CostumeDef[] = [
   { id: 'minotaur_buz_labirenti', heroId: 'minotaur', name: 'Buz Labirenti' },
   { id: 'golem_zumrut_cekirdek', heroId: 'golem', name: 'Zümrüt Çekirdek' },
   { id: 'phoenix_kutup_ankasi', heroId: 'phoenix', name: 'Kutup Ankası' },
-  { id: 'djinn_gece_sarayi', heroId: 'djinn', name: 'Gece Sarayı' },
+  { id: 'djinn_gece_sarayi', heroId: 'djinn', name: 'Kızıl Ferman' },
   { id: 'demon_soluk_alev', heroId: 'demon', name: 'Soluk Alev' },
-  { id: 'seraph_gunes_mabedi', heroId: 'seraph', name: 'Güneş Mabedi' },
+  { id: 'seraph_gunes_mabedi', heroId: 'seraph', name: 'Gece Yaprağı' },
 ];
 
 const BY_ID = new Map(COSTUMES.map((c) => [c.id, c]));

@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.60.0 — Kostüm renk düzeltmesi
+- Altı ikinci kostümün çizimi ve görünen adı yerinde güncellendi; dahili kimlikler değişmedi, bu yüzden kostümü daha önce seçen oyuncular yeni çizimi otomatik görür: Suikastçı Mor Sis → **Yeşil Pençe**, Kocaayak Yosun Bekçisi → **Mürdüm Geçidi**, Cin Gece Sarayı → **Kızıl Ferman**, Ejder Kalbi Kor Pulu → **Firuze Pul**, Serafim Güneş Mabedi → **Gece Yaprağı**, Fırtına Çağıran Mercan Fırtınası → **Kehribar Yıldırımı**.
+- Kostüm sayısı (44), animasyonlar ve oynanış değerleri değişmedi.
+
 ## v1.59.0 — Kostümler: üçüncü paket
 - Kalan 11 şampiyona yeni kostüm: Kor Pulu (Rhogar), Yıldız Tozu (Peri), Ay Tılsımı (Ruh Tilkisi), Yakut Tahtı (Naga), Mercan Ezgisi (Siren), Buz Labirenti (Minotor), Zümrüt Çekirdek (Kristal Golem), Kutup Ankası (Anka), Gece Sarayı (Cin), Soluk Alev (İblis) ve Güneş Mabedi (Serafim). Toplam 44 kostüm; 22 şampiyonun hepsinin iki kostümü var.
 - Mevcut kostüm sistemi üzerinden (liste satırı + dosya + `meta.json`); önceki kostümler ve kayıtlı seçimler korunur. Süzülen şampiyonlarda (Peri, Anka, Cin, Serafim) taban 1,0 ve mevcut hafif süzülme; nefes, parlama ve saldırı efektleri değişmedi.

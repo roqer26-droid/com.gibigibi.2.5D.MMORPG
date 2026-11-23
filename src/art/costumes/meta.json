@@ -88,11 +88,11 @@
   "footFrac": 0.9821
  },
  "assassin_mor_sis": {
-  "aspect": 0.5518,
+  "aspect": 0.5536,
   "footFrac": 0.9982
  },
  "bigfoot_yosun_bekcisi": {
-  "aspect": 0.9089,
+  "aspect": 0.9036,
   "footFrac": 1.0
  },
  "mage_kor_akademisi": {
@@ -116,7 +116,7 @@
   "footFrac": 0.9964
  },
  "stormcaller_mercan_firtinasi": {
-  "aspect": 0.6089,
+  "aspect": 0.6071,
   "footFrac": 0.9982
  },
  "vampire_buz_soylusu": {
@@ -140,7 +140,7 @@
   "footFrac": 1.0
  },
  "dragonheart_kor_pulu": {
-  "aspect": 0.6893,
+  "aspect": 0.6875,
   "footFrac": 0.9982
  },
  "fairy_yildiz_tozu": {

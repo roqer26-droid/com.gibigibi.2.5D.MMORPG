@@ -22,15 +22,15 @@ const EXPECTED: [string, string, string][] = [
 const SECOND: [string, string, string][] = [
   ['warrior', 'Kutup Çeliği', 'warrior_kutup_celigi'], ['paladin', 'Zümrüt Yemini', 'paladin_zumrut_yemini'], ['ranger', 'Gece İzcisi', 'ranger_gece_izcisi'],
   ['mage', 'Kor Akademisi', 'mage_kor_akademisi'], ['werewolf', 'Kanlı Ay', 'werewolf_kanli_ay'], ['vampire', 'Buz Soylusu', 'vampire_buz_soylusu'],
-  ['bigfoot', 'Yosun Bekçisi', 'bigfoot_yosun_bekcisi'], ['night_screecher', 'Bakır Tutulma', 'night_screecher_bakir_tutulma'], ['assassin', 'Mor Sis', 'assassin_mor_sis'],
-  ['necromancer', 'Zehirli Lahit', 'necromancer_zehirli_lahit'], ['stormcaller', 'Mercan Fırtınası', 'stormcaller_mercan_firtinasi'],
+  ['bigfoot', 'Mürdüm Geçidi', 'bigfoot_yosun_bekcisi'], ['night_screecher', 'Bakır Tutulma', 'night_screecher_bakir_tutulma'], ['assassin', 'Yeşil Pençe', 'assassin_mor_sis'],
+  ['necromancer', 'Zehirli Lahit', 'necromancer_zehirli_lahit'], ['stormcaller', 'Kehribar Yıldırımı', 'stormcaller_mercan_firtinasi'],
 ];
 
 const THIRD: [string, string, string][] = [
-  ['dragonheart', 'Kor Pulu', 'dragonheart_kor_pulu'], ['fairy', 'Yıldız Tozu', 'fairy_yildiz_tozu'], ['kitsune', 'Ay Tılsımı', 'kitsune_ay_tilsimi'],
+  ['dragonheart', 'Firuze Pul', 'dragonheart_kor_pulu'], ['fairy', 'Yıldız Tozu', 'fairy_yildiz_tozu'], ['kitsune', 'Ay Tılsımı', 'kitsune_ay_tilsimi'],
   ['naga', 'Yakut Tahtı', 'naga_yakut_tahti'], ['siren', 'Mercan Ezgisi', 'siren_mercan_ezgisi'], ['minotaur', 'Buz Labirenti', 'minotaur_buz_labirenti'],
-  ['golem', 'Zümrüt Çekirdek', 'golem_zumrut_cekirdek'], ['phoenix', 'Kutup Ankası', 'phoenix_kutup_ankasi'], ['djinn', 'Gece Sarayı', 'djinn_gece_sarayi'],
-  ['demon', 'Soluk Alev', 'demon_soluk_alev'], ['seraph', 'Güneş Mabedi', 'seraph_gunes_mabedi'],
+  ['golem', 'Zümrüt Çekirdek', 'golem_zumrut_cekirdek'], ['phoenix', 'Kutup Ankası', 'phoenix_kutup_ankasi'], ['djinn', 'Kızıl Ferman', 'djinn_gece_sarayi'],
+  ['demon', 'Soluk Alev', 'demon_soluk_alev'], ['seraph', 'Gece Yaprağı', 'seraph_gunes_mabedi'],
 ];
 
 describe('v1.45.0: kostümler', () => {
@@ -181,5 +181,34 @@ describe('v1.59.0: kostümler üçüncü paket (kalan 11 şampiyon)', () => {
     const r = setHeroCostume(s, hero, next.id).save;
     expect(computeHeroBuild(r.heroes[hero])).toEqual(before);
     expect(parseSaveString(JSON.stringify(r))!.heroes[hero].costumeId).toBe(next.id);
+  });
+});
+
+describe('v1.60.0: altı kostümün renk düzeltmesi (yerinde güncelleme)', () => {
+  const FIX: [string, string, string, string][] = [
+    ['assassin', 'assassin_mor_sis', 'Yeşil Pençe', 'Mor Sis'], ['bigfoot', 'bigfoot_yosun_bekcisi', 'Mürdüm Geçidi', 'Yosun Bekçisi'],
+    ['djinn', 'djinn_gece_sarayi', 'Kızıl Ferman', 'Gece Sarayı'], ['dragonheart', 'dragonheart_kor_pulu', 'Firuze Pul', 'Kor Pulu'],
+    ['seraph', 'seraph_gunes_mabedi', 'Gece Yaprağı', 'Güneş Mabedi'], ['stormcaller', 'stormcaller_mercan_firtinasi', 'Kehribar Yıldırımı', 'Mercan Fırtınası'],
+  ];
+  it('kimlikler aynı kalır, görünen ad yeni; toplam kostüm sayısı değişmez', () => {
+    expect(COSTUMES).toHaveLength(44);
+    for (const [hero, id, name, oldName] of FIX) {
+      const c = costumeById(id)!;
+      expect([c.heroId, c.id, c.name], id).toEqual([hero, id, name]);
+      expect(c.name).not.toBe(oldName);
+      expect(COSTUMES.some((x) => x.name === oldName), oldName).toBe(false);
+      expect(hasHeroArt(id) && heroArtKey(hero, id) === id, id).toBe(true);
+    }
+  });
+  it('bu kostümü daha önce seçmiş kayıt aynı kimlikle geçerli kalır ve yeni çizimi otomatik kullanır', () => {
+    for (const [hero, id] of FIX) {
+      const s = createInitialSaveState();
+      const saved = JSON.parse(JSON.stringify(s));
+      saved.heroes[hero].costumeId = id;
+      saved.heroUnlocks = [...new Set([...saved.heroUnlocks, hero])];
+      const loaded = parseSaveString(JSON.stringify(saved))!;
+      expect(loaded.heroes[hero].costumeId, id).toBe(id);
+      expect(heroArtKey(hero, loaded.heroes[hero].costumeId), id).toBe(id);
+    }
   });
 });
