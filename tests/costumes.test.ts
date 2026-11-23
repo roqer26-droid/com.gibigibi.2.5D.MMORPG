@@ -19,9 +19,16 @@ const EXPECTED: [string, string, string][] = [
   ['night_screecher', 'Fırtına Çığlığı', 'night_screecher_firtina_cigligi'],
 ];
 
+const SECOND: [string, string, string][] = [
+  ['warrior', 'Kutup Çeliği', 'warrior_kutup_celigi'], ['paladin', 'Zümrüt Yemini', 'paladin_zumrut_yemini'], ['ranger', 'Gece İzcisi', 'ranger_gece_izcisi'],
+  ['mage', 'Kor Akademisi', 'mage_kor_akademisi'], ['werewolf', 'Kanlı Ay', 'werewolf_kanli_ay'], ['vampire', 'Buz Soylusu', 'vampire_buz_soylusu'],
+  ['bigfoot', 'Yosun Bekçisi', 'bigfoot_yosun_bekcisi'], ['night_screecher', 'Bakır Tutulma', 'night_screecher_bakir_tutulma'], ['assassin', 'Mor Sis', 'assassin_mor_sis'],
+  ['necromancer', 'Zehirli Lahit', 'necromancer_zehirli_lahit'], ['stormcaller', 'Mercan Fırtınası', 'stormcaller_mercan_firtinasi'],
+];
+
 describe('v1.45.0: kostümler', () => {
   it('22 dosya doğru şampiyonla, adla ve kimlikle eşleşir; hepsinin görseli ve ölçüsü vardır', () => {
-    expect(COSTUMES).toHaveLength(22);
+    expect(COSTUMES.slice(0, 22)).toHaveLength(22);
     for (const [hero, name, file] of EXPECTED) {
       const c = costumeById(file)!;
       expect(c, file).toBeTruthy();
@@ -31,8 +38,8 @@ describe('v1.45.0: kostümler', () => {
       expect(HERO_ART_META[file].aspect).toBeGreaterThan(0.4);
       expect(HERO_ART_META[file].footFrac).toBeGreaterThan(0.9);
     }
-    // 22 şampiyonun her birinin tam bir kostümü; aynı şampiyon tek kayıttan okunur
-    for (const h of HERO_CLASS_LIST) expect(costumesForHero(h.id).map((c) => c.id), h.id).toHaveLength(1);
+    // ilk sette her şampiyonun birer kostümü vardı; v1.58.0 ile 11 şampiyona ikinci kostüm eklendi (tek kayıttan okunur)
+    for (const h of HERO_CLASS_LIST) expect(costumesForHero(h.id).map((c) => c.id), h.id).toHaveLength(SECOND.some(([hh]) => hh === h.id) ? 2 : 1);
     // klasördeki dosyalar = tanımlı kostümler (dosya adı kaynak)
     const files = readdirSync('src/art/costumes').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     expect(files).toEqual(COSTUMES.map((c) => c.id).sort());
@@ -107,5 +114,38 @@ describe('v1.45.0: kostümler', () => {
       expect(parseSaveString(JSON.stringify(broken))!.heroes[a].costumeId, String(bad)).toBeUndefined();
       expect(sanitizeSave(broken).heroes[a].costumeId).toBeUndefined();
     }
+  });
+});
+
+describe('v1.58.0: ikinci kostüm seti (11 yeni kostüm)', () => {
+  it('11 dosya doğru şampiyonla, adla ve kimlikle eşleşir (night_screecher tek parça); ilk set korunur', () => {
+    expect(COSTUMES).toHaveLength(33);
+    for (const [hero, name, file] of SECOND) {
+      const c = costumeById(file)!;
+      expect([c.heroId, c.name, c.id], file).toEqual([hero, name, file]);
+      expect(hasHeroArt(file), file).toBe(true);
+      expect(HERO_ART_META[file].aspect).toBeGreaterThan(0.45);
+      expect(isValidCostume(hero, file)).toBe(true);
+      expect(heroArtKey(hero, file)).toBe(file);
+    }
+    // ilk setin kostümleri ve sırası aynı; kayıtlı eski seçimler geçerli kalır
+    for (const [hero, , file] of EXPECTED) {
+      expect(isValidCostume(hero, file), file).toBe(true);
+      expect(costumesForHero(hero)[0].id).toBe(file);
+    }
+    const files = readdirSync('src/art/costumes').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
+    expect(files).toEqual(COSTUMES.map((c) => c.id).sort());
+  });
+  it('kostümler yalnızca görünümü değiştirir; ikinci kostüm giyilip eskisine dönülebilir, güç aynı kalır', () => {
+    const s = createInitialSaveState();
+    const hero = 'warrior' as const;
+    const before = computeHeroBuild(s.heroes[hero]);
+    const a = setHeroCostume(s, hero, 'warrior_koz_muhafizi').save;
+    const b = setHeroCostume(a, hero, 'warrior_kutup_celigi').save;
+    expect(b.heroes[hero].costumeId).toBe('warrior_kutup_celigi');
+    expect(computeHeroBuild(b.heroes[hero])).toEqual(before);
+    expect(parseSaveString(JSON.stringify(b))!.heroes[hero].costumeId).toBe('warrior_kutup_celigi');
+    expect(setHeroCostume(b, hero, 'warrior_koz_muhafizi').save.heroes[hero].costumeId).toBe('warrior_koz_muhafizi');
+    expect(setHeroCostume(b, hero, 'mage_kor_akademisi').save).toBe(b); // başka şampiyonun kostümü
   });
 });

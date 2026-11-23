@@ -38,6 +38,18 @@ export const COSTUMES: readonly CostumeDef[] = [
   { id: 'seraph_gece_mabedi', heroId: 'seraph', name: 'Gece Mabedi' },
   { id: 'bigfoot_kiragi_gezgini', heroId: 'bigfoot', name: 'Kırağı Gezgini' },
   { id: 'night_screecher_firtina_cigligi', heroId: 'night_screecher', name: 'Fırtına Çığlığı' },
+  // v1.58.0: ikinci set (11 şampiyon için ek kostüm; önceki kostümler ve kayıtlı seçimler korunur)
+  { id: 'warrior_kutup_celigi', heroId: 'warrior', name: 'Kutup Çeliği' },
+  { id: 'paladin_zumrut_yemini', heroId: 'paladin', name: 'Zümrüt Yemini' },
+  { id: 'ranger_gece_izcisi', heroId: 'ranger', name: 'Gece İzcisi' },
+  { id: 'mage_kor_akademisi', heroId: 'mage', name: 'Kor Akademisi' },
+  { id: 'werewolf_kanli_ay', heroId: 'werewolf', name: 'Kanlı Ay' },
+  { id: 'vampire_buz_soylusu', heroId: 'vampire', name: 'Buz Soylusu' },
+  { id: 'bigfoot_yosun_bekcisi', heroId: 'bigfoot', name: 'Yosun Bekçisi' },
+  { id: 'night_screecher_bakir_tutulma', heroId: 'night_screecher', name: 'Bakır Tutulma' },
+  { id: 'assassin_mor_sis', heroId: 'assassin', name: 'Mor Sis' },
+  { id: 'necromancer_zehirli_lahit', heroId: 'necromancer', name: 'Zehirli Lahit' },
+  { id: 'stormcaller_mercan_firtinasi', heroId: 'stormcaller', name: 'Mercan Fırtınası' },
 ];
 
 const BY_ID = new Map(COSTUMES.map((c) => [c.id, c]));

@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.58.0 — Kostümler: ikinci set
+- 11 şampiyona yeni kostüm: Kutup Çeliği (Savaşçı), Zümrüt Yemini (Şövalye), Gece İzcisi (Korucu), Kor Akademisi (Büyücü), Kanlı Ay (Kurt Adam), Buz Soylusu (Vampir), Yosun Bekçisi (Koca Ayak), Bakır Tutulma (Gecenin Çığırtkanı), Mor Sis (Suikastçı), Zehirli Lahit (Ölü Çağıran) ve Mercan Fırtınası (Fırtına Çağıran). Toplam 33 kostüm; bu 11 şampiyonun artık iki kostümü var.
+- Mevcut kostüm sistemi üzerinden: yalnızca `costumes.ts` listesine satır + `src/art/costumes/` dosyası + `meta.json`. Önceki kostümler ve kayıtlı seçimler korunur; nefes, parlama, saldırı efektleri ve hizalama değişmedi.
+
 ## v1.57.0 — Kristal taş seti
 - Savaş tahtasının altı temel taşı yeni kristal görselleriyle güncellendi (`src/art/gems/gem_*.png`, 128×128 şeffaf, merkez hizalı). Dosya adı = Phaser doku anahtarı (`gem_fire`, `gem_frost`, `gem_nature`, `gem_lightning`, `gem_arcane`, `gem_golden`); `src/data/gemArt.ts`.
 - Dokular `BattleScene.preload` içinde tahta kurulmadan önce yüklenir. Bir doku yüklenemezse o taş için eski çizim işlevi (`createGemTextures`) yedek olarak çalışır. Tek dosyalık HTML çıktısında PNG'ler gömülüdür.

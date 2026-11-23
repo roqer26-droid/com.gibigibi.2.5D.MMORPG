@@ -86,5 +86,49 @@
  "werewolf_ay_pencesi": {
   "aspect": 0.8018,
   "footFrac": 0.9821
+ },
+ "assassin_mor_sis": {
+  "aspect": 0.5518,
+  "footFrac": 0.9982
+ },
+ "bigfoot_yosun_bekcisi": {
+  "aspect": 0.9089,
+  "footFrac": 1.0
+ },
+ "mage_kor_akademisi": {
+  "aspect": 0.6321,
+  "footFrac": 0.9946
+ },
+ "necromancer_zehirli_lahit": {
+  "aspect": 0.7875,
+  "footFrac": 1.0
+ },
+ "night_screecher_bakir_tutulma": {
+  "aspect": 1.039,
+  "footFrac": 1.0
+ },
+ "paladin_zumrut_yemini": {
+  "aspect": 0.7071,
+  "footFrac": 0.9929
+ },
+ "ranger_gece_izcisi": {
+  "aspect": 0.7143,
+  "footFrac": 0.9964
+ },
+ "stormcaller_mercan_firtinasi": {
+  "aspect": 0.6089,
+  "footFrac": 0.9982
+ },
+ "vampire_buz_soylusu": {
+  "aspect": 0.7071,
+  "footFrac": 0.9911
+ },
+ "warrior_kutup_celigi": {
+  "aspect": 0.6714,
+  "footFrac": 0.9982
+ },
+ "werewolf_kanli_ay": {
+  "aspect": 0.7964,
+  "footFrac": 0.9786
  }
 }
