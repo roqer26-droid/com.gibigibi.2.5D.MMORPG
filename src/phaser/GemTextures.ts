@@ -178,6 +178,10 @@ const GEM_PALETTES: Record<
   },
 };
 
+/**
+ * Taş dokularını çizer. Savaş sahnesi `gem_<tür>` görsellerini önceden yükler (bkz. `src/data/gemArt.ts`); burada yalnızca
+ * yüklenemeyen/eksik olan taşlar için eski çizim işlevi yedek olarak çalışır. Özel taş ve donma katmanları her zaman buradan çizilir.
+ */
 export function createGemTextures(scene: Phaser.Scene) {
   const types: GemType[] = ['fire', 'frost', 'nature', 'lightning', 'arcane', 'golden'];
   const cx = TEX_SIZE / 2;
@@ -254,6 +258,24 @@ export function createGemTextures(scene: Phaser.Scene) {
       ctx.save();
       ctx.translate(cx, cy);
       if (sp === 'line_v') ctx.rotate(Math.PI / 2);
+      // Koyu dış çizgi: açık renkli taşların (Yıldırım, Altın) üzerinde ok okunaklı kalsın
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.lineWidth = 10;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-50, 0);
+      ctx.lineTo(50, 0);
+      ctx.stroke();
+      for (const dir of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(dir * 61, 0);
+        ctx.lineTo(dir * 34, -15);
+        ctx.lineTo(dir * 34, 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
       // Glowing arrow beams left & right
       ctx.strokeStyle = '#ffffff';
       ctx.shadowColor = '#fde047';
@@ -281,6 +303,19 @@ export function createGemTextures(scene: Phaser.Scene) {
       ctx.restore();
     } else if (sp === 'nova') {
       ctx.save();
+      // Koyu dış çizgi (okunaklılık)
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 46, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = (Math.PI / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * 34, cy + Math.sin(a) * 34);
+        ctx.lineTo(cx + Math.cos(a) * 54, cy + Math.sin(a) * 54);
+        ctx.stroke();
+      }
       ctx.strokeStyle = '#fde047';
       ctx.shadowColor = '#f97316';
       ctx.shadowBlur = 16;

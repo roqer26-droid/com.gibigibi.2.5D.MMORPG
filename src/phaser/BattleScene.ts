@@ -19,6 +19,7 @@ import { ComputedHeroBuild } from '../utils/rpgLogic';
 import { computeEnchantAura, HERO_TEX_SIZE, heroAuraGeometry } from './HeroRenderer';
 import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
+import { GEM_ART_URL, GEM_TYPES, gemTextureKey } from '../data/gemArt';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
@@ -357,6 +358,12 @@ export class BattleScene extends Phaser.Scene {
   public preload() {
     if (this.initData?.arenaImage) {
       this.load.image('hunt_arena', this.initData.arenaImage);
+    }
+    // Taş dokuları tahta kurulmadan önce yüklenir; yüklenemeyen taş için create()'teki createGemTextures yedek çizimi kullanır
+    for (const type of GEM_TYPES) {
+      const key = gemTextureKey(type);
+      const url = GEM_ART_URL[key];
+      if (url && !this.textures.exists(key)) this.load.image(key, url);
     }
   }
 

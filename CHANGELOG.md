@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.57.0 — Kristal taş seti
+- Savaş tahtasının altı temel taşı yeni kristal görselleriyle güncellendi (`src/art/gems/gem_*.png`, 128×128 şeffaf, merkez hizalı). Dosya adı = Phaser doku anahtarı (`gem_fire`, `gem_frost`, `gem_nature`, `gem_lightning`, `gem_arcane`, `gem_golden`); `src/data/gemArt.ts`.
+- Dokular `BattleScene.preload` içinde tahta kurulmadan önce yüklenir. Bir doku yüklenemezse o taş için eski çizim işlevi (`createGemTextures`) yedek olarak çalışır. Tek dosyalık HTML çıktısında PNG'ler gömülüdür.
+- Özel taş okları ve nova halkasına koyu dış çizgi eklendi (açık renkli Yıldırım/Altın taşlarında okunaklılık). Donma katmanı, seçili taş çerçevesi ve hamle ipuçları aynı.
+- Taş kimlikleri, düşme oranları, eşleşme kuralları ve savaş etkileri değişmedi.
+
 ## v1.56.0 — Hazine çizimleri paket 3 (son hazineler)
 - 12 hazine çizimi: Ejder Hazinesi (×2), Kutsal Hazine (×2), Yeniden Doğuş Sandığı (×2, 8. aşama süzülür), Fırtına Sandığı (×2, 8. aşama süzülür), Ölümsüzlük Sandığı (×2) ve Sonsuzluk Sandığı (×2) (`<aşama>_enemy.webp`). Bununla oyundaki tüm karşılaşmalar özel çizimli ya da havuz çizimli; eski vektör çizime düşen aşama kalmadı. Toplam 311 çizim.
 - Yayın boyutu için tüm düşman WebP'leri en uzun kenar 320 px'e indirildi (kalite 58, alfa 55); yeni çizimler de aynı ayarda. Saldırı efektleri, ganimet ve yedek çizim davranışı değişmedi.
