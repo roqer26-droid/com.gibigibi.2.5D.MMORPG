@@ -54,7 +54,7 @@ export const COSTUMES: readonly CostumeDef[] = [
   { id: 'dragonheart_kor_pulu', heroId: 'dragonheart', name: 'Firuze Pul' },
   { id: 'fairy_yildiz_tozu', heroId: 'fairy', name: 'Yıldız Tozu' },
   { id: 'kitsune_ay_tilsimi', heroId: 'kitsune', name: 'Ay Tılsımı' },
-  { id: 'naga_yakut_tahti', heroId: 'naga', name: 'Yakut Tahtı' },
+  { id: 'naga_yakut_tahti', heroId: 'naga', name: 'Safir Gelgit' },
   { id: 'siren_mercan_ezgisi', heroId: 'siren', name: 'Mercan Ezgisi' },
   { id: 'minotaur_buz_labirenti', heroId: 'minotaur', name: 'Buz Labirenti' },
   { id: 'golem_zumrut_cekirdek', heroId: 'golem', name: 'Zümrüt Çekirdek' },

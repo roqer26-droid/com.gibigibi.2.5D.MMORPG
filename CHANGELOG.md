@@ -4,6 +4,9 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.61.0 — Naga kostümü: Safir Gelgit
+- Naga'nın ikinci kostümü Yakut Tahtı → **Safir Gelgit** olarak yeniden adlandırıldı ve çizimi güncellendi. Dahili kimlik (`naga_yakut_tahti`) korundu; kostümü daha önce açan/seçen oyuncular yeni görünümü otomatik alır.
+
 ## v1.60.0 — Kostüm renk düzeltmesi
 - Altı ikinci kostümün çizimi ve görünen adı yerinde güncellendi; dahili kimlikler değişmedi, bu yüzden kostümü daha önce seçen oyuncular yeni çizimi otomatik görür: Suikastçı Mor Sis → **Yeşil Pençe**, Kocaayak Yosun Bekçisi → **Mürdüm Geçidi**, Cin Gece Sarayı → **Kızıl Ferman**, Ejder Kalbi Kor Pulu → **Firuze Pul**, Serafim Güneş Mabedi → **Gece Yaprağı**, Fırtına Çağıran Mercan Fırtınası → **Kehribar Yıldırımı**.
 - Kostüm sayısı (44), animasyonlar ve oynanış değerleri değişmedi.

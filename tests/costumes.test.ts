@@ -28,7 +28,7 @@ const SECOND: [string, string, string][] = [
 
 const THIRD: [string, string, string][] = [
   ['dragonheart', 'Firuze Pul', 'dragonheart_kor_pulu'], ['fairy', 'Yıldız Tozu', 'fairy_yildiz_tozu'], ['kitsune', 'Ay Tılsımı', 'kitsune_ay_tilsimi'],
-  ['naga', 'Yakut Tahtı', 'naga_yakut_tahti'], ['siren', 'Mercan Ezgisi', 'siren_mercan_ezgisi'], ['minotaur', 'Buz Labirenti', 'minotaur_buz_labirenti'],
+  ['naga', 'Safir Gelgit', 'naga_yakut_tahti'], ['siren', 'Mercan Ezgisi', 'siren_mercan_ezgisi'], ['minotaur', 'Buz Labirenti', 'minotaur_buz_labirenti'],
   ['golem', 'Zümrüt Çekirdek', 'golem_zumrut_cekirdek'], ['phoenix', 'Kutup Ankası', 'phoenix_kutup_ankasi'], ['djinn', 'Kızıl Ferman', 'djinn_gece_sarayi'],
   ['demon', 'Soluk Alev', 'demon_soluk_alev'], ['seraph', 'Gece Yaprağı', 'seraph_gunes_mabedi'],
 ];
@@ -210,5 +210,21 @@ describe('v1.60.0: altı kostümün renk düzeltmesi (yerinde güncelleme)', () 
       expect(loaded.heroes[hero].costumeId, id).toBe(id);
       expect(heroArtKey(hero, loaded.heroes[hero].costumeId), id).toBe(id);
     }
+  });
+});
+
+describe('v1.61.0: Naga ikinci kostümü Safir Gelgit (yerinde güncelleme)', () => {
+  it('dahili kimlik aynı, görünen ad yeni; eski ad listede yok; eski seçimli kayıt geçerli', () => {
+    const c = costumeById('naga_yakut_tahti')!;
+    expect([c.heroId, c.id, c.name]).toEqual(['naga', 'naga_yakut_tahti', 'Safir Gelgit']);
+    expect(COSTUMES.some((x) => x.name === 'Yakut Tahtı')).toBe(false);
+    expect(COSTUMES).toHaveLength(44);
+    expect(costumesForHero('naga').map((x) => x.name)).toEqual(['Zümrüt Taht', 'Safir Gelgit']);
+    const s = createInitialSaveState();
+    const saved = JSON.parse(JSON.stringify(s));
+    saved.heroes.naga.costumeId = 'naga_yakut_tahti';
+    saved.heroUnlocks = [...new Set([...saved.heroUnlocks, 'naga'])];
+    const loaded = parseSaveString(JSON.stringify(saved))!;
+    expect(heroArtKey('naga', loaded.heroes.naga.costumeId)).toBe('naga_yakut_tahti');
   });
 });
