@@ -4,6 +4,9 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.72.0 — Bekleme döngüleri 0,5 saniye daha kısaldı
+- `IDLE_LOOP_REDUCTION_MS` 1000 → 1500: tüm idle sheet'ler manifestteki süreden 1,5 sn kısa oynar (3,75 sn → 2,25 sn; 4 sn → 2,5 sn; 3,5 sn → 2 sn; 4,5 sn → 3 sn).
+
 ## v1.71.0 — Bekleme döngüleri 1 saniye kısaldı
 - Tüm idle sheet'ler manifestteki süreden 1 sn kısa oynar (örn. 3,75 sn → 2,75 sn; 4,5 sn → 3,5 sn): kare dizisi aynı, oynatma hızı orantılı artar. Ayar `IDLE_LOOP_REDUCTION_MS` (`src/data/heroIdle.ts`); 0 yapılırsa manifest hızına döner.
 

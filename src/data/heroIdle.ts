@@ -32,7 +32,7 @@ export const IDLE_ORIGIN: { x: number; y: number } = manifest.origin;
  * Döngü süresinden düşülen miktar (ms): tüm sheet'ler manifestteki süreden bu kadar kısa sürede oynar
  * (dizideki kare sayısı aynı kalır, oynatma hızı orantılı artar). 0 yapılırsa manifest hızına döner.
  */
-export const IDLE_LOOP_REDUCTION_MS = 1000;
+export const IDLE_LOOP_REDUCTION_MS = 1500;
 const tempo = (durationMs: number) => (durationMs > IDLE_LOOP_REDUCTION_MS * 2 ? durationMs / (durationMs - IDLE_LOOP_REDUCTION_MS) : 1);
 
 export const IDLE_DEFAULT_SPEC: IdleSpec = {
