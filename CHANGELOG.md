@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.65.0 — Kahramanlar 13–16 çizilmiş bekleme animasyonları
+- Peri, Ruh Tilkisi, Naga ve Siren için 12 yeni sheet (varsayılan + 2'şer kostüm); önceki paketlerin 36 kaydı korunur (toplam 48). 4×2 ızgarada 8 poz (320×384); `frameSequence` 12 FPS, 4,5 sn döngü, manifest `origin`; sheet oynarken esnetme ve ayrı süzülme (bob) kapalı — Peri ve Siren'in hafif süzülmesi karelerde.
+- `naga_safir_gelgit` → mevcut `naga_yakut_tahti` kimliğine eşlendi (kayıtlar bozulmaz). Saldırı/hasar sonrası seçili kostümün bekleme döngüsüne dönülür.
+
 ## v1.64.0 — Kahramanlar 09–12 çizilmiş bekleme animasyonları
 - Ölüm Çağıran, Suikastçı, Fırtına Çağıran ve Ejderkalp için 12 yeni sheet (varsayılan + 2'şer kostüm); ilk sekiz kahramanın 24 kaydı korunur (toplam 36). 4×2 ızgarada 8 poz (320×384); manifest `frameSequence` 12 FPS, 4,5 sn döngü, `origin` ayak noktası; sheet oynarken esnetme kapalı. Saldırı/hasar sonrası seçili kostümün bekleme döngüsüne dönülür.
 - Paket kostüm adları mevcut kimliklere eşlendi: `yesil_pence`→`assassin_mor_sis`, `kehribar_yildirimi`→`stormcaller_mercan_firtinasi`, `firuze_pul`→`dragonheart_kor_pulu` (kayıtlar bozulmaz).

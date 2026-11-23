@@ -275,7 +275,68 @@
    "costume": "firuze_pul",
    "file": "dragonheart_firuze_pul_idle_drawn.webp",
    "key": "dragonheart_kor_pulu"
+  },
+  {
+   "hero": "fairy",
+   "costume": "default",
+   "file": "fairy_default_idle_drawn.webp"
+  },
+  {
+   "hero": "fairy",
+   "costume": "ciy_bahcesi",
+   "file": "fairy_ciy_bahcesi_idle_drawn.webp"
+  },
+  {
+   "hero": "fairy",
+   "costume": "yildiz_tozu",
+   "file": "fairy_yildiz_tozu_idle_drawn.webp"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "default",
+   "file": "kitsune_default_idle_drawn.webp"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "sonbahar_ruhu",
+   "file": "kitsune_sonbahar_ruhu_idle_drawn.webp"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "ay_tilsimi",
+   "file": "kitsune_ay_tilsimi_idle_drawn.webp"
+  },
+  {
+   "hero": "naga",
+   "costume": "default",
+   "file": "naga_default_idle_drawn.webp"
+  },
+  {
+   "hero": "naga",
+   "costume": "zumrut_taht",
+   "file": "naga_zumrut_taht_idle_drawn.webp"
+  },
+  {
+   "hero": "naga",
+   "costume": "safir_gelgit",
+   "file": "naga_safir_gelgit_idle_drawn.webp",
+   "key": "naga_yakut_tahti"
+  },
+  {
+   "hero": "siren",
+   "costume": "default",
+   "file": "siren_default_idle_drawn.webp"
+  },
+  {
+   "hero": "siren",
+   "costume": "ay_gelgiti",
+   "file": "siren_ay_gelgiti_idle_drawn.webp"
+  },
+  {
+   "hero": "siren",
+   "costume": "mercan_ezgisi",
+   "file": "siren_mercan_ezgisi_idle_drawn.webp"
   }
  ],
- "batch": 3
+ "batch": 4
 }

@@ -34,8 +34,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(counts).toEqual(manifest.frameHolds);
   });
 
-  it('36 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
-    expect(manifest.textures).toHaveLength(36);
+  it('48 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
+    expect(manifest.textures).toHaveLength(48);
     const files = readdirSync('src/art/heroes-idle').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     const keys: string[] = [];
     for (const t of manifest.textures) {
@@ -52,7 +52,7 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(files).toEqual(keys.sort());
     expect(idleSheetKey('warrior')).toBe('warrior');
     expect(idleSheetKey('warrior', 'mage_ay_kristali')).toBe('warrior'); // başka şampiyonun kostümü → varsayılan sheet
-    expect(idleSheetKey('fairy')).toBeNull(); // sheet'i olmayan kahraman
-    expect(idleSheetKey('fairy', 'fairy_yildiz_tozu')).toBeNull();
+    expect(idleSheetKey('phoenix')).toBeNull(); // sheet'i olmayan kahraman
+    expect(idleSheetKey('phoenix', 'fairy_yildiz_tozu')).toBeNull();
   });
 });
