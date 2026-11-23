@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.53.0 — Elit çizimleri paket 6 (son elitler)
+- 9 elit çizimi: Renk Ayıran Dev, Halka Nöbetçisi (süzülür), Çapa Avcısı, Yıldız Demircisi, Kutup Nöbetçisi, Zümrüt Buz Golemi, Mahzen Mızrağı (süzülür), Uykucu Avcı ve Mor Kamış Bekçisi (`<aşama>_enemy.webp`). Bununla tüm elit aşamalar özel çizimli. Toplam 272 çizim.
+- Saldırı profilleri, animasyonlar ve oynanış değerleri değişmedi.
+
 ## v1.52.0 — Elit çizimleri paket 5
 - 10 elit çizimi: Yıldırım Golemi (×2), Bulut Yaratığı (süzülür), Ruh Biçici (×2, süzülür), Zaman Yiyici (süzülür), Sonsuzluk Muhafızı (×2), Yargıç ve Prizma Terzisi (`<aşama>_enemy.webp`; aynı adlı düşmanlar kimliğine göre ayrı eşlenir). Toplam 263 çizim.
 - Yayın boyutu sınırı için tüm düşman WebP'leri en uzun kenar 360 px'e indirildi (kalite 64, alfa 60); yeni çizimler de aynı ayarda. Saldırı profilleri, animasyonlar ve oynanış değerleri değişmedi.

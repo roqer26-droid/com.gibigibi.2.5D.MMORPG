@@ -43,7 +43,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
   });
   it('aynı arketipi paylaşan diğer düşmanlar eski çizimini korur', () => {
-    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'iron_orbit_5_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
+    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'ocean_3_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
       expect(allEnemies.some((e) => e.id === id), id).toBe(true);
       expect(enemyArtKey(id), id).toBeNull();
     }
@@ -114,8 +114,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(375);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(263);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(384);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(272);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -153,7 +153,7 @@ describe('v1.24.0: beş yeni bölge düşmanı + ortak nefes', () => {
     expect(new Set(GROUPS.map((g) => g[1])).size).toBe(5);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları kendi görseline sahip değildir (aynı türü paylaşsalar da)', () => {
-    for (const id of ['iron_orbit_9_enemy']) {
+    for (const id of ['swamp_3_enemy']) {
       expect(enemyArtKey(id), id).toBeNull();
     }
   });
@@ -201,7 +201,7 @@ describe('v1.25.0: sıradaki beş genişleme düşmanı', () => {
     expect(total).toBe(25);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları ve önceki paket etkilenmez', () => {
-    for (const id of ['iron_orbit_5_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['ocean_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('thorn_citadel_8_enemy')).toBe('diken_kurt');
   });
@@ -236,7 +236,7 @@ describe('v1.26.0: üçüncü beşli düşman paketi', () => {
     for (const k of ['yanki_bosluk_avcisi', 'kor_semender', 'prizma_tas_nobetci', 'demir_yagmaci']) expect(ENEMY_ART_LAYOUT[k].bob ?? 0, k).toBe(0);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları ve önceki paketler etkilenmez', () => {
-    for (const id of ['iron_orbit_7_enemy', 'iron_orbit_9_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['desert_3_enemy', 'swamp_3_enemy', 'moonlit_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('amber_dunes_1_enemy')).toBe('kehribar_semender');
     expect(enemyArtKey('glass_forest_8_enemy')).toBe('cam_agac_ruhu');
   });
@@ -275,7 +275,7 @@ describe('v1.27.0: dördüncü beşli düşman seti', () => {
     expect(allEnemies.find((e) => e.id === 'mirror_court_1_enemy')!.visualArchetype).toBe(allEnemies.find((e) => e.id === 'midnight_observatory_1_enemy')!.visualArchetype);
   });
   it('hazine/elit/boss düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['aurora_vault_5_enemy', 'dream_marsh_7_enemy', 'iron_orbit_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['crystal_caves_3_enemy', 'chaos_3_enemy', 'desert_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('echo_terrace_1_enemy')).toBe('yanki_bosluk_avcisi');
   });
 });
@@ -310,7 +310,7 @@ describe('v1.28.0: 13 görsel, 33 karşılaşma', () => {
     for (const k of ['safak_ates_ruhu', 'sisin_mimari']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);
   });
   it('aynı bölgelerin hazine/elit düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['iron_orbit_5_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['ocean_3_enemy', 'moonlit_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('hollow_sun_8_enemy')).toBe('sonuk_ates_ruhu');
   });
@@ -340,7 +340,7 @@ describe('v1.29.0: paket 2, 12 bölge bossu', () => {
     expect(new Set(ids.map((i) => enemyArtKey(i))).size).toBe(25);
   });
   it('bu bölgelerin hazine/elit düşmanları etkilenmez', () => {
-    for (const id of ['prism_labyrinth_9_enemy', 'dream_marsh_7_enemy', 'iron_orbit_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['moonlit_3_enemy', 'chaos_3_enemy', 'swamp_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
   });
 });
 
@@ -372,7 +372,7 @@ describe('v1.30.0: son beş genişleme bossu, 25 genişleme bossu tamam', () => 
   it('aynı bölgelerin normal/elit/hazine eşleşmeleri korunur', () => {
     expect(enemyArtKey('comet_bridge_1_enemy')).toBe('kuyruklu_buz_golemi');
     expect(enemyArtKey('dawn_core_8_enemy')).toBe('safak_ates_ruhu');
-    for (const id of ['iron_orbit_7_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['desert_3_enemy', 'moonlit_3_enemy']) expect(enemyArtKey(id), id).toBeNull();
   });
 });
 
@@ -394,8 +394,8 @@ describe('v1.31.0: ilk beş genişleme hazine karşılaşması', () => {
   it('aynı bölgelerin normal/elit/boss eşleşmeleri korunur', () => {
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('thorn_citadel_10_enemy')).toBe('diken_taci');
-    expect(enemyArtKey('iron_orbit_5_enemy')).toBeNull();
-    expect(enemyArtKey('iron_orbit_7_enemy')).toBeNull();
+    expect(enemyArtKey('ocean_3_enemy')).toBeNull();
+    expect(enemyArtKey('desert_3_enemy')).toBeNull();
   });
 });
 
@@ -417,8 +417,8 @@ describe('v1.34.0: ikinci hazine seti', () => {
   it('aynı bölgelerin normal/elit/boss eşleşmeleri korunur; çizimsiz elitler çizimsiz kalır', () => {
     expect(enemyArtKey('amber_dunes_1_enemy')).toBe('kehribar_semender');
     expect(enemyArtKey('iron_orbit_10_enemy')).toBe('demir_gezegenin_kalbi');
-    expect(enemyArtKey('iron_orbit_9_enemy')).toBeNull();
-    expect(enemyArtKey('prism_labyrinth_9_enemy')).toBeNull();
+    expect(enemyArtKey('swamp_3_enemy')).toBeNull();
+    expect(enemyArtKey('moonlit_3_enemy')).toBeNull();
   });
 });
 
@@ -446,7 +446,7 @@ describe('v1.35.0: üçüncü hazine seti', () => {
     }
     expect(keys.size).toBeGreaterThanOrEqual(25);
     expect(enemyArtKey('dawn_core_8_enemy')).toBe('safak_ates_ruhu');
-    expect(enemyArtKey('aurora_vault_5_enemy')).toBeNull();
+    expect(enemyArtKey('crystal_caves_3_enemy')).toBeNull();
   });
 });
 
@@ -468,8 +468,8 @@ describe('v1.36.0: ilk on elit karşılaşma', () => {
     expect(enemyArtKey('glass_forest_3_enemy')).toBe('cam_kozasi');
     expect(enemyArtKey('glass_forest_10_enemy')).toBe('camorman_bekcisi');
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
-    expect(enemyArtKey('prism_labyrinth_9_enemy')).toBeNull();
-    expect(enemyArtKey('iron_orbit_5_enemy')).toBeNull();
+    expect(enemyArtKey('moonlit_3_enemy')).toBeNull();
+    expect(enemyArtKey('ocean_3_enemy')).toBeNull();
   });
 });
 
@@ -489,8 +489,8 @@ describe('v1.37.0: elit karşılaşmalar 11–20', () => {
   it('önceki elit/hazine eşleşmeleri ve çizimsiz kalan elitler korunur', () => {
     expect(enemyArtKey('glass_forest_5_enemy')).toBe('glass_forest_5');
     expect(enemyArtKey('aurora_vault_3_enemy')).toBe('aurora_emaneti');
-    expect(enemyArtKey('iron_orbit_7_enemy')).toBeNull();
-    expect(enemyArtKey('iron_orbit_9_enemy')).toBeNull();
+    expect(enemyArtKey('desert_3_enemy')).toBeNull();
+    expect(enemyArtKey('swamp_3_enemy')).toBeNull();
   });
 });
 
@@ -533,7 +533,7 @@ describe('v1.39.0: elit karşılaşmalar 31–40', () => {
     expect(enemyArtKey('echo_terrace_3_enemy')).toBe('ses_muhuru');
     expect(enemyArtKey('echo_terrace_1_enemy')).toBe('yanki_bosluk_avcisi');
     expect(enemyArtKey('echo_terrace_10_enemy')).toBe('bin_sesli_velora');
-    expect(enemyArtKey('iron_orbit_5_enemy')).toBeNull();
+    expect(enemyArtKey('ocean_3_enemy')).toBeNull();
   });
 });
 
@@ -594,12 +594,12 @@ describe('v1.42.0: elit karşılaşmalar 71–75 (son 5)', () => {
       expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'zero_threshold_9');
     }
   });
-  it('genişleme bölgelerindeki 75 elit aşamanın 66\'sı kendi çizimine bağlı; kalan 9 (41–50 paketi) henüz çizimsiz', () => {
+  it('genişleme bölgelerindeki 75 elit aşamanın hepsi özel çizimli (v1.53.0: 41–50 paketi tamamlandı)', () => {
     const ex = WORLD_REGIONS.slice(-25).flatMap((r) => r.stages).filter((s) => s.type === 'elite');
     expect(ex.length).toBe(75);
     const missing = ex.filter((s) => !enemyArtKey(s.enemy.id)).map((s) => s.id);
-    expect(missing).toEqual(['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']);
-    for (const id of missing) expect(enemyArtKey(id + '_enemy'), id).toBeNull();
+    expect(missing).toEqual([]);
+
   });
   it('önceki paketler ve aynı bölgelerin diğer karşılaşmaları korunur', () => {
     expect(enemyArtKey('zero_threshold_5_enemy')).toBe('zero_threshold_5');
@@ -630,7 +630,7 @@ describe('v1.46.0: bölge bossları paket 1 (aşama 8)', () => {
   it('aynı arketipi paylaşan diğer düşmanlar, önceki paketler ve havuz değişmez', () => {
     expect(enemyArtKey('dawn_core_9_enemy')).toBe('dawn_core_9');
     expect(enemyArtKey('sky_10_enemy')).not.toBe('sky_8_enemy');
-    for (const id of ['iron_orbit_5_enemy', 'aurora_vault_5_enemy', 'dream_marsh_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
+    for (const id of ['ocean_3_enemy', 'crystal_caves_3_enemy', 'spirit_3_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
     expect(enemyArtKey('astral_10_enemy')).toBeNull();
   });
 });
@@ -738,7 +738,7 @@ describe('v1.50.0: elit çizimleri paket 3', () => {
       expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
     }
     expect(enemyArtKey('time_rift_9_enemy')).toBe('time_rift_9_enemy');
-    expect(enemyArtKey('aurora_vault_7_enemy')).toBeNull();
+    expect(enemyArtKey('ashen_3_enemy')).toBeNull();
     expect(enemyArtKey('eternal_winter_9_enemy')).not.toBe('eternal_winter_7_enemy');
   });
 });
@@ -767,8 +767,8 @@ describe('v1.51.0: elit çizimleri paket 4', () => {
       expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
     }
     expect(enemyArtKey('dreamscape_9_enemy')).toBe('dreamscape_9_enemy');
-    expect(enemyArtKey('iron_orbit_9_enemy')).toBeNull();
-    expect(enemyArtKey('aurora_vault_9_enemy')).toBeNull();
+    expect(enemyArtKey('swamp_3_enemy')).toBeNull();
+    expect(enemyArtKey('astral_3_enemy')).toBeNull();
   });
 });
 
@@ -797,7 +797,32 @@ describe('v1.52.0: elit çizimleri paket 5', () => {
     }
     expect(enemyArtKey('rebirth_9_enemy')).toBe('rebirth_9_enemy');
   });
-  it('genişleme hariç tüm elit aşamaların durumu: 41–50 paketinden yalnızca Prizma Terzisi çizimli oldu', () => {
-    for (const id of ['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']) expect(enemyArtKey(`${id}_enemy`), id).toBeNull();
+  it('v1.53.0 öncesi 41–50 paketinin Prizma Terzisi dışındaki 9 aşaması artık çizimli', () => {
+    for (const id of ['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']) expect(enemyArtKey(`${id}_enemy`), id).toBe(`${id}_enemy`);
+  });
+});
+
+describe('v1.53.0: elit çizimleri paket 6 (41–50 paketinin kalanı)', () => {
+  const IDS = ['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7'];
+  it('9 elit: kimlik = çizim anahtarı = dosya adı; yalnızca Halka Nöbetçisi ve Mahzen Mızrağı süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      const key = `${id}_enemy`;
+      expect(st.type, id).toBe('elite');
+      expect(st.enemy.id, id).toBe(key);
+      expect(ENEMY_ART_BY_ID[key], id).toBe(key);
+      expect(enemyArtKey(key)).toBe(key);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.45);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, id).toBe(id === 'iron_orbit_5' || id === 'aurora_vault_9');
+    }
+  });
+  it('tüm elit aşamaların hepsi artık çizimli (özel çizimsiz elit kalmadı); önceki paketler korunur', () => {
+    const elites = WORLD_REGIONS.flatMap((r) => r.stages).filter((s) => s.type === 'elite');
+    const missing = elites.filter((s) => !enemyArtKey(s.enemy.id)).map((s) => s.id);
+    expect(missing).toEqual([]);
+    expect(enemyArtKey('prism_labyrinth_7_enemy')).toBe('prism_labyrinth_7_enemy');
+    expect(enemyArtKey('dream_marsh_8_enemy')).toBeTruthy(); // normal aşama eski eşleşmesini korur
   });
 });

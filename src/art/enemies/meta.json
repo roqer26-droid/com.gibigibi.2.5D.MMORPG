@@ -1090,5 +1090,41 @@
  "prism_labyrinth_7_enemy": {
   "aspect": 0.7194,
   "footFrac": 0.9917
+ },
+ "aurora_vault_5_enemy": {
+  "aspect": 0.8667,
+  "footFrac": 0.9972
+ },
+ "aurora_vault_7_enemy": {
+  "aspect": 1.165,
+  "footFrac": 0.9935
+ },
+ "aurora_vault_9_enemy": {
+  "aspect": 1.7476,
+  "footFrac": 1.0
+ },
+ "dream_marsh_5_enemy": {
+  "aspect": 0.8194,
+  "footFrac": 0.9806
+ },
+ "dream_marsh_7_enemy": {
+  "aspect": 0.9611,
+  "footFrac": 0.9972
+ },
+ "iron_orbit_5_enemy": {
+  "aspect": 1.2162,
+  "footFrac": 1.0
+ },
+ "iron_orbit_7_enemy": {
+  "aspect": 1.2766,
+  "footFrac": 0.9965
+ },
+ "iron_orbit_9_enemy": {
+  "aspect": 1.0315,
+  "footFrac": 0.9914
+ },
+ "prism_labyrinth_9_enemy": {
+  "aspect": 0.975,
+  "footFrac": 0.9917
  }
 }
