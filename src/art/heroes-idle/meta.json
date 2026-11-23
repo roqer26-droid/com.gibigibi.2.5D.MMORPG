@@ -94,5 +94,53 @@
  "night_screecher_bakir_tutulma": {
   "refTop": 0.4688,
   "refBottom": 0.8802
+ },
+ "necromancer": {
+  "refTop": 0.1953,
+  "refBottom": 0.9688
+ },
+ "necromancer_mezar_ayazi": {
+  "refTop": 0.1875,
+  "refBottom": 0.9661
+ },
+ "necromancer_zehirli_lahit": {
+  "refTop": 0.1641,
+  "refBottom": 0.9714
+ },
+ "assassin": {
+  "refTop": 0.1042,
+  "refBottom": 0.9688
+ },
+ "assassin_kizil_golge": {
+  "refTop": 0.112,
+  "refBottom": 0.9714
+ },
+ "assassin_mor_sis": {
+  "refTop": 0.1042,
+  "refBottom": 0.9688
+ },
+ "stormcaller": {
+  "refTop": 0.1458,
+  "refBottom": 0.9714
+ },
+ "stormcaller_kara_bulut": {
+  "refTop": 0.1823,
+  "refBottom": 0.9714
+ },
+ "stormcaller_mercan_firtinasi": {
+  "refTop": 0.1693,
+  "refBottom": 0.9714
+ },
+ "dragonheart": {
+  "refTop": 0.2552,
+  "refBottom": 0.9688
+ },
+ "dragonheart_safir_ejder": {
+  "refTop": 0.276,
+  "refBottom": 0.9688
+ },
+ "dragonheart_kor_pulu": {
+  "refTop": 0.2396,
+  "refBottom": 0.9688
  }
 }

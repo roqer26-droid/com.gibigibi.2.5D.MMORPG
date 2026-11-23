@@ -212,7 +212,70 @@
    "costume": "bakir_tutulma",
    "key": "night_screecher_bakir_tutulma",
    "file": "night_screecher_bakir_tutulma_idle_drawn.webp"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "default",
+   "file": "necromancer_default_idle_drawn.webp"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "mezar_ayazi",
+   "file": "necromancer_mezar_ayazi_idle_drawn.webp"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "zehirli_lahit",
+   "file": "necromancer_zehirli_lahit_idle_drawn.webp"
+  },
+  {
+   "hero": "assassin",
+   "costume": "default",
+   "file": "assassin_default_idle_drawn.webp"
+  },
+  {
+   "hero": "assassin",
+   "costume": "kizil_golge",
+   "file": "assassin_kizil_golge_idle_drawn.webp"
+  },
+  {
+   "hero": "assassin",
+   "costume": "yesil_pence",
+   "file": "assassin_yesil_pence_idle_drawn.webp",
+   "key": "assassin_mor_sis"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "default",
+   "file": "stormcaller_default_idle_drawn.webp"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "kara_bulut",
+   "file": "stormcaller_kara_bulut_idle_drawn.webp"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "kehribar_yildirimi",
+   "file": "stormcaller_kehribar_yildirimi_idle_drawn.webp",
+   "key": "stormcaller_mercan_firtinasi"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "default",
+   "file": "dragonheart_default_idle_drawn.webp"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "safir_ejder",
+   "file": "dragonheart_safir_ejder_idle_drawn.webp"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "firuze_pul",
+   "file": "dragonheart_firuze_pul_idle_drawn.webp",
+   "key": "dragonheart_kor_pulu"
   }
  ],
- "batch": 2
+ "batch": 3
 }

@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.64.0 — Kahramanlar 09–12 çizilmiş bekleme animasyonları
+- Ölüm Çağıran, Suikastçı, Fırtına Çağıran ve Ejderkalp için 12 yeni sheet (varsayılan + 2'şer kostüm); ilk sekiz kahramanın 24 kaydı korunur (toplam 36). 4×2 ızgarada 8 poz (320×384); manifest `frameSequence` 12 FPS, 4,5 sn döngü, `origin` ayak noktası; sheet oynarken esnetme kapalı. Saldırı/hasar sonrası seçili kostümün bekleme döngüsüne dönülür.
+- Paket kostüm adları mevcut kimliklere eşlendi: `yesil_pence`→`assassin_mor_sis`, `kehribar_yildirimi`→`stormcaller_mercan_firtinasi`, `firuze_pul`→`dragonheart_kor_pulu` (kayıtlar bozulmaz).
+- Yayın boyutu için: tüm sheet'ler 896×540'a (kalite 50) ve düşman görselleri en uzun kenar 264 px'e (kalite 58) yeniden sıkıştırıldı.
+
 ## v1.63.0 — Kahramanlar 05–08 çizilmiş bekleme animasyonları
 - Kurt Adam, Vampir, Koca Ayak ve Gecenin Çığırtkanı için 12 yeni sheet (varsayılan + 2'şer kostüm); ilk dört kahramanın 12 kaydı korunur (toplam 24). Her sheet 4×2 ızgarada 8 poz (320×384 kare); manifest `frameSequence` 12 FPS, 4,5 sn döngü, `origin` ayak noktası. Sheet oynarken eski esnetme efekti kapalıdır.
 - Gecenin Çığırtkanı'nın hafif yükselmesi çizimlerde olduğundan ayrı süzülme (bob) animasyonu sheet modunda uygulanmaz; saldırı pozu statik çizimle aynı yükseklikte durur.
