@@ -20,7 +20,8 @@ import { computeEnchantAura, HERO_TEX_SIZE, heroArtSize, heroAuraGeometry } from
 import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { GEM_ART_URL, GEM_TYPES, gemTextureKey } from '../data/gemArt';
-import { IDLE_ORIGIN, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey, idleSpec, type IdleSpec } from '../data/heroIdle';
+import { COMBAT_ORIGIN, COMBAT_SOURCE_FRAME, clipContactMs, clipFrameStarts, combatClip, type CombatAction, type CombatClip, type CombatEvent } from '../data/heroCombat';
+import { IDLE_ORIGIN, IDLE_SHEET_URL, IDLE_SOURCE_FRAME_H, idleFrameAt, idleReference, idleSheetKey, idleSpec, type IdleSpec } from '../data/heroIdle';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
@@ -152,6 +153,13 @@ export class BattleScene extends Phaser.Scene {
   /** Çizilmiş bekleme sheet'i (varsa): kare sırası 12 FPS oynar; saldırı pozu sırasında gizlenir, bitince döngüye dönülür */
   private heroSheet: { texKey: string; scale: number; frames: number; spec: IdleSpec } | null = null;
   private heroPosing = false;
+  /** Çizilmiş savaş klipleri (saldırı / hasar alma): idle ile aynı dikey ölçek ve zemin hizası; yoksa eski statik poz */
+  private heroClips: Partial<Record<CombatAction, { clip: CombatClip; texKey: string; scale: number }>> = {};
+  /** Oynayan klibin belirteci: yeni klip ya da idle'a dönüş eski klibin zamanlayıcılarını geçersiz kılar */
+  private heroClipToken = 0;
+  private heroClipAction: CombatAction | null = null;
+  /** Doğrulama için: oynatılan kliplerin ve olaylarının sahne zamanı kaydı */
+  private clipLog: Array<{ action: CombatAction; key: string; at: number; ev?: string }> = [];
   private heroIdleClock = 0;
   private heroIdleFrame = -1;
   private heroShadow?: Phaser.GameObjects.Ellipse;
@@ -370,6 +378,11 @@ export class BattleScene extends Phaser.Scene {
     // Seçili kahraman/kostümün çizilmiş bekleme sheet'i (yalnızca gerektiğinde, tahta kurulmadan önce)
     const sheetKey = this.initData?.hero ? idleSheetKey(this.initData.hero.classId, this.initData.hero.costumeId) : null;
     if (sheetKey && IDLE_SHEET_URL[sheetKey] && !this.textures.exists(`hero_idle_${sheetKey}`)) this.load.image(`hero_idle_${sheetKey}`, IDLE_SHEET_URL[sheetKey]);
+    // Aynı görünümün savaş klipleri (saldırı / hasar alma), varsa
+    for (const action of ['attack', 'hurt'] as const) {
+      const clip = combatClip(sheetKey, action);
+      if (clip && !this.textures.exists(`hero_combat_${clip.key}_${action}`)) this.load.image(`hero_combat_${clip.key}_${action}`, clip.url);
+    }
     for (const type of GEM_TYPES) {
       const key = gemTextureKey(type);
       const url = GEM_ART_URL[key];
@@ -1925,6 +1938,32 @@ export class BattleScene extends Phaser.Scene {
     this.attackAnimLog.push({ side, type: profile.type, style: profile.style, trail: profile.trail, action: opts.action ?? 0, skill: own, at: this.time.now });
     if (this.attackAnimLog.length > 80) this.attackAnimLog.shift();
 
+    // Çizilmiş saldırı klibi (varsa): hareket çizimde; hasar sayısı/ses/tepki `impact` ya da mermi varış anına hizalanır
+    if (hero && !own && this.heroClips.attack) {
+      const clip = this.heroClips.attack.clip;
+      const contact = clipContactMs(clip);
+      const tx = foe.x - dir * 14;
+      const ty = foe.y - 20;
+      this.holdHeroBreath(clip.durationMs);
+      const played = this.playHeroClip('attack', (e) => {
+        if (e.type !== 'projectileRelease' || !foe.active) return;
+        const o = this.clipPointWorld('attack', e.originPx ?? { x: COMBAT_SOURCE_FRAME.w * 0.7, y: COMBAT_SOURCE_FRAME.h * 0.3 });
+        const travel = e.suggestedTravelMs ?? 120;
+        if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, col, travel);
+        else this.launchArrow(o.x, o.y, tx, ty, col, travel);
+      });
+      if (played) {
+        this.heroAnimBusy = true;
+        if (profile.type === 'melee_weapon') {
+          const sweep = Math.min(130, contact);
+          this.time.delayedCall(contact - sweep, () => cont.active && this.drawSweepTrail(tx - dir * 6, ty + 4, dir, profile.trail ?? 'thin', col, crit, sweep));
+        } else if (profile.type === 'melee_unarmed') {
+          this.time.delayedCall(contact, () => cont.active && this.drawContactBurst(profile.style ?? 'fist', tx, ty, dir, col));
+        }
+        return contact;
+      }
+    }
+
     const hold = opts.holdMs ?? T.total + 140;
     if (hero) {
       this.holdHeroBreath(hold);
@@ -2598,6 +2637,8 @@ export class BattleScene extends Phaser.Scene {
       this.heroHp = Math.max(0, this.heroHp - dmg);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 8);
       this.holdHeroBreath(360);
+      // Çizilmiş hasar alma klibi isabet anında başlar (yoksa yalnızca kırmızı parlama)
+      this.playHeroClip('hurt');
       this.heroSprite.setTintFill(0xef4444);
       this.time.delayedCall(120, () => {
         if (this.heroSprite && this.heroSprite.active) this.heroSprite.clearTint();
@@ -3978,7 +4019,75 @@ export class BattleScene extends Phaser.Scene {
     this.heroContainer.sendToBack(this.heroShadow);
     this.heroBreath?.stop();
     this.heroBreath = null;
+    // Savaş klipleri: idle ile aynı dikey piksel ölçeği (kaynak pikseli başına ekran boyu) ve aynı ayak noktası
+    const perSourcePx = (scale * fh) / IDLE_SOURCE_FRAME_H;
+    for (const action of ['attack', 'hurt'] as const) {
+      const clip = combatClip(key, action);
+      const ck = clip ? `hero_combat_${clip.key}_${action}` : '';
+      if (!clip || !this.textures.exists(ck)) continue;
+      const ct = this.textures.get(ck);
+      const cs = ct.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      const cw = Math.floor(cs.width / clip.columns);
+      const ch = Math.floor(cs.height / clip.rows);
+      if (cw < 8 || ch < 8) continue;
+      for (let i = 0; i < clip.frameCount; i++) {
+        if (!ct.has(String(i))) ct.add(String(i), 0, (i % clip.columns) * cw, Math.floor(i / clip.columns) * ch, cw, ch);
+      }
+      this.heroClips[action] = { clip, texKey: ck, scale: (perSourcePx * COMBAT_SOURCE_FRAME.h) / ch };
+    }
     this.showHeroIdle();
+  }
+
+  /**
+   * Çizilmiş savaş klibini bir kez oynatır (kareler sahne saatinde: 2×'te kareler, olaylar ve mermi birlikte yarı sürede);
+   * bitince idle döngüsüne döner. Olaylar zaman sırasıyla bir kez çalışır. Klip yoksa false döner (çağıran eski pozu kullanır).
+   */
+  private playHeroClip(action: CombatAction, onEvent?: (e: CombatEvent) => void): boolean {
+    const c = this.heroClips[action];
+    if (!c || !this.heroSheet || !this.heroSprite?.active) return false;
+    if (this.heroClipAction === 'attack') this.heroAnimBusy = false; // kesilen saldırı klibi meşguliyeti bırakır
+    const token = ++this.heroClipToken;
+    this.heroClipAction = action;
+    const sp = this.heroSprite;
+    const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
+    this.heroPosing = true;
+    this.tweens.killTweensOf(sp);
+    sp.angle = 0;
+    sp.setTexture(c.texKey, '0');
+    sp.setOrigin(COMBAT_ORIGIN.x, COMBAT_ORIGIN.y);
+    sp.y = (footY - 0.5) * HERO_TEX_SIZE;
+    sp.setScale(c.scale);
+    this.heroShadow?.setVisible(true);
+    this.clipLog.push({ action, key: c.clip.key, at: this.time.now });
+    if (this.clipLog.length > 60) this.clipLog.shift();
+    const live = () => token === this.heroClipToken && sp.active;
+    clipFrameStarts(c.clip).forEach((t, i) => {
+      if (i > 0) this.time.delayedCall(t, () => live() && sp.setFrame(String(i)));
+    });
+    for (const e of c.clip.events) {
+      this.time.delayedCall(e.atMs, () => {
+        if (!live()) return;
+        this.clipLog.push({ action, key: c.clip.key, at: this.time.now, ev: e.type });
+        onEvent?.(e);
+      });
+    }
+    this.time.delayedCall(c.clip.durationMs, () => {
+      if (!live()) return;
+      this.showHeroIdle();
+    });
+    return true;
+  }
+
+  /** Klip karesindeki kaynak piksel konumunun dünya koordinatı (mermi çıkışı için). */
+  private clipPointWorld(action: CombatAction, px: { x: number; y: number }): { x: number; y: number } {
+    const c = this.heroClips[action];
+    const sp = this.heroSprite;
+    if (!c || !sp) return { x: this.heroContainer.x, y: this.heroContainer.y };
+    const per = (c.scale * Math.floor(this.textures.get(c.texKey).getSourceImage().height / c.clip.rows)) / COMBAT_SOURCE_FRAME.h;
+    const lx = sp.x + (px.x - COMBAT_ORIGIN.x * COMBAT_SOURCE_FRAME.w) * per;
+    const ly = sp.y + (px.y - COMBAT_ORIGIN.y * COMBAT_SOURCE_FRAME.h) * per;
+    const p = this.heroContainer.getWorldTransformMatrix().transformPoint(lx, ly);
+    return { x: p.x, y: p.y };
   }
 
   /** Bekleme döngüsüne dön (sheet varsa): çizim ayak noktasından zemin çizgisine oturur; yoksa statik bekleme dokusu. */
@@ -3989,6 +4098,9 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     this.heroPosing = false;
+    this.heroClipToken++;
+    if (this.heroClipAction === 'attack') this.heroAnimBusy = false;
+    this.heroClipAction = null;
     this.heroIdleFrame = -1;
     const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
     this.heroSprite.setTexture(this.heroSheet.texKey, String(idleFrameAt(this.heroIdleClock, this.heroSheet.spec)));

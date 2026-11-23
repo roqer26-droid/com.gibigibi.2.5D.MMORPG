@@ -1,0 +1,212 @@
+{
+ "revision": 1,
+ "frameWidth": 480,
+ "frameHeight": 384,
+ "origin": {
+  "x": 0.5,
+  "y": 0.96875
+ },
+ "frameIndexBase": 0,
+ "textures": [
+  {
+   "hero": "warrior",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "warrior_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "warrior_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "warrior"
+  },
+  {
+   "hero": "paladin",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "paladin_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "paladin_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "paladin"
+  },
+  {
+   "hero": "ranger",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "ranger_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "arrow",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 351,
+        "y": 116
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "ranger_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "ranger"
+  },
+  {
+   "hero": "mage",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "mage_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spell",
+       "suggestedTravelMs": 140,
+       "originPx": {
+        "x": 430,
+        "y": 126
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "mage_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "mage"
+  }
+ ]
+}

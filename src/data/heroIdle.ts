@@ -19,6 +19,8 @@ export interface IdleSpec {
   sequence: readonly number[];
   durationMs: number;
 }
+/** Kaynak kare yüksekliği (px): savaş klipleri bu piksel ölçeğine göre hizalanır. */
+export const IDLE_SOURCE_FRAME_H: number = manifest.frameHeight;
 export const IDLE_COLUMNS: number = manifest.columns;
 export const IDLE_ROWS: number = manifest.rows;
 export const IDLE_FRAME_COUNT: number = manifest.frameCount;

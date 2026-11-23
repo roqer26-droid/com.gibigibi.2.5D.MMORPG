@@ -1,7 +1,7 @@
 {
   "name": "react-vite-tailwind",
   "private": true,
-  "version": "1.72.0",
+  "version": "1.73.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build:single": "SINGLE_FILE=1 vite build",
+    "build:artifact": "SINGLE_FILE=1 SPLIT_SHEETS=1 vite build --outDir dist-artifact --emptyOutDir",
     "release": "node scripts/release.mjs",
     "android:sync": "node scripts/sync-android-version.mjs && vite build && cap sync android",
     "android:open": "cap open android",

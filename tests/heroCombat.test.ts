@@ -1,0 +1,55 @@
+import { describe, expect, it } from 'vitest';
+import manifest from '../src/art/heroes-combat/combat-manifest.json';
+import { COMBAT_ORIGIN, COMBAT_SOURCE_FRAME, allCombatClips, clipContactMs, clipEventsBetween, clipFrameAt, clipFrameStarts, combatClip } from '../src/data/heroCombat';
+import { IDLE_ORIGIN } from '../src/data/heroIdle';
+
+describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
+  it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
+    expect(allCombatClips()).toHaveLength(8);
+    expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
+    expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage']) {
+      const a = combatClip(hero, 'attack')!;
+      const h = combatClip(hero, 'hurt')!;
+      expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
+      expect([h.columns, h.rows, h.frameCount, h.durationMs], hero).toEqual([4, 1, 4, 260]);
+      expect(a.frameDurationsMs.reduce((x, y) => x + y, 0)).toBe(a.durationMs);
+      expect(h.frameDurationsMs.reduce((x, y) => x + y, 0)).toBe(h.durationMs);
+      expect(a.url).toBeTruthy();
+    }
+    expect(manifest.textures.every((t) => t.costume === 'default')).toBe(true);
+  });
+
+  it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
+    expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
+    expect(combatClip('assassin', 'attack')).toBeNull();
+    expect(combatClip(null, 'hurt')).toBeNull();
+  });
+
+  it('temas anı: yakın dövüşte impact (240 ms), Korucu/Büyücüde atış + yolculuk', () => {
+    expect(clipContactMs(combatClip('warrior', 'attack')!)).toBe(240);
+    expect(clipContactMs(combatClip('paladin', 'attack')!)).toBe(240);
+    expect(clipContactMs(combatClip('ranger', 'attack')!)).toBe(240 + 120);
+    expect(clipContactMs(combatClip('mage', 'attack')!)).toBe(240 + 140);
+    const r = combatClip('ranger', 'attack')!.events[0];
+    expect(r.type).toBe('projectileRelease');
+    expect(r.projectile).toBe('arrow');
+    expect(r.originPx).toEqual({ x: 351, y: 116 });
+    expect(combatClip('mage', 'attack')!.events[0].projectile).toBe('spell');
+  });
+
+  it('kare zamanlaması ve olaylar: atlanan karede bile olay bir kez, sırayla', () => {
+    const a = combatClip('warrior', 'attack')!;
+    expect(clipFrameStarts(a)).toEqual([0, 60, 120, 180, 240, 300, 360, 440]);
+    expect(clipFrameAt(a, 0)).toBe(0);
+    expect(clipFrameAt(a, 239)).toBe(3);
+    expect(clipFrameAt(a, 240)).toBe(4); // impact karesi
+    expect(clipFrameAt(a, 519)).toBe(7);
+    expect(clipFrameAt(a, 900)).toBe(7);
+    // tek adımda 0 → 500 ms (kareler atlanır): impact yine bir kez
+    expect(clipEventsBetween(a, -1, 500).map((e) => e.type)).toEqual(['impact']);
+    expect(clipEventsBetween(a, -1, 200)).toEqual([]);
+    expect(clipEventsBetween(a, 200, 240)).toHaveLength(1);
+    expect(clipEventsBetween(a, 240, 520)).toEqual([]);
+  });
+});

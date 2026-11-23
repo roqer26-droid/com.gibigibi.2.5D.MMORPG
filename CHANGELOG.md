@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.73.0 — Çizilmiş saldırı ve hasar alma animasyonları (Savaşçı, Şövalye, Korucu, Büyücü)
+- Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri (`src/art/heroes-combat/`, `src/data/heroCombat.ts`). Kareler idle ile aynı dikey piksel ölçeğinde ve aynı ayak noktasında (372/384) çizilir; klip bir kez oynar ve idle döngüsüne döner (boyut/konum sıçraması yok). Kostüm seçiliyse eski statik poz davranışı sürer.
+- Zamanlama `frameDurationsMs` ile sahne saatinde: 2× hızda kareler, vuruş işaretleri ve mermi yolculuğu birlikte (tek kez) yarıya iner. Savaşçı/Şövalye: hasar sayısı, ses ve düşman tepkisi `impact` anında (240 ms). Korucu/Büyücü: ok ya da büyü `projectileRelease` karesinde çizimdeki `originPx` noktasından çıkar, hedefe varınca (240+120 / 240+140 ms) sonuç gösterilir. Hasarı savaş motoru bir kez hesaplar.
+- Hasar alma klibi düşman isabetinde (hasar > 0) başlar; sıyrılma ve tam kalkan engellemesi mevcut geri bildirimi kullanır.
+- Artifact önizlemesi tek dosya sınırını aştığı için yeni derleme modu: `npm run build:artifact` (`dist-artifact/`) — her şey index.html'e gömülü, yalnızca kahraman bekleme/savaş sheet'leri yanında ayrı dosya. `npm run release` yedeği yine tam tek dosyadır.
+
 ## v1.72.0 — Bekleme döngüleri 0,5 saniye daha kısaldı
 - `IDLE_LOOP_REDUCTION_MS` 1000 → 1500: tüm idle sheet'ler manifestteki süreden 1,5 sn kısa oynar (3,75 sn → 2,25 sn; 4 sn → 2,5 sn; 3,5 sn → 2 sn; 4,5 sn → 3 sn).
 
