@@ -24,27 +24,27 @@
   "refBottom": 0.9688
  },
  "ranger": {
-  "refTop": 0.1068,
-  "refBottom": 0.9714
+  "refTop": 0.0729,
+  "refBottom": 0.9688
  },
  "ranger_sonbahar_avcisi": {
-  "refTop": 0.112,
+  "refTop": 0.0755,
   "refBottom": 0.9688
  },
  "ranger_gece_izcisi": {
-  "refTop": 0.1172,
+  "refTop": 0.0729,
   "refBottom": 0.9688
  },
  "mage": {
-  "refTop": 0.1328,
+  "refTop": 0.1354,
   "refBottom": 0.9688
  },
  "mage_ay_kristali": {
-  "refTop": 0.138,
+  "refTop": 0.0703,
   "refBottom": 0.9688
  },
  "mage_kor_akademisi": {
-  "refTop": 0.1354,
+  "refTop": 0.0703,
   "refBottom": 0.9688
  },
  "werewolf": {
@@ -72,16 +72,16 @@
   "refBottom": 0.9688
  },
  "bigfoot": {
-  "refTop": 0.1797,
-  "refBottom": 0.9714
+  "refTop": 0.1745,
+  "refBottom": 0.9688
  },
  "bigfoot_kiragi_gezgini": {
-  "refTop": 0.1589,
-  "refBottom": 0.9714
+  "refTop": 0.237,
+  "refBottom": 0.9688
  },
  "bigfoot_yosun_bekcisi": {
-  "refTop": 0.1849,
-  "refBottom": 0.9714
+  "refTop": 0.1745,
+  "refBottom": 0.9688
  },
  "night_screecher": {
   "refTop": 0.4401,
@@ -237,6 +237,18 @@
  },
  "minotaur_buz_labirenti": {
   "refTop": 0.0755,
+  "refBottom": 0.9688
+ },
+ "demon": {
+  "refTop": 0.1823,
+  "refBottom": 0.9688
+ },
+ "demon_obsidyen_yemini": {
+  "refTop": 0.2292,
+  "refBottom": 0.9688
+ },
+ "demon_soluk_alev": {
+  "refTop": 0.2344,
   "refBottom": 0.9688
  }
 }
