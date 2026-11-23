@@ -16,13 +16,14 @@ import {
   StageDef,
 } from '../types/game';
 import { ComputedHeroBuild } from '../utils/rpgLogic';
-import { computeEnchantAura, HERO_TEX_SIZE, heroAuraGeometry } from './HeroRenderer';
+import { computeEnchantAura, HERO_TEX_SIZE, heroArtSize, heroAuraGeometry } from './HeroRenderer';
 import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { GEM_ART_URL, GEM_TYPES, gemTextureKey } from '../data/gemArt';
+import { IDLE_COLUMNS, IDLE_FRAME_COUNT, IDLE_ORIGIN, IDLE_ROWS, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey } from '../data/heroIdle';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
-import { HERO_ART_LAYOUT, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
+import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
 import { ENEMY_ART_GROUND, ENEMY_ART_LAYOUT, ENEMY_BREATH_DEFAULT, ENEMY_FLOATING_ARCHETYPES, clampBreathSec, enemyArtAttack, enemyArtKey, enemyImage, enemyImageReady } from '../data/enemyArt';
 import { ATTACK_TIMING, enemyAttackProfile, heroAttackProfile, shouldPlayAttackAnim, skillAttackProfile, type AttackProfile } from '../game/attackAnimation';
 import { IMAGE_HERO_TUNING } from '../data/imageHeroes';
@@ -148,6 +149,12 @@ export class BattleScene extends Phaser.Scene {
   private heroContainer!: Phaser.GameObjects.Container;
   private heroSprite!: Phaser.GameObjects.Image;
   private heroIdleKey = '';
+  /** Çizilmiş bekleme sheet'i (varsa): kare sırası 12 FPS oynar; saldırı pozu sırasında gizlenir, bitince döngüye dönülür */
+  private heroSheet: { texKey: string; scale: number; frames: number } | null = null;
+  private heroPosing = false;
+  private heroIdleClock = 0;
+  private heroIdleFrame = -1;
+  private heroShadow?: Phaser.GameObjects.Ellipse;
   private heroAttackKey = '';
   private enemyContainer!: Phaser.GameObjects.Container;
   private enemySprite!: Phaser.GameObjects.Image;
@@ -360,6 +367,9 @@ export class BattleScene extends Phaser.Scene {
       this.load.image('hunt_arena', this.initData.arenaImage);
     }
     // Taş dokuları tahta kurulmadan önce yüklenir; yüklenemeyen taş için create()'teki createGemTextures yedek çizimi kullanır
+    // Seçili kahraman/kostümün çizilmiş bekleme sheet'i (yalnızca gerektiğinde, tahta kurulmadan önce)
+    const sheetKey = this.initData?.hero ? idleSheetKey(this.initData.hero.classId, this.initData.hero.costumeId) : null;
+    if (sheetKey && IDLE_SHEET_URL[sheetKey] && !this.textures.exists(`hero_idle_${sheetKey}`)) this.load.image(`hero_idle_${sheetKey}`, IDLE_SHEET_URL[sheetKey]);
     for (const type of GEM_TYPES) {
       const key = gemTextureKey(type);
       const url = GEM_ART_URL[key];
@@ -408,9 +418,10 @@ export class BattleScene extends Phaser.Scene {
         if (!this.heroSprite || !this.heroSprite.active) return;
         this.heroIdleKey = this.artIdleKey = createHeroPhaserTexture(this, this.initData.hero, 'idle');
         this.heroAttackKey = this.artAttackKey = createHeroPhaserTexture(this, this.initData.hero, 'attack');
-        this.heroSprite.setTexture(this.heroIdleKey);
+        this.showHeroIdle();
       });
     }
+    this.setupHeroIdleSheet();
 
     this.enemyContainer = this.add.container(0, 0);
     this.enemySprite = this.add.image(0, 0, enemyKey);
@@ -537,6 +548,7 @@ export class BattleScene extends Phaser.Scene {
   private lastIntentSignature = '';
 
   public update(_time: number, delta: number) {
+    this.updateHeroIdleSheet(delta);
     this.applyPendingSpeed();
     // Yetenek/dondurma/sersemletme gibi hangi yoldan olursa olsun niyet değiştiğinde gösterge hemen güncellenir
     if (this.turnPhase !== 'victory' && this.turnPhase !== 'defeat') {
@@ -1920,7 +1932,7 @@ export class BattleScene extends Phaser.Scene {
       this.holdEnemyIdle(hold);
     }
     const swapTexture = hero && !own;
-    if (swapTexture) this.heroSprite.setTexture(this.heroAttackKey);
+    if (swapTexture) this.showHeroPose();
 
     // --- Gövde hareketi: küçük konum + dönüş (yakın dövüşte hedefe hamle, menzilli saldırıda geri çekilme, büyüde yerinde duruş) ---
     const dist = Math.abs(foe.x - cont.x);
@@ -1936,7 +1948,7 @@ export class BattleScene extends Phaser.Scene {
       if (sprite.active) sprite.angle = 0;
       if (hero) {
         this.heroAnimBusy = false;
-        if (swapTexture && this.heroSprite?.active) this.heroSprite.setTexture(this.heroIdleKey);
+        if (swapTexture && this.heroSprite?.active) this.showHeroIdle();
       }
     };
     this.tweens.add({ targets: sprite, angle: tiltDeg, duration: fwdMs, ease: 'Cubic.easeOut' });
@@ -3923,6 +3935,7 @@ export class BattleScene extends Phaser.Scene {
   /** Görsel kahramanın bekleme nefesi: pivot ayak çizgisinde, bu yüzden ayaklar kaymaz. */
   private startHeroBreath() {
     if (!this.heroSprite || !this.heroSprite.active) return;
+    if (this.heroSheet) return; // çizilmiş bekleme sheet'inde eski esnetme animasyonu uygulanmaz
     this.heroBreath?.stop();
     this.heroBreath = this.tweens.add({
       targets: this.heroSprite,
@@ -3933,6 +3946,82 @@ export class BattleScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+  }
+
+  /** Bekleme sheet'ini kurar: kare dilimleri, ölçek (statik çizimle aynı boy), ayak noktası ve zemin gölgesi. Doku yoksa statik çizim kalır. */
+  private setupHeroIdleSheet() {
+    const hero = this.initData.hero;
+    const key = idleSheetKey(hero.classId, hero.costumeId);
+    const texKey = key ? `hero_idle_${key}` : '';
+    const ref = key ? idleReference(key) : null;
+    if (!key || !ref || !this.textures.exists(texKey) || !hasHeroArt(hero.classId)) return;
+    const tex = this.textures.get(texKey);
+    const src = tex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+    const fw = Math.floor(src.width / IDLE_COLUMNS);
+    const fh = Math.floor(src.height / IDLE_ROWS);
+    if (fw < 8 || fh < 8) return;
+    for (let i = 0; i < IDLE_FRAME_COUNT; i++) {
+      if (!tex.has(String(i))) tex.add(String(i), 0, (i % IDLE_COLUMNS) * fw, Math.floor(i / IDLE_COLUMNS) * fh, fw, fh);
+    }
+    // Ölçek: 1. karedeki çizimin tepeden ayağa yüksekliği, statik çizimin (aynı kahraman/kostüm) ayaktan tepeye yüksekliğiyle eşitlenir
+    const artKey = heroArtKey(hero.classId, hero.costumeId);
+    const size = heroArtSize(hero.classId, undefined, artKey);
+    const foot = HERO_ART_META[artKey]?.footFrac ?? 1;
+    const bodyPx = (ref.bottom - ref.top) * fh;
+    const scale = (size.h * foot) / bodyPx;
+    this.heroSheet = { texKey, scale, frames: IDLE_FRAME_COUNT };
+    this.heroShadow = this.add.ellipse(0, 100, 88, 22, 0x000000, 0.45);
+    this.heroContainer.add(this.heroShadow);
+    this.heroContainer.sendToBack(this.heroShadow);
+    this.heroBreath?.stop();
+    this.heroBreath = null;
+    this.showHeroIdle();
+  }
+
+  /** Bekleme döngüsüne dön (sheet varsa): çizim ayak noktasından zemin çizgisine oturur; yoksa statik bekleme dokusu. */
+  private showHeroIdle() {
+    if (!this.heroSprite?.active) return;
+    if (!this.heroSheet) {
+      this.heroSprite.setTexture(this.heroIdleKey);
+      return;
+    }
+    this.heroPosing = false;
+    this.heroIdleFrame = -1;
+    const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
+    this.heroSprite.setTexture(this.heroSheet.texKey, String(idleFrameAt(this.heroIdleClock)));
+    this.heroSprite.setOrigin(IDLE_ORIGIN.x, IDLE_ORIGIN.y);
+    this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE;
+    this.heroSprite.setScale(this.heroSheet.scale);
+    this.heroShadow?.setVisible(true);
+  }
+
+  /** Saldırı pozu (statik çizim) gösterilirken sheet gizlenir. */
+  private showHeroPose() {
+    if (!this.heroSprite?.active) return;
+    if (this.heroSheet) {
+      this.heroPosing = true;
+      const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
+      this.heroSprite.setTexture(this.heroAttackKey);
+      this.heroSprite.setOrigin(0.5, footY);
+      this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE;
+      this.heroSprite.setScale(1);
+      this.heroShadow?.setVisible(false);
+    } else {
+      this.heroSprite.setTexture(this.heroAttackKey);
+    }
+  }
+
+  /** Her karede bekleme sheet'inin karesini ilerletir: 12 FPS, savaş hızıyla ölçeklenir. */
+  private updateHeroIdleSheet(delta: number) {
+    if (!this.heroSheet || this.heroPosing || !this.heroSprite?.active) return;
+    // `delta` Phaser'da hedef kare hızına göre yumuşatılır; gerçek geçen süre (rawDelta) kullanılır ki 12 FPS oynatma gerçek zamanda doğru kalsın
+    const real = Math.min(100, this.game.loop.rawDelta || delta);
+    this.heroIdleClock += (real / 1000) * this.speed;
+    const f = idleFrameAt(this.heroIdleClock);
+    if (f !== this.heroIdleFrame) {
+      this.heroIdleFrame = f;
+      this.heroSprite.setFrame(String(f));
+    }
   }
 
   /**

@@ -1,0 +1,50 @@
+{
+ "warrior": {
+  "refTop": 0.1615,
+  "refBottom": 0.9714
+ },
+ "warrior_koz_muhafizi": {
+  "refTop": 0.1042,
+  "refBottom": 0.9661
+ },
+ "warrior_kutup_celigi": {
+  "refTop": 0.1068,
+  "refBottom": 0.9688
+ },
+ "paladin": {
+  "refTop": 0.1641,
+  "refBottom": 0.9688
+ },
+ "paladin_gumus_safak": {
+  "refTop": 0.112,
+  "refBottom": 0.9688
+ },
+ "paladin_zumrut_yemini": {
+  "refTop": 0.1068,
+  "refBottom": 0.9714
+ },
+ "ranger": {
+  "refTop": 0.1068,
+  "refBottom": 0.9714
+ },
+ "ranger_sonbahar_avcisi": {
+  "refTop": 0.112,
+  "refBottom": 0.9688
+ },
+ "ranger_gece_izcisi": {
+  "refTop": 0.1172,
+  "refBottom": 0.9688
+ },
+ "mage": {
+  "refTop": 0.1328,
+  "refBottom": 0.9688
+ },
+ "mage_ay_kristali": {
+  "refTop": 0.138,
+  "refBottom": 0.9688
+ },
+ "mage_kor_akademisi": {
+  "refTop": 0.1354,
+  "refBottom": 0.9688
+ }
+}

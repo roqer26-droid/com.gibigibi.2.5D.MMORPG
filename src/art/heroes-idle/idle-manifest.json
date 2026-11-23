@@ -1,0 +1,145 @@
+{
+ "revision": 4,
+ "technique": "redrawn pose frames",
+ "frameWidth": 320,
+ "frameHeight": 384,
+ "columns": 4,
+ "rows": 2,
+ "frameRate": 12,
+ "frameCount": 8,
+ "playbackFrameCount": 54,
+ "durationMs": 4500,
+ "repeat": -1,
+ "frameHolds": [
+  8,
+  5,
+  6,
+  6,
+  10,
+  5,
+  6,
+  8
+ ],
+ "frameSequence": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  1,
+  1,
+  1,
+  1,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  3,
+  3,
+  3,
+  3,
+  3,
+  3,
+  4,
+  4,
+  4,
+  4,
+  4,
+  4,
+  4,
+  4,
+  4,
+  4,
+  5,
+  5,
+  5,
+  5,
+  5,
+  6,
+  6,
+  6,
+  6,
+  6,
+  6,
+  7,
+  7,
+  7,
+  7,
+  7,
+  7,
+  7,
+  7
+ ],
+ "origin": {
+  "x": 0.5,
+  "y": 0.96875
+ },
+ "textures": [
+  {
+   "hero": "warrior",
+   "costume": "default",
+   "file": "warrior_default_idle_drawn.webp"
+  },
+  {
+   "hero": "warrior",
+   "costume": "koz_muhafizi",
+   "file": "warrior_koz_muhafizi_idle_drawn.webp"
+  },
+  {
+   "hero": "warrior",
+   "costume": "kutup_celigi",
+   "file": "warrior_kutup_celigi_idle_drawn.webp"
+  },
+  {
+   "hero": "paladin",
+   "costume": "default",
+   "file": "paladin_default_idle_drawn.webp"
+  },
+  {
+   "hero": "paladin",
+   "costume": "gumus_safak",
+   "file": "paladin_gumus_safak_idle_drawn.webp"
+  },
+  {
+   "hero": "paladin",
+   "costume": "zumrut_yemini",
+   "file": "paladin_zumrut_yemini_idle_drawn.webp"
+  },
+  {
+   "hero": "ranger",
+   "costume": "default",
+   "file": "ranger_default_idle_drawn.webp"
+  },
+  {
+   "hero": "ranger",
+   "costume": "sonbahar_avcisi",
+   "file": "ranger_sonbahar_avcisi_idle_drawn.webp"
+  },
+  {
+   "hero": "ranger",
+   "costume": "gece_izcisi",
+   "file": "ranger_gece_izcisi_idle_drawn.webp"
+  },
+  {
+   "hero": "mage",
+   "costume": "default",
+   "file": "mage_default_idle_drawn.webp"
+  },
+  {
+   "hero": "mage",
+   "costume": "ay_kristali",
+   "file": "mage_ay_kristali_idle_drawn.webp"
+  },
+  {
+   "hero": "mage",
+   "costume": "kor_akademisi",
+   "file": "mage_kor_akademisi_idle_drawn.webp"
+  }
+ ]
+}

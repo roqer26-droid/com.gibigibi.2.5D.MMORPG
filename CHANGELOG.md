@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.62.0 — İlk dört kahramanın çizilmiş bekleme animasyonları
+- Savaşçı, Şövalye, Korucu ve Büyücü için 12 sheet (varsayılan görünüm + her birinin 2 kostümü): her biri 4×2 ızgarada 8 poz. Manifestteki `frameSequence` 12 FPS hızında oynar (54 kare = 4,5 sn; tekrarlar pozun ekranda kalma süresidir), savaş hızıyla ölçeklenir. Ayak noktası manifestteki `origin` ile zemin çizgisine oturur; bu sheet'lerde eski esnetme (nefes) animasyonu uygulanmaz. `src/data/heroIdle.ts`, `src/art/heroes-idle/`.
+- Saldırı pozu sırasında (statik, seçili kostümün çizimi) sheet gizlenir; saldırı ve hasar bitince seçili kostümün bekleme döngüsüne dönülür. Sheet'i olmayan kahramanlar eski çizim + esnetmeyle devam eder; sheet yüklenemezse de aynı yedek çalışır. Sheet yalnızca savaşa girilen kahraman/kostüm için yüklenir.
+- Yayın boyutu için: sheet'ler 0,75 ölçeğinde (kalite 60) saklanır; kahraman ve kostüm statik görselleri en uzun kenar 480 px'e indirildi (kalite 60–62).
+
 ## v1.61.0 — Naga kostümü: Safir Gelgit
 - Naga'nın ikinci kostümü Yakut Tahtı → **Safir Gelgit** olarak yeniden adlandırıldı ve çizimi güncellendi. Dahili kimlik (`naga_yakut_tahti`) korundu; kostümü daha önce açan/seçen oyuncular yeni görünümü otomatik alır.
 
