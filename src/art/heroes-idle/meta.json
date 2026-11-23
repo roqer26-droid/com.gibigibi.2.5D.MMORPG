@@ -48,15 +48,15 @@
   "refBottom": 0.9688
  },
  "werewolf": {
-  "refTop": 0.2682,
-  "refBottom": 0.9688
+  "refTop": 0.0911,
+  "refBottom": 0.9714
  },
  "werewolf_ay_pencesi": {
-  "refTop": 0.1589,
+  "refTop": 0.1198,
   "refBottom": 0.9688
  },
  "werewolf_kanli_ay": {
-  "refTop": 0.25,
+  "refTop": 0.0859,
   "refBottom": 0.9714
  },
  "vampire": {
@@ -132,15 +132,15 @@
   "refBottom": 0.9714
  },
  "dragonheart": {
-  "refTop": 0.2552,
+  "refTop": 0.0755,
   "refBottom": 0.9688
  },
  "dragonheart_safir_ejder": {
-  "refTop": 0.276,
-  "refBottom": 0.9688
+  "refTop": 0.0859,
+  "refBottom": 0.9714
  },
  "dragonheart_kor_pulu": {
-  "refTop": 0.2396,
+  "refTop": 0.0729,
   "refBottom": 0.9688
  },
  "fairy": {
@@ -168,16 +168,16 @@
   "refBottom": 0.9688
  },
  "naga": {
-  "refTop": 0.1302,
-  "refBottom": 0.9688
- },
- "naga_zumrut_taht": {
-  "refTop": 0.2109,
+  "refTop": 0.0859,
   "refBottom": 0.9714
  },
- "naga_yakut_tahti": {
-  "refTop": 0.1589,
+ "naga_zumrut_taht": {
+  "refTop": 0.0729,
   "refBottom": 0.9688
+ },
+ "naga_yakut_tahti": {
+  "refTop": 0.1042,
+  "refBottom": 0.9714
  },
  "siren": {
   "refTop": 0.1953,
@@ -226,5 +226,17 @@
  "seraph_gunes_mabedi": {
   "refTop": 0.1328,
   "refBottom": 0.7839
+ },
+ "minotaur": {
+  "refTop": 0.0703,
+  "refBottom": 0.9688
+ },
+ "minotaur_bronz_labirent": {
+  "refTop": 0.0703,
+  "refBottom": 0.9688
+ },
+ "minotaur_buz_labirenti": {
+  "refTop": 0.0755,
+  "refBottom": 0.9688
  }
 }

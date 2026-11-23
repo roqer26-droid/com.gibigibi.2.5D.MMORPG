@@ -34,8 +34,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(counts).toEqual(manifest.frameHolds);
   });
 
-  it('57 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
-    expect(manifest.textures).toHaveLength(57);
+  it('60 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
+    expect(manifest.textures).toHaveLength(60);
     const files = readdirSync('src/art/heroes-idle').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     const keys: string[] = [];
     for (const t of manifest.textures) {
@@ -81,10 +81,10 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(idleSpec('olmayan').frameCount).toBe(8);
   });
 
-  it('12 pozlu sheet (4×3): dört kahramanın üç görünümü kendi dizisiyle oynar', () => {
+  it('12 pozlu sheet (4×3): sekiz kahramanın üç görünümü kendi dizisiyle oynar', () => {
     const twelve = (manifest.textures as Array<{ hero: string; costume: string; key?: string; frameCount?: number; frameSequence?: number[]; columns?: number; rows?: number; frameRate?: number }>).filter((t) => t.frameCount === 12);
-    expect(twelve).toHaveLength(12);
-    expect([...new Set(twelve.map((t) => t.hero))].sort()).toEqual(['kitsune', 'paladin', 'stormcaller', 'warrior']);
+    expect(twelve).toHaveLength(24);
+    expect([...new Set(twelve.map((t) => t.hero))].sort()).toEqual(['dragonheart', 'kitsune', 'minotaur', 'naga', 'paladin', 'stormcaller', 'warrior', 'werewolf']);
     for (const t of twelve) {
       const key = t.key ?? (t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`);
       const sp = idleSpec(key);
@@ -94,5 +94,7 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
       expect([...new Set(sp.sequence)], key).toEqual(Array.from({ length: 12 }, (_, i) => i));
     }
     expect(idleSpec('stormcaller_mercan_firtinasi').frameCount).toBe(12);
+    expect(idleSpec('naga_yakut_tahti').frameCount).toBe(12);
+    expect(idleSpec('dragonheart_kor_pulu').frameCount).toBe(12);
   });
 });

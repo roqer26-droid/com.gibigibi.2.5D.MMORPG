@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.68.0 — 12 pozlu bekleme animasyonları, paket 2 (Kurt Adam, Ejderkalp, Naga, Minotor)
+- Kurt Adam, Ejderkalp ve Naga'nın 9 sheet'i 12 pozlu (4×3) sürümleriyle güncellendi; Minotor için varsayılan + 2 kostüm sheet'i ilk kez eklendi (toplam 60 sheet: 24 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar.
+- Kostüm eşlemeleri: `dragonheart_firuze_pul`→`dragonheart_kor_pulu`, `naga_safir_gelgit`→`naga_yakut_tahti`.
+- Yayın boyutu için düşman görselleri en uzun kenar 224 px'e (kalite 46) indirildi.
+
 ## v1.67.0 — 12 pozlu bekleme animasyonları (Savaşçı, Şövalye, Ruh Tilkisi, Fırtına Çağıran)
 - Dört kahramanın varsayılan + 2'şer kostüm sheet'i (12) 12 pozlu (4×3) sürümleriyle güncellendi; 16 pozlu kayıtlar korundu (toplam 57 sheet: 12 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar (3,5–3,75 sn döngü).
 - `stormcaller_kehribar_yildirimi` → mevcut `stormcaller_mercan_firtinasi` kimliğine eşlendi. Sheet'ler 768×693 (kalite 44).
