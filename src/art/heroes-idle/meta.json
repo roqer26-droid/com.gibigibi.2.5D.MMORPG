@@ -1,27 +1,27 @@
 {
  "warrior": {
-  "refTop": 0.1615,
-  "refBottom": 0.9714
+  "refTop": 0.0703,
+  "refBottom": 0.9688
  },
  "warrior_koz_muhafizi": {
-  "refTop": 0.1042,
-  "refBottom": 0.9661
+  "refTop": 0.0729,
+  "refBottom": 0.9688
  },
  "warrior_kutup_celigi": {
-  "refTop": 0.1068,
-  "refBottom": 0.9688
+  "refTop": 0.0729,
+  "refBottom": 0.9714
  },
  "paladin": {
-  "refTop": 0.1641,
-  "refBottom": 0.9688
+  "refTop": 0.1979,
+  "refBottom": 0.9714
  },
  "paladin_gumus_safak": {
-  "refTop": 0.112,
-  "refBottom": 0.9688
+  "refTop": 0.1771,
+  "refBottom": 0.9714
  },
  "paladin_zumrut_yemini": {
-  "refTop": 0.1068,
-  "refBottom": 0.9714
+  "refTop": 0.2396,
+  "refBottom": 0.9688
  },
  "ranger": {
   "refTop": 0.1068,
@@ -120,15 +120,15 @@
   "refBottom": 0.9714
  },
  "stormcaller": {
-  "refTop": 0.1458,
+  "refTop": 0.0729,
   "refBottom": 0.9714
  },
  "stormcaller_kara_bulut": {
-  "refTop": 0.1823,
+  "refTop": 0.0729,
   "refBottom": 0.9714
  },
  "stormcaller_mercan_firtinasi": {
-  "refTop": 0.1693,
+  "refTop": 0.0833,
   "refBottom": 0.9714
  },
  "dragonheart": {
@@ -156,16 +156,16 @@
   "refBottom": 0.9036
  },
  "kitsune": {
-  "refTop": 0.4297,
+  "refTop": 0.474,
   "refBottom": 0.9688
  },
  "kitsune_sonbahar_ruhu": {
-  "refTop": 0.3958,
-  "refBottom": 0.9714
+  "refTop": 0.4375,
+  "refBottom": 0.9688
  },
  "kitsune_ay_tilsimi": {
-  "refTop": 0.4141,
-  "refBottom": 0.9661
+  "refTop": 0.4401,
+  "refBottom": 0.9688
  },
  "naga": {
   "refTop": 0.1302,

@@ -75,9 +75,24 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
       expect(idleFrameAt(sp.sequence.length / sp.fps - 1e-3, sp)).toBe(sp.sequence[sp.sequence.length - 1]);
     }
     // 4 kahramanın varsayılan görünümü 8 pozlu kalır; Anka/Cin/Serafim varsayılanları 16 pozludur
-    for (const k of ['night_screecher', 'assassin', 'fairy', 'siren', 'warrior']) expect(idleSpec(k).frameCount, k).toBe(8);
+    for (const k of ['night_screecher', 'assassin', 'fairy', 'siren', 'golem']) expect(idleSpec(k).frameCount, k).toBe(8);
     for (const k of ['phoenix', 'djinn', 'seraph', 'phoenix_gunes_taci', 'djinn_gece_sarayi', 'seraph_gunes_mabedi']) expect(idleSpec(k).frameCount, k).toBe(16);
     expect(idleSpec('assassin_mor_sis').frameCount).toBe(16);
     expect(idleSpec('olmayan').frameCount).toBe(8);
+  });
+
+  it('12 pozlu sheet (4×3): dört kahramanın üç görünümü kendi dizisiyle oynar', () => {
+    const twelve = (manifest.textures as Array<{ hero: string; costume: string; key?: string; frameCount?: number; frameSequence?: number[]; columns?: number; rows?: number; frameRate?: number }>).filter((t) => t.frameCount === 12);
+    expect(twelve).toHaveLength(12);
+    expect([...new Set(twelve.map((t) => t.hero))].sort()).toEqual(['kitsune', 'paladin', 'stormcaller', 'warrior']);
+    for (const t of twelve) {
+      const key = t.key ?? (t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`);
+      const sp = idleSpec(key);
+      expect([sp.columns, sp.rows], key).toEqual([4, 3]);
+      expect(sp.fps, key).toBe(t.frameRate);
+      expect(sp.sequence, key).toEqual(t.frameSequence);
+      expect([...new Set(sp.sequence)], key).toEqual(Array.from({ length: 12 }, (_, i) => i));
+    }
+    expect(idleSpec('stormcaller_mercan_firtinasi').frameCount).toBe(12);
   });
 });

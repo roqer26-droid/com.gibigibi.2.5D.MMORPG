@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.67.0 — 12 pozlu bekleme animasyonları (Savaşçı, Şövalye, Ruh Tilkisi, Fırtına Çağıran)
+- Dört kahramanın varsayılan + 2'şer kostüm sheet'i (12) 12 pozlu (4×3) sürümleriyle güncellendi; 16 pozlu kayıtlar korundu (toplam 57 sheet: 12 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar (3,5–3,75 sn döngü).
+- `stormcaller_kehribar_yildirimi` → mevcut `stormcaller_mercan_firtinasi` kimliğine eşlendi. Sheet'ler 768×693 (kalite 44).
+
 ## v1.66.0 — 16 pozlu bekleme animasyonları (Anka, Cin, Serafim + dört kahramanın kostümleri)
 - Anka, Cin ve Serafim için varsayılan + 2'şer kostüm (9 yeni sheet); Gecenin Çığırtkanı, Suikastçı, Peri ve Siren'in 8 kostümü 16 pozlu sürümleriyle değiştirildi (toplam 57 sheet, 17'si 16 pozlu 4×4). Bu dört kahramanın varsayılan görünümleri mevcut 8 pozlu sheet'te kaldı (pakette 16 pozlu varsayılan yoktu).
 - Oynatma sheet başına: ızgara (4×2 / 4×4), kare sayısı, `frameRate`, `frameSequence` ve süre manifestteki kayıttan okunur (`idleSpec`); kaydı olmayanlar eski 4×2 varsayılanını kullanır. 16 pozlular 3,5–3,75 sn döngü.
