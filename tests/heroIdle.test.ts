@@ -34,8 +34,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(counts).toEqual(manifest.frameHolds);
   });
 
-  it('63 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
-    expect(manifest.textures).toHaveLength(63);
+  it('66 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
+    expect(manifest.textures).toHaveLength(66);
     const files = readdirSync('src/art/heroes-idle').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     const keys: string[] = [];
     for (const t of manifest.textures) {
@@ -52,8 +52,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(files).toEqual(keys.sort());
     expect(idleSheetKey('warrior')).toBe('warrior');
     expect(idleSheetKey('warrior', 'mage_ay_kristali')).toBe('warrior'); // başka şampiyonun kostümü → varsayılan sheet
-    expect(idleSheetKey('golem')).toBeNull(); // sheet'i olmayan kahraman
-    expect(idleSheetKey('golem', 'fairy_yildiz_tozu')).toBeNull();
+    expect(idleSheetKey('olmayan_kahraman')).toBeNull(); // sheet'i olmayan kahraman
+    expect(idleSheetKey('olmayan_kahraman', 'fairy_yildiz_tozu')).toBeNull();
   });
 
   it('16 pozlu sheet: kendi ızgarası, hızı ve dizisiyle oynar; diğerleri 4×2 varsayılanında kalır', () => {
@@ -75,16 +75,16 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
       expect(idleFrameAt(sp.sequence.length / sp.fps - 1e-3, sp)).toBe(sp.sequence[sp.sequence.length - 1]);
     }
     // 4 kahramanın varsayılan görünümü 8 pozlu kalır; Anka/Cin/Serafim varsayılanları 16 pozludur
-    for (const k of ['night_screecher', 'assassin', 'fairy', 'siren', 'golem']) expect(idleSpec(k).frameCount, k).toBe(8);
+    for (const k of ['night_screecher', 'assassin', 'fairy', 'siren']) expect(idleSpec(k).frameCount, k).toBe(8);
     for (const k of ['phoenix', 'djinn', 'seraph', 'phoenix_gunes_taci', 'djinn_gece_sarayi', 'seraph_gunes_mabedi']) expect(idleSpec(k).frameCount, k).toBe(16);
     expect(idleSpec('assassin_mor_sis').frameCount).toBe(16);
     expect(idleSpec('olmayan').frameCount).toBe(8);
   });
 
-  it('12 pozlu sheet (4×3): on iki kahramanın üç görünümü kendi dizisiyle oynar', () => {
+  it('12 pozlu sheet (4×3): on beş kahramanın üç görünümü kendi dizisiyle oynar', () => {
     const twelve = (manifest.textures as Array<{ hero: string; costume: string; key?: string; frameCount?: number; frameSequence?: number[]; columns?: number; rows?: number; frameRate?: number }>).filter((t) => t.frameCount === 12);
-    expect(twelve).toHaveLength(36);
-    expect([...new Set(twelve.map((t) => t.hero))].sort()).toEqual(['bigfoot', 'dragonheart', 'demon', 'kitsune', 'mage', 'minotaur', 'naga', 'paladin', 'ranger', 'stormcaller', 'warrior', 'werewolf'].sort());
+    expect(twelve).toHaveLength(45);
+    expect([...new Set(twelve.map((t) => t.hero))].sort()).toEqual(['bigfoot', 'dragonheart', 'demon', 'golem', 'kitsune', 'mage', 'minotaur', 'naga', 'necromancer', 'paladin', 'ranger', 'stormcaller', 'vampire', 'warrior', 'werewolf'].sort());
     for (const t of twelve) {
       const key = t.key ?? (t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`);
       const sp = idleSpec(key);
@@ -97,6 +97,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(idleSpec('naga_yakut_tahti').frameCount).toBe(12);
     expect(idleSpec('bigfoot_yosun_bekcisi').frameCount).toBe(12);
     expect(idleSpec('demon_soluk_alev').frameCount).toBe(12);
+    expect(idleSpec('golem_zumrut_cekirdek').frameCount).toBe(12);
+    expect(idleSpec('vampire_buz_soylusu').frameCount).toBe(12);
     expect(idleSpec('dragonheart_kor_pulu').frameCount).toBe(12);
   });
 });

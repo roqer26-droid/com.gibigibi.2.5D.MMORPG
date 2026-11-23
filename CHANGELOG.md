@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.70.0 — 12 pozlu bekleme animasyonları, paket 4 (Ölüm Çağıran, Vampir, Kristal Golem)
+- Ölüm Çağıran ve Vampir'in 6 sheet'i 12 pozlu (4×3) sürümleriyle güncellendi; Kristal Golem için varsayılan + 2 kostüm sheet'i ilk kez eklendi (toplam 66 sheet: 45 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Artık sheet'i olmayan kahraman kalmadı. Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar.
+- Yayın boyutu için düşman görselleri kalite 34'e yeniden sıkıştırıldı.
+
 ## v1.69.0 — 12 pozlu bekleme animasyonları, paket 3 (İblis, Korucu, Büyücü, Koca Ayak)
 - İblis için varsayılan + 2 kostüm sheet'i ilk kez eklendi; Korucu, Büyücü ve Koca Ayak'ın 8 pozlu kayıtları 12 pozlu (4×3) sürümleriyle güncellendi (toplam 63 sheet: 36 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar. Sheet'i olmayan tek kahraman: Golem.
 - `bigfoot_murdum_gecidi` → mevcut `bigfoot_yosun_bekcisi` kimliğine eşlendi.

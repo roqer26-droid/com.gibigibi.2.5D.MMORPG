@@ -60,16 +60,16 @@
   "refBottom": 0.9714
  },
  "vampire": {
-  "refTop": 0.1224,
-  "refBottom": 0.9688
+  "refTop": 0.1719,
+  "refBottom": 0.9714
  },
  "vampire_kizil_kadife": {
-  "refTop": 0.1979,
-  "refBottom": 0.9688
+  "refTop": 0.2109,
+  "refBottom": 0.9714
  },
  "vampire_buz_soylusu": {
-  "refTop": 0.2005,
-  "refBottom": 0.9688
+  "refTop": 0.1849,
+  "refBottom": 0.9714
  },
  "bigfoot": {
   "refTop": 0.1745,
@@ -96,15 +96,15 @@
   "refBottom": 0.8203
  },
  "necromancer": {
-  "refTop": 0.1953,
+  "refTop": 0.2161,
   "refBottom": 0.9688
  },
  "necromancer_mezar_ayazi": {
-  "refTop": 0.1875,
-  "refBottom": 0.9661
+  "refTop": 0.2604,
+  "refBottom": 0.9688
  },
  "necromancer_zehirli_lahit": {
-  "refTop": 0.1641,
+  "refTop": 0.2682,
   "refBottom": 0.9714
  },
  "assassin": {
@@ -249,6 +249,18 @@
  },
  "demon_soluk_alev": {
   "refTop": 0.2344,
+  "refBottom": 0.9688
+ },
+ "golem": {
+  "refTop": 0.2057,
+  "refBottom": 0.9714
+ },
+ "golem_ametist_cekirdek": {
+  "refTop": 0.1797,
+  "refBottom": 0.9688
+ },
+ "golem_zumrut_cekirdek": {
+  "refTop": 0.1667,
   "refBottom": 0.9688
  }
 }
