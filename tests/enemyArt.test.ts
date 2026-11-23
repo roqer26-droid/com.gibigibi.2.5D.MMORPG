@@ -114,8 +114,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(355);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(243);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(365);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(253);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -630,7 +630,7 @@ describe('v1.46.0: bölge bossları paket 1 (aşama 8)', () => {
   it('aynı arketipi paylaşan diğer düşmanlar, önceki paketler ve havuz değişmez', () => {
     expect(enemyArtKey('dawn_core_9_enemy')).toBe('dawn_core_9');
     expect(enemyArtKey('sky_10_enemy')).not.toBe('sky_8_enemy');
-    for (const id of ['rebirth_5_enemy', 'light_shadow_5_enemy', 'gods_court_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
+    for (const id of ['cosmic_storm_7_enemy', 'immortality_7_enemy', 'eternity_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
     expect(enemyArtKey('astral_10_enemy')).toBeNull();
   });
 });
@@ -738,7 +738,36 @@ describe('v1.50.0: elit çizimleri paket 3', () => {
       expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
     }
     expect(enemyArtKey('time_rift_9_enemy')).toBe('time_rift_9_enemy');
-    expect(enemyArtKey('light_shadow_5_enemy')).toBeNull();
+    expect(enemyArtKey('eternity_7_enemy')).toBeNull();
     expect(enemyArtKey('eternal_winter_9_enemy')).not.toBe('eternal_winter_7_enemy');
+  });
+});
+
+describe('v1.51.0: elit çizimleri paket 4', () => {
+  const IDS = ['light_shadow_5', 'light_shadow_7', 'light_shadow_9', 'dragon_roost_7', 'gods_court_5', 'gods_court_7', 'gods_court_9', 'rebirth_5', 'rebirth_7', 'rebirth_9'];
+  const FLOAT = ['light_shadow_7', 'gods_court_5', 'gods_court_9', 'rebirth_5', 'rebirth_9'];
+  it('10 elit: kimlik = çizim anahtarı = dosya adı; yalnızca Karanlık Kılıç, Tanrı Elçileri ve Kor Ruhları süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      const key = `${id}_enemy`;
+      expect(st.type, id).toBe('elite');
+      expect(st.enemy.id, id).toBe(key);
+      expect(ENEMY_ART_BY_ID[key], id).toBe(key);
+      expect(enemyArtKey(key)).toBe(key);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.45);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, id).toBe(FLOAT.includes(id));
+    }
+  });
+  it('aynı adlı düşmanlar kimliğine göre ayrı eşlenir (Gölge Rahibi ×2, Tanrı Elçisi ×2, Kor Ruhu ×2)', () => {
+    const name = (id: string) => WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === id)!.enemy.name;
+    for (const [a, b] of [['light_shadow_5', 'light_shadow_9'], ['gods_court_5', 'gods_court_9'], ['rebirth_5', 'rebirth_9']]) {
+      expect(name(a)).toBe(name(b));
+      expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
+    }
+    expect(enemyArtKey('dreamscape_9_enemy')).toBe('dreamscape_9_enemy');
+    expect(enemyArtKey('cosmic_storm_5_enemy')).toBeNull();
+    expect(enemyArtKey('immortality_5_enemy')).toBeNull();
   });
 });

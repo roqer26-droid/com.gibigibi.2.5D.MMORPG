@@ -1010,5 +1010,45 @@
  "iron_inferno_9_enemy": {
   "aspect": 1.039,
   "footFrac": 0.9974
+ },
+ "dragon_roost_7_enemy": {
+  "aspect": 1.8182,
+  "footFrac": 0.9727
+ },
+ "gods_court_5_enemy": {
+  "aspect": 0.68,
+  "footFrac": 1.0
+ },
+ "gods_court_7_enemy": {
+  "aspect": 0.945,
+  "footFrac": 0.9975
+ },
+ "gods_court_9_enemy": {
+  "aspect": 1.1527,
+  "footFrac": 1.0
+ },
+ "light_shadow_5_enemy": {
+  "aspect": 0.6275,
+  "footFrac": 0.9975
+ },
+ "light_shadow_7_enemy": {
+  "aspect": 1.0499,
+  "footFrac": 1.0
+ },
+ "light_shadow_9_enemy": {
+  "aspect": 0.865,
+  "footFrac": 0.9975
+ },
+ "rebirth_5_enemy": {
+  "aspect": 1.0178,
+  "footFrac": 1.0
+ },
+ "rebirth_7_enemy": {
+  "aspect": 1.6878,
+  "footFrac": 0.9705
+ },
+ "rebirth_9_enemy": {
+  "aspect": 0.785,
+  "footFrac": 1.0
  }
 }
