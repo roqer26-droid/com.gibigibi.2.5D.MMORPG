@@ -50,6 +50,18 @@ export const COSTUMES: readonly CostumeDef[] = [
   { id: 'assassin_mor_sis', heroId: 'assassin', name: 'Mor Sis' },
   { id: 'necromancer_zehirli_lahit', heroId: 'necromancer', name: 'Zehirli Lahit' },
   { id: 'stormcaller_mercan_firtinasi', heroId: 'stormcaller', name: 'Mercan Fırtınası' },
+  // v1.59.0: üçüncü paket (kalan 11 şampiyon için ek kostüm; önceki kostümler ve kayıtlı seçimler korunur)
+  { id: 'dragonheart_kor_pulu', heroId: 'dragonheart', name: 'Kor Pulu' },
+  { id: 'fairy_yildiz_tozu', heroId: 'fairy', name: 'Yıldız Tozu' },
+  { id: 'kitsune_ay_tilsimi', heroId: 'kitsune', name: 'Ay Tılsımı' },
+  { id: 'naga_yakut_tahti', heroId: 'naga', name: 'Yakut Tahtı' },
+  { id: 'siren_mercan_ezgisi', heroId: 'siren', name: 'Mercan Ezgisi' },
+  { id: 'minotaur_buz_labirenti', heroId: 'minotaur', name: 'Buz Labirenti' },
+  { id: 'golem_zumrut_cekirdek', heroId: 'golem', name: 'Zümrüt Çekirdek' },
+  { id: 'phoenix_kutup_ankasi', heroId: 'phoenix', name: 'Kutup Ankası' },
+  { id: 'djinn_gece_sarayi', heroId: 'djinn', name: 'Gece Sarayı' },
+  { id: 'demon_soluk_alev', heroId: 'demon', name: 'Soluk Alev' },
+  { id: 'seraph_gunes_mabedi', heroId: 'seraph', name: 'Güneş Mabedi' },
 ];
 
 const BY_ID = new Map(COSTUMES.map((c) => [c.id, c]));

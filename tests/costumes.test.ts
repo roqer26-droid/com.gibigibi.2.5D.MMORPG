@@ -26,6 +26,13 @@ const SECOND: [string, string, string][] = [
   ['necromancer', 'Zehirli Lahit', 'necromancer_zehirli_lahit'], ['stormcaller', 'Mercan Fırtınası', 'stormcaller_mercan_firtinasi'],
 ];
 
+const THIRD: [string, string, string][] = [
+  ['dragonheart', 'Kor Pulu', 'dragonheart_kor_pulu'], ['fairy', 'Yıldız Tozu', 'fairy_yildiz_tozu'], ['kitsune', 'Ay Tılsımı', 'kitsune_ay_tilsimi'],
+  ['naga', 'Yakut Tahtı', 'naga_yakut_tahti'], ['siren', 'Mercan Ezgisi', 'siren_mercan_ezgisi'], ['minotaur', 'Buz Labirenti', 'minotaur_buz_labirenti'],
+  ['golem', 'Zümrüt Çekirdek', 'golem_zumrut_cekirdek'], ['phoenix', 'Kutup Ankası', 'phoenix_kutup_ankasi'], ['djinn', 'Gece Sarayı', 'djinn_gece_sarayi'],
+  ['demon', 'Soluk Alev', 'demon_soluk_alev'], ['seraph', 'Güneş Mabedi', 'seraph_gunes_mabedi'],
+];
+
 describe('v1.45.0: kostümler', () => {
   it('22 dosya doğru şampiyonla, adla ve kimlikle eşleşir; hepsinin görseli ve ölçüsü vardır', () => {
     expect(COSTUMES.slice(0, 22)).toHaveLength(22);
@@ -39,7 +46,7 @@ describe('v1.45.0: kostümler', () => {
       expect(HERO_ART_META[file].footFrac).toBeGreaterThan(0.9);
     }
     // ilk sette her şampiyonun birer kostümü vardı; v1.58.0 ile 11 şampiyona ikinci kostüm eklendi (tek kayıttan okunur)
-    for (const h of HERO_CLASS_LIST) expect(costumesForHero(h.id).map((c) => c.id), h.id).toHaveLength(SECOND.some(([hh]) => hh === h.id) ? 2 : 1);
+    for (const h of HERO_CLASS_LIST) expect(costumesForHero(h.id).map((c) => c.id), h.id).toHaveLength(SECOND.some(([hh]) => hh === h.id) || THIRD.some(([hh]) => hh === h.id) ? 2 : 1);
     // klasördeki dosyalar = tanımlı kostümler (dosya adı kaynak)
     const files = readdirSync('src/art/costumes').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     expect(files).toEqual(COSTUMES.map((c) => c.id).sort());
@@ -119,7 +126,7 @@ describe('v1.45.0: kostümler', () => {
 
 describe('v1.58.0: ikinci kostüm seti (11 yeni kostüm)', () => {
   it('11 dosya doğru şampiyonla, adla ve kimlikle eşleşir (night_screecher tek parça); ilk set korunur', () => {
-    expect(COSTUMES).toHaveLength(33);
+    expect(COSTUMES.slice(0, 33)).toHaveLength(33);
     for (const [hero, name, file] of SECOND) {
       const c = costumeById(file)!;
       expect([c.heroId, c.name, c.id], file).toEqual([hero, name, file]);
@@ -147,5 +154,32 @@ describe('v1.58.0: ikinci kostüm seti (11 yeni kostüm)', () => {
     expect(parseSaveString(JSON.stringify(b))!.heroes[hero].costumeId).toBe('warrior_kutup_celigi');
     expect(setHeroCostume(b, hero, 'warrior_koz_muhafizi').save.heroes[hero].costumeId).toBe('warrior_koz_muhafizi');
     expect(setHeroCostume(b, hero, 'mage_kor_akademisi').save).toBe(b); // başka şampiyonun kostümü
+  });
+});
+
+describe('v1.59.0: kostümler üçüncü paket (kalan 11 şampiyon)', () => {
+  it('11 dosya doğru şampiyonla, adla ve kimlikle eşleşir; artık 22 şampiyonun hepsinin iki kostümü var', () => {
+    expect(COSTUMES).toHaveLength(44);
+    for (const [hero, name, file] of THIRD) {
+      const c = costumeById(file)!;
+      expect([c.heroId, c.name, c.id], file).toEqual([hero, name, file]);
+      expect(hasHeroArt(file), file).toBe(true);
+      expect(HERO_ART_META[file].aspect).toBeGreaterThan(0.45);
+      expect(heroArtKey(hero, file)).toBe(file);
+    }
+    for (const h of HERO_CLASS_LIST) expect(costumesForHero(h.id), h.id).toHaveLength(2);
+    for (const [hero, , file] of [...EXPECTED, ...SECOND]) expect(isValidCostume(hero, file), file).toBe(true); // önceki kostümler geçerli
+    const files = readdirSync('src/art/costumes').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
+    expect(files).toEqual(COSTUMES.map((c) => c.id).sort());
+  });
+  it('süzülen şampiyonların (Peri, Anka, Cin, Serafim) kostüm tabanı 1,0; kayıt turu ve kozmetiklik', () => {
+    for (const f of ['fairy_yildiz_tozu', 'phoenix_kutup_ankasi', 'djinn_gece_sarayi', 'seraph_gunes_mabedi']) expect(HERO_ART_META[f].footFrac, f).toBe(1);
+    const s = createInitialSaveState();
+    const hero = s.activeHeroClass;
+    const before = computeHeroBuild(s.heroes[hero]);
+    const next = costumesForHero(hero)[1];
+    const r = setHeroCostume(s, hero, next.id).save;
+    expect(computeHeroBuild(r.heroes[hero])).toEqual(before);
+    expect(parseSaveString(JSON.stringify(r))!.heroes[hero].costumeId).toBe(next.id);
   });
 });

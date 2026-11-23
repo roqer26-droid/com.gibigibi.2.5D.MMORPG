@@ -130,5 +130,49 @@
  "werewolf_kanli_ay": {
   "aspect": 0.7964,
   "footFrac": 0.9786
+ },
+ "demon_soluk_alev": {
+  "aspect": 0.7089,
+  "footFrac": 0.9839
+ },
+ "djinn_gece_sarayi": {
+  "aspect": 0.6393,
+  "footFrac": 1.0
+ },
+ "dragonheart_kor_pulu": {
+  "aspect": 0.6893,
+  "footFrac": 0.9982
+ },
+ "fairy_yildiz_tozu": {
+  "aspect": 0.7768,
+  "footFrac": 1.0
+ },
+ "golem_zumrut_cekirdek": {
+  "aspect": 0.8589,
+  "footFrac": 1.0
+ },
+ "kitsune_ay_tilsimi": {
+  "aspect": 1.1618,
+  "footFrac": 0.9876
+ },
+ "minotaur_buz_labirenti": {
+  "aspect": 0.7179,
+  "footFrac": 0.9982
+ },
+ "naga_yakut_tahti": {
+  "aspect": 0.7643,
+  "footFrac": 1.0
+ },
+ "phoenix_kutup_ankasi": {
+  "aspect": 0.875,
+  "footFrac": 1.0
+ },
+ "seraph_gunes_mabedi": {
+  "aspect": 0.9411,
+  "footFrac": 1.0
+ },
+ "siren_mercan_ezgisi": {
+  "aspect": 0.6714,
+  "footFrac": 0.9893
  }
 }
