@@ -4,6 +4,9 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.71.0 — Bekleme döngüleri 1 saniye kısaldı
+- Tüm idle sheet'ler manifestteki süreden 1 sn kısa oynar (örn. 3,75 sn → 2,75 sn; 4,5 sn → 3,5 sn): kare dizisi aynı, oynatma hızı orantılı artar. Ayar `IDLE_LOOP_REDUCTION_MS` (`src/data/heroIdle.ts`); 0 yapılırsa manifest hızına döner.
+
 ## v1.70.0 — 12 pozlu bekleme animasyonları, paket 4 (Ölüm Çağıran, Vampir, Kristal Golem)
 - Ölüm Çağıran ve Vampir'in 6 sheet'i 12 pozlu (4×3) sürümleriyle güncellendi; Kristal Golem için varsayılan + 2 kostüm sheet'i ilk kez eklendi (toplam 66 sheet: 45 adet 12 pozlu, 17 adet 16 pozlu, kalanı 8 pozlu). Artık sheet'i olmayan kahraman kalmadı. Her görünüm kendi `frameSequence` ve `frameRate` değeriyle oynar.
 - Yayın boyutu için düşman görselleri kalite 34'e yeniden sıkıştırıldı.

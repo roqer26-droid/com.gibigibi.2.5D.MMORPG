@@ -28,13 +28,20 @@ export const IDLE_DURATION_MS: number = manifest.durationMs;
 /** Ayak noktası (kare içinde normalleştirilmiş): çizim bu noktadan zemin çizgisine oturur. */
 export const IDLE_ORIGIN: { x: number; y: number } = manifest.origin;
 
+/**
+ * Döngü süresinden düşülen miktar (ms): tüm sheet'ler manifestteki süreden bu kadar kısa sürede oynar
+ * (dizideki kare sayısı aynı kalır, oynatma hızı orantılı artar). 0 yapılırsa manifest hızına döner.
+ */
+export const IDLE_LOOP_REDUCTION_MS = 1000;
+const tempo = (durationMs: number) => (durationMs > IDLE_LOOP_REDUCTION_MS * 2 ? durationMs / (durationMs - IDLE_LOOP_REDUCTION_MS) : 1);
+
 export const IDLE_DEFAULT_SPEC: IdleSpec = {
   columns: IDLE_COLUMNS,
   rows: IDLE_ROWS,
   frameCount: IDLE_FRAME_COUNT,
-  fps: IDLE_FPS,
+  fps: IDLE_FPS * tempo(IDLE_DURATION_MS),
   sequence: IDLE_SEQUENCE,
-  durationMs: IDLE_DURATION_MS,
+  durationMs: IDLE_DURATION_MS / tempo(IDLE_DURATION_MS),
 };
 
 interface ManifestEntry {
@@ -55,9 +62,9 @@ for (const t of manifest.textures as ManifestEntry[]) {
     columns: t.columns ?? IDLE_COLUMNS,
     rows: t.rows ?? IDLE_ROWS,
     frameCount: t.frameCount ?? IDLE_FRAME_COUNT,
-    fps: t.frameRate ?? IDLE_FPS,
+    fps: (t.frameRate ?? IDLE_FPS) * tempo(t.durationMs ?? IDLE_DURATION_MS),
     sequence: t.frameSequence ?? IDLE_SEQUENCE,
-    durationMs: t.durationMs ?? IDLE_DURATION_MS,
+    durationMs: (t.durationMs ?? IDLE_DURATION_MS) / tempo(t.durationMs ?? IDLE_DURATION_MS),
   };
 }
 /** Sheet anahtarına göre oynatma bilgisi (bilinmiyorsa 4×2 varsayılanı). */

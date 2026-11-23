@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readdirSync } from 'fs';
 import manifest from '../src/art/heroes-idle/idle-manifest.json';
-import { IDLE_DURATION_MS, IDLE_FPS, IDLE_FRAME_COUNT, IDLE_ORIGIN, IDLE_SEQUENCE, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey, idleSpec } from '../src/data/heroIdle';
+import { IDLE_DURATION_MS, IDLE_FPS, IDLE_FRAME_COUNT, IDLE_ORIGIN, IDLE_SEQUENCE, IDLE_DEFAULT_SPEC, IDLE_LOOP_REDUCTION_MS, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey, idleSpec } from '../src/data/heroIdle';
 import { isValidCostume } from '../src/data/costumes';
 
 describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
@@ -20,17 +20,18 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
   });
 
   it('kare seçimi: 12 FPS, 4,5 sn sonunda başa sarar; tekrarlar kadar ekranda kalır', () => {
-    expect(idleFrameAt(0)).toBe(0);
-    expect(idleFrameAt(7 / 12)).toBe(0); // ilk poz 8 kare tutulur (0–7)
-    expect(idleFrameAt(8 / 12)).toBe(1);
-    expect(idleFrameAt(13 / 12)).toBe(2);
-    expect(idleFrameAt(53 / 12)).toBe(7);
-    expect(idleFrameAt(4.5)).toBe(0); // döngü başa döner
-    expect(idleFrameAt(4.5 + 8 / 12)).toBe(1);
-    expect(idleFrameAt(-1)).toBe(0);
+    const BASE = { ...IDLE_DEFAULT_SPEC, fps: IDLE_FPS, durationMs: IDLE_DURATION_MS };
+    expect(idleFrameAt(0, BASE)).toBe(0);
+    expect(idleFrameAt(7 / 12, BASE)).toBe(0); // ilk poz 8 kare tutulur (0–7)
+    expect(idleFrameAt(8 / 12, BASE)).toBe(1);
+    expect(idleFrameAt(13 / 12, BASE)).toBe(2);
+    expect(idleFrameAt(53 / 12, BASE)).toBe(7);
+    expect(idleFrameAt(4.5, BASE)).toBe(0); // döngü başa döner
+    expect(idleFrameAt(4.5 + 8 / 12, BASE)).toBe(1);
+    expect(idleFrameAt(-1, BASE)).toBe(0);
     // her pozun toplam kalma süresi = holds / 12 sn
     const counts = new Array(8).fill(0);
-    for (let i = 0; i < 54; i++) counts[idleFrameAt(i / 12 + 1e-6)]++;
+    for (let i = 0; i < 54; i++) counts[idleFrameAt(i / 12 + 1e-6, BASE)]++;
     expect(counts).toEqual(manifest.frameHolds);
   });
 
@@ -64,10 +65,10 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
       const sp = idleSpec(key);
       expect(sp.columns, key).toBe(4);
       expect(sp.rows, key).toBe(4);
-      expect(sp.fps, key).toBe(t.frameRate);
+      expect(sp.fps, key).toBeCloseTo(t.frameRate! * (t.durationMs! / (t.durationMs! - IDLE_LOOP_REDUCTION_MS)), 6);
+      expect(sp.sequence.length / sp.fps * 1000, key).toBeCloseTo(t.durationMs! - IDLE_LOOP_REDUCTION_MS, 0);
       expect(sp.sequence, key).toEqual(t.frameSequence);
       expect([...new Set(sp.sequence)], key).toEqual(Array.from({ length: 16 }, (_, i) => i));
-      expect(sp.sequence.length / sp.fps * 1000, key).toBeCloseTo(t.frameSequence!.length / 12 * 1000, 3);
       for (let f = 0; f < 16; f++) expect(sp.sequence.filter((x) => x === f).length, `${key} kare ${f}`).toBe(t.frameHolds![f]);
       // kare seçimi sheet'in kendi dizisini izler ve döngü başa sarar
       expect(idleFrameAt(0, sp)).toBe(sp.sequence[0]);
@@ -89,7 +90,8 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
       const key = t.key ?? (t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`);
       const sp = idleSpec(key);
       expect([sp.columns, sp.rows], key).toEqual([4, 3]);
-      expect(sp.fps, key).toBe(t.frameRate);
+      expect(sp.fps, key).toBeCloseTo(t.frameRate! * (t.durationMs! / (t.durationMs! - IDLE_LOOP_REDUCTION_MS)), 6);
+      expect(sp.sequence.length / sp.fps * 1000, key).toBeCloseTo(t.durationMs! - IDLE_LOOP_REDUCTION_MS, 0);
       expect(sp.sequence, key).toEqual(t.frameSequence);
       expect([...new Set(sp.sequence)], key).toEqual(Array.from({ length: 12 }, (_, i) => i));
     }
