@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.66.0 — 16 pozlu bekleme animasyonları (Anka, Cin, Serafim + dört kahramanın kostümleri)
+- Anka, Cin ve Serafim için varsayılan + 2'şer kostüm (9 yeni sheet); Gecenin Çığırtkanı, Suikastçı, Peri ve Siren'in 8 kostümü 16 pozlu sürümleriyle değiştirildi (toplam 57 sheet, 17'si 16 pozlu 4×4). Bu dört kahramanın varsayılan görünümleri mevcut 8 pozlu sheet'te kaldı (pakette 16 pozlu varsayılan yoktu).
+- Oynatma sheet başına: ızgara (4×2 / 4×4), kare sayısı, `frameRate`, `frameSequence` ve süre manifestteki kayıttan okunur (`idleSpec`); kaydı olmayanlar eski 4×2 varsayılanını kullanır. 16 pozlular 3,5–3,75 sn döngü.
+- Kostüm eşlemeleri: `assassin_yesil_pence`→`assassin_mor_sis`, `djinn_kizil_firman`→`djinn_gece_sarayi`, `seraph_gece_yapragi`→`seraph_gunes_mabedi`.
+- Yayın boyutu için: 16 pozlu sheet'ler 768×924 (kalite 44), 8 pozlular 768×464 (kalite 44), düşman görselleri en uzun kenar 240 px (kalite 52).
+
 ## v1.65.0 — Kahramanlar 13–16 çizilmiş bekleme animasyonları
 - Peri, Ruh Tilkisi, Naga ve Siren için 12 yeni sheet (varsayılan + 2'şer kostüm); önceki paketlerin 36 kaydı korunur (toplam 48). 4×2 ızgarada 8 poz (320×384); `frameSequence` 12 FPS, 4,5 sn döngü, manifest `origin`; sheet oynarken esnetme ve ayrı süzülme (bob) kapalı — Peri ve Siren'in hafif süzülmesi karelerde.
 - `naga_safir_gelgit` → mevcut `naga_yakut_tahti` kimliğine eşlendi (kayıtlar bozulmaz). Saldırı/hasar sonrası seçili kostümün bekleme döngüsüne dönülür.

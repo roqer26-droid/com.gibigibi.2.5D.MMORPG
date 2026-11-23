@@ -88,12 +88,12 @@
   "refBottom": 0.8958
  },
  "night_screecher_firtina_cigligi": {
-  "refTop": 0.4193,
-  "refBottom": 0.8802
+  "refTop": 0.3698,
+  "refBottom": 0.8307
  },
  "night_screecher_bakir_tutulma": {
-  "refTop": 0.4688,
-  "refBottom": 0.8802
+  "refTop": 0.388,
+  "refBottom": 0.8203
  },
  "necromancer": {
   "refTop": 0.1953,
@@ -112,12 +112,12 @@
   "refBottom": 0.9688
  },
  "assassin_kizil_golge": {
-  "refTop": 0.112,
-  "refBottom": 0.9714
+  "refTop": 0.0755,
+  "refBottom": 0.9688
  },
  "assassin_mor_sis": {
-  "refTop": 0.1042,
-  "refBottom": 0.9688
+  "refTop": 0.0703,
+  "refBottom": 0.9714
  },
  "stormcaller": {
   "refTop": 0.1458,
@@ -148,12 +148,12 @@
   "refBottom": 0.9688
  },
  "fairy_ciy_bahcesi": {
-  "refTop": 0.2344,
-  "refBottom": 0.9688
+  "refTop": 0.2005,
+  "refBottom": 0.888
  },
  "fairy_yildiz_tozu": {
-  "refTop": 0.3177,
-  "refBottom": 0.9688
+  "refTop": 0.2031,
+  "refBottom": 0.9036
  },
  "kitsune": {
   "refTop": 0.4297,
@@ -184,11 +184,47 @@
   "refBottom": 0.9714
  },
  "siren_ay_gelgiti": {
-  "refTop": 0.2344,
-  "refBottom": 0.9688
+  "refTop": 0.1745,
+  "refBottom": 0.8464
  },
  "siren_mercan_ezgisi": {
-  "refTop": 0.2292,
-  "refBottom": 0.9688
+  "refTop": 0.125,
+  "refBottom": 0.8464
+ },
+ "phoenix": {
+  "refTop": 0.3698,
+  "refBottom": 0.8516
+ },
+ "phoenix_gunes_taci": {
+  "refTop": 0.3724,
+  "refBottom": 0.8438
+ },
+ "phoenix_kutup_ankasi": {
+  "refTop": 0.3698,
+  "refBottom": 0.8359
+ },
+ "djinn": {
+  "refTop": 0.0703,
+  "refBottom": 0.8672
+ },
+ "djinn_kum_sarayi": {
+  "refTop": 0.0885,
+  "refBottom": 0.8594
+ },
+ "djinn_gece_sarayi": {
+  "refTop": 0.0859,
+  "refBottom": 0.8151
+ },
+ "seraph": {
+  "refTop": 0.151,
+  "refBottom": 0.7865
+ },
+ "seraph_gece_mabedi": {
+  "refTop": 0.1276,
+  "refBottom": 0.7786
+ },
+ "seraph_gunes_mabedi": {
+  "refTop": 0.1328,
+  "refBottom": 0.7839
  }
 }

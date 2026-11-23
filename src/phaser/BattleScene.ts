@@ -20,7 +20,7 @@ import { computeEnchantAura, HERO_TEX_SIZE, heroArtSize, heroAuraGeometry } from
 import { createEnemyGlowTexture, createEnemyPhaserTexture, createHeroPhaserTexture } from './CharacterRenderer';
 import { createGemTextures } from './GemTextures';
 import { GEM_ART_URL, GEM_TYPES, gemTextureKey } from '../data/gemArt';
-import { IDLE_COLUMNS, IDLE_FRAME_COUNT, IDLE_ORIGIN, IDLE_ROWS, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey } from '../data/heroIdle';
+import { IDLE_ORIGIN, IDLE_SHEET_URL, idleFrameAt, idleReference, idleSheetKey, idleSpec, type IdleSpec } from '../data/heroIdle';
 import { capGemShield, enemyHitDamage } from '../data/difficulty';
 import type { ObjectiveDef } from '../data/mastery';
 import { HERO_ART_LAYOUT, HERO_ART_META, HERO_BREATH, hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
@@ -150,7 +150,7 @@ export class BattleScene extends Phaser.Scene {
   private heroSprite!: Phaser.GameObjects.Image;
   private heroIdleKey = '';
   /** Çizilmiş bekleme sheet'i (varsa): kare sırası 12 FPS oynar; saldırı pozu sırasında gizlenir, bitince döngüye dönülür */
-  private heroSheet: { texKey: string; scale: number; frames: number } | null = null;
+  private heroSheet: { texKey: string; scale: number; frames: number; spec: IdleSpec } | null = null;
   private heroPosing = false;
   private heroIdleClock = 0;
   private heroIdleFrame = -1;
@@ -3958,11 +3958,12 @@ export class BattleScene extends Phaser.Scene {
     if (!key || !ref || !this.textures.exists(texKey) || !hasHeroArt(hero.classId)) return;
     const tex = this.textures.get(texKey);
     const src = tex.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
-    const fw = Math.floor(src.width / IDLE_COLUMNS);
-    const fh = Math.floor(src.height / IDLE_ROWS);
+    const spec = idleSpec(key);
+    const fw = Math.floor(src.width / spec.columns);
+    const fh = Math.floor(src.height / spec.rows);
     if (fw < 8 || fh < 8) return;
-    for (let i = 0; i < IDLE_FRAME_COUNT; i++) {
-      if (!tex.has(String(i))) tex.add(String(i), 0, (i % IDLE_COLUMNS) * fw, Math.floor(i / IDLE_COLUMNS) * fh, fw, fh);
+    for (let i = 0; i < spec.frameCount; i++) {
+      if (!tex.has(String(i))) tex.add(String(i), 0, (i % spec.columns) * fw, Math.floor(i / spec.columns) * fh, fw, fh);
     }
     // Havada duran kahramanlarda (Gecenin Çığırtkanı) yükselme sheet karelerinde çizilidir: çizim zemin çizgisine hizalanır
     // Ölçek: 1. karedeki çizimin tepeden ayağa yüksekliği, statik çizimin (aynı kahraman/kostüm) ayaktan tepeye yüksekliğiyle eşitlenir
@@ -3971,7 +3972,7 @@ export class BattleScene extends Phaser.Scene {
     const foot = HERO_ART_META[artKey]?.footFrac ?? 1;
     const bodyPx = (ref.bottom - ref.top) * fh;
     const scale = (size.h * foot) / bodyPx;
-    this.heroSheet = { texKey, scale, frames: IDLE_FRAME_COUNT };
+    this.heroSheet = { texKey, scale, frames: spec.frameCount, spec };
     this.heroShadow = this.add.ellipse(0, 100, 88, 22, 0x000000, 0.45);
     this.heroContainer.add(this.heroShadow);
     this.heroContainer.sendToBack(this.heroShadow);
@@ -3990,7 +3991,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroPosing = false;
     this.heroIdleFrame = -1;
     const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
-    this.heroSprite.setTexture(this.heroSheet.texKey, String(idleFrameAt(this.heroIdleClock)));
+    this.heroSprite.setTexture(this.heroSheet.texKey, String(idleFrameAt(this.heroIdleClock, this.heroSheet.spec)));
     this.heroSprite.setOrigin(IDLE_ORIGIN.x, IDLE_ORIGIN.y);
     this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE;
     this.heroSprite.setScale(this.heroSheet.scale);
@@ -4020,7 +4021,7 @@ export class BattleScene extends Phaser.Scene {
     // `delta` Phaser'da hedef kare hızına göre yumuşatılır; gerçek geçen süre (rawDelta) kullanılır ki 12 FPS oynatma gerçek zamanda doğru kalsın
     const real = Math.min(100, this.game.loop.rawDelta || delta);
     this.heroIdleClock += (real / 1000) * this.speed;
-    const f = idleFrameAt(this.heroIdleClock);
+    const f = idleFrameAt(this.heroIdleClock, this.heroSheet.spec);
     if (f !== this.heroIdleFrame) {
       this.heroIdleFrame = f;
       this.heroSprite.setFrame(String(f));
