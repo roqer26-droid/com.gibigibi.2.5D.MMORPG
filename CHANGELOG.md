@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.56.0 — Hazine çizimleri paket 3 (son hazineler)
+- 12 hazine çizimi: Ejder Hazinesi (×2), Kutsal Hazine (×2), Yeniden Doğuş Sandığı (×2, 8. aşama süzülür), Fırtına Sandığı (×2, 8. aşama süzülür), Ölümsüzlük Sandığı (×2) ve Sonsuzluk Sandığı (×2) (`<aşama>_enemy.webp`). Bununla oyundaki tüm karşılaşmalar özel çizimli ya da havuz çizimli; eski vektör çizime düşen aşama kalmadı. Toplam 311 çizim.
+- Yayın boyutu için tüm düşman WebP'leri en uzun kenar 320 px'e indirildi (kalite 58, alfa 55); yeni çizimler de aynı ayarda. Saldırı efektleri, ganimet ve yedek çizim davranışı değişmedi.
+
 ## v1.55.0 — Hazine çizimleri paket 2
 - 12 hazine çizimi: Ebedi Saatin Sandığı (×2), Kızıl Ay Sandığı (×2), Demir Hazine Sandığı (×2), Buz Çekirdeği Sandığı (×2), Rüya Sandığı (×2, süzülür) ve Denge Sandığı (×2) (`<aşama>_enemy.webp`; aynı adlı sandıklar kendi aşama kimliğiyle). Toplam 299 çizim.
 - Saldırı animasyonları, savaş değerleri, ganimet kuralları ve yedek çizim değişmedi.

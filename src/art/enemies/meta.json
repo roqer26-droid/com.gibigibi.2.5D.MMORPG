@@ -1234,5 +1234,53 @@
  "time_rift_8_enemy": {
   "aspect": 1.1003,
   "footFrac": 0.9838
+ },
+ "cosmic_storm_3_enemy": {
+  "aspect": 1.5385,
+  "footFrac": 0.9471
+ },
+ "cosmic_storm_8_enemy": {
+  "aspect": 1.592,
+  "footFrac": 1.0
+ },
+ "dragon_roost_3_enemy": {
+  "aspect": 1.1348,
+  "footFrac": 0.9574
+ },
+ "dragon_roost_8_enemy": {
+  "aspect": 1.608,
+  "footFrac": 0.9698
+ },
+ "eternity_3_enemy": {
+  "aspect": 1.5842,
+  "footFrac": 0.9752
+ },
+ "eternity_8_enemy": {
+  "aspect": 0.9125,
+  "footFrac": 0.9906
+ },
+ "gods_court_3_enemy": {
+  "aspect": 1.2214,
+  "footFrac": 0.9733
+ },
+ "gods_court_8_enemy": {
+  "aspect": 1.4884,
+  "footFrac": 0.9953
+ },
+ "immortality_3_enemy": {
+  "aspect": 1.2261,
+  "footFrac": 0.9847
+ },
+ "immortality_8_enemy": {
+  "aspect": 1.1808,
+  "footFrac": 0.9815
+ },
+ "rebirth_3_enemy": {
+  "aspect": 1.0738,
+  "footFrac": 0.9597
+ },
+ "rebirth_8_enemy": {
+  "aspect": 0.8438,
+  "footFrac": 1.0
  }
 }
