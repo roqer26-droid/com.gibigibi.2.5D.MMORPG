@@ -433,7 +433,8 @@ export class BattleScene extends Phaser.Scene {
       this.startHeroBreath();
       // Havada duran kahramanlar (Peri, Anka, Cin, Serafim, Gecenin Çığırtkanı): hafif süzülme; ayaklı kahramanlarda bob = 0
       const bob = HERO_ART_LAYOUT[this.initData.hero.classId]?.bob ?? 0;
-      if (bob > 0) {
+      // Çizilmiş bekleme sheet'inde hafif yükselme çizimlere dahildir: ayrıca süzülme tween'i uygulanmaz
+      if (bob > 0 && !this.heroSheet) {
         const baseY = this.heroSprite.y;
         this.tweens.add({
           targets: this.heroSprite,
@@ -3963,6 +3964,7 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < IDLE_FRAME_COUNT; i++) {
       if (!tex.has(String(i))) tex.add(String(i), 0, (i % IDLE_COLUMNS) * fw, Math.floor(i / IDLE_COLUMNS) * fh, fw, fh);
     }
+    // Havada duran kahramanlarda (Gecenin Çığırtkanı) yükselme sheet karelerinde çizilidir: çizim zemin çizgisine hizalanır
     // Ölçek: 1. karedeki çizimin tepeden ayağa yüksekliği, statik çizimin (aynı kahraman/kostüm) ayaktan tepeye yüksekliğiyle eşitlenir
     const artKey = heroArtKey(hero.classId, hero.costumeId);
     const size = heroArtSize(hero.classId, undefined, artKey);
@@ -4003,7 +4005,8 @@ export class BattleScene extends Phaser.Scene {
       const footY = (HERO_TEX_SIZE * 0.58 + 74) / HERO_TEX_SIZE;
       this.heroSprite.setTexture(this.heroAttackKey);
       this.heroSprite.setOrigin(0.5, footY);
-      this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE;
+      // Havada duran kahramanın saldırı pozu statik çizimle aynı yükseklikte (zemin − float) durur
+      this.heroSprite.y = (footY - 0.5) * HERO_TEX_SIZE - (HERO_ART_LAYOUT[this.initData.hero.classId]?.float ?? 0);
       this.heroSprite.setScale(1);
       this.heroShadow?.setVisible(false);
     } else {

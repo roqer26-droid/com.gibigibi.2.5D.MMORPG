@@ -34,19 +34,19 @@ describe('v1.62.0: çizilmiş bekleme (idle) animasyonları', () => {
     expect(counts).toEqual(manifest.frameHolds);
   });
 
-  it('12 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
-    expect(manifest.textures).toHaveLength(12);
+  it('24 sheet: kahraman/kostüm eşlemesi manifestle aynı; dosya mevcut; geçersiz kostüm ve sheet olmayan kahraman statik çizime düşer', () => {
+    expect(manifest.textures).toHaveLength(24);
     const files = readdirSync('src/art/heroes-idle').filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', '')).sort();
     const keys: string[] = [];
     for (const t of manifest.textures) {
-      const key = t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`;
+      const key = (t as { key?: string }).key ?? (t.costume === 'default' ? t.hero : `${t.hero}_${t.costume}`);
       keys.push(key);
       if (t.costume !== 'default') expect(isValidCostume(t.hero, key), key).toBe(true);
       expect(IDLE_SHEET_URL[key], key).toBeTruthy();
       expect(idleSheetKey(t.hero, t.costume === 'default' ? null : key), key).toBe(key);
       const ref = idleReference(key)!;
       expect(ref.top).toBeGreaterThan(0.05);
-      expect(ref.bottom).toBeGreaterThan(0.9);
+      expect(ref.bottom).toBeGreaterThan(0.85); // havada duran Gecenin Çığırtkanı'nın ayağı kare tabanından yukarıda
       expect(ref.bottom).toBeLessThanOrEqual(1);
     }
     expect(files).toEqual(keys.sort());

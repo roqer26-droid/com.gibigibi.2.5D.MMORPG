@@ -140,6 +140,79 @@
    "hero": "mage",
    "costume": "kor_akademisi",
    "file": "mage_kor_akademisi_idle_drawn.webp"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "default",
+   "key": "werewolf",
+   "file": "werewolf_default_idle_drawn.webp"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "ay_pencesi",
+   "key": "werewolf_ay_pencesi",
+   "file": "werewolf_ay_pencesi_idle_drawn.webp"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "kanli_ay",
+   "key": "werewolf_kanli_ay",
+   "file": "werewolf_kanli_ay_idle_drawn.webp"
+  },
+  {
+   "hero": "vampire",
+   "costume": "default",
+   "key": "vampire",
+   "file": "vampire_default_idle_drawn.webp"
+  },
+  {
+   "hero": "vampire",
+   "costume": "kizil_kadife",
+   "key": "vampire_kizil_kadife",
+   "file": "vampire_kizil_kadife_idle_drawn.webp"
+  },
+  {
+   "hero": "vampire",
+   "costume": "buz_soylusu",
+   "key": "vampire_buz_soylusu",
+   "file": "vampire_buz_soylusu_idle_drawn.webp"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "default",
+   "key": "bigfoot",
+   "file": "bigfoot_default_idle_drawn.webp"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "kiragi_gezgini",
+   "key": "bigfoot_kiragi_gezgini",
+   "file": "bigfoot_kiragi_gezgini_idle_drawn.webp"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "murdum_gecidi",
+   "key": "bigfoot_yosun_bekcisi",
+   "file": "bigfoot_murdum_gecidi_idle_drawn.webp"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "default",
+   "key": "night_screecher",
+   "file": "night_screecher_default_idle_drawn.webp"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "firtina_cigligi",
+   "key": "night_screecher_firtina_cigligi",
+   "file": "night_screecher_firtina_cigligi_idle_drawn.webp"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "bakir_tutulma",
+   "key": "night_screecher_bakir_tutulma",
+   "file": "night_screecher_bakir_tutulma_idle_drawn.webp"
   }
- ]
+ ],
+ "batch": 2
 }

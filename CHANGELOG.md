@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.63.0 — Kahramanlar 05–08 çizilmiş bekleme animasyonları
+- Kurt Adam, Vampir, Koca Ayak ve Gecenin Çığırtkanı için 12 yeni sheet (varsayılan + 2'şer kostüm); ilk dört kahramanın 12 kaydı korunur (toplam 24). Her sheet 4×2 ızgarada 8 poz (320×384 kare); manifest `frameSequence` 12 FPS, 4,5 sn döngü, `origin` ayak noktası. Sheet oynarken eski esnetme efekti kapalıdır.
+- Gecenin Çığırtkanı'nın hafif yükselmesi çizimlerde olduğundan ayrı süzülme (bob) animasyonu sheet modunda uygulanmaz; saldırı pozu statik çizimle aynı yükseklikte durur.
+- Pakettaki `murdum_gecidi` kostümü mevcut `bigfoot_yosun_bekcisi` kimliğine eşlenir (kayıtlar bozulmaz). Yeni sheet'ler 0,75 ölçeğinde saklanır.
+
 ## v1.62.0 — İlk dört kahramanın çizilmiş bekleme animasyonları
 - Savaşçı, Şövalye, Korucu ve Büyücü için 12 sheet (varsayılan görünüm + her birinin 2 kostümü): her biri 4×2 ızgarada 8 poz. Manifestteki `frameSequence` 12 FPS hızında oynar (54 kare = 4,5 sn; tekrarlar pozun ekranda kalma süresidir), savaş hızıyla ölçeklenir. Ayak noktası manifestteki `origin` ile zemin çizgisine oturur; bu sheet'lerde eski esnetme (nefes) animasyonu uygulanmaz. `src/data/heroIdle.ts`, `src/art/heroes-idle/`.
 - Saldırı pozu sırasında (statik, seçili kostümün çizimi) sheet gizlenir; saldırı ve hasar bitince seçili kostümün bekleme döngüsüne dönülür. Sheet'i olmayan kahramanlar eski çizim + esnetmeyle devam eder; sheet yüklenemezse de aynı yedek çalışır. Sheet yalnızca savaşa girilen kahraman/kostüm için yüklenir.

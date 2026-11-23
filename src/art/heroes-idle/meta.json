@@ -46,5 +46,53 @@
  "mage_kor_akademisi": {
   "refTop": 0.1354,
   "refBottom": 0.9688
+ },
+ "werewolf": {
+  "refTop": 0.2682,
+  "refBottom": 0.9688
+ },
+ "werewolf_ay_pencesi": {
+  "refTop": 0.1589,
+  "refBottom": 0.9688
+ },
+ "werewolf_kanli_ay": {
+  "refTop": 0.25,
+  "refBottom": 0.9714
+ },
+ "vampire": {
+  "refTop": 0.1224,
+  "refBottom": 0.9688
+ },
+ "vampire_kizil_kadife": {
+  "refTop": 0.1979,
+  "refBottom": 0.9688
+ },
+ "vampire_buz_soylusu": {
+  "refTop": 0.2005,
+  "refBottom": 0.9688
+ },
+ "bigfoot": {
+  "refTop": 0.1797,
+  "refBottom": 0.9714
+ },
+ "bigfoot_kiragi_gezgini": {
+  "refTop": 0.1589,
+  "refBottom": 0.9714
+ },
+ "bigfoot_yosun_bekcisi": {
+  "refTop": 0.1849,
+  "refBottom": 0.9714
+ },
+ "night_screecher": {
+  "refTop": 0.4401,
+  "refBottom": 0.8958
+ },
+ "night_screecher_firtina_cigligi": {
+  "refTop": 0.4193,
+  "refBottom": 0.8802
+ },
+ "night_screecher_bakir_tutulma": {
+  "refTop": 0.4688,
+  "refBottom": 0.8802
  }
 }
