@@ -43,7 +43,7 @@ describe('v1.21.0: 21 düşman görseli', () => {
     for (const id of ['shadow_wolf', 'mountain_yeti', 'stone_sentinel']) expect(ENEMY_ART_LAYOUT[id].float ?? 0).toBe(0);
   });
   it('aynı arketipi paylaşan diğer düşmanlar eski çizimini korur', () => {
-    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'cosmic_storm_5_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
+    for (const id of ['mountains_7_enemy', 'volcano_7_enemy', 'iron_orbit_5_enemy', 'ruins_7_enemy', 'abyss_7_enemy']) {
       expect(allEnemies.some((e) => e.id === id), id).toBe(true);
       expect(enemyArtKey(id), id).toBeNull();
     }
@@ -114,8 +114,8 @@ describe('v1.23.0: beş bölge bossu', () => {
   it('önceki 45 özel çizimin eşleştirmesi korunur; toplam 165 çizim, 277 düşman kimliği', () => {
     const before = ['goblin_raider', 'elder_treant', 'boss_frost_queen', 'boss_shadow_demon', 'forest_6_enemy', 'sky_3_enemy', 'eternity_6_enemy', 'boss_forest_guardian', 'boss_abyssal_king', 'abyss_general'];
     for (const id of before) expect(enemyArtKey(id), id).toBeTruthy();
-    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(365);
-    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(253);
+    expect(Object.keys(ENEMY_ART_BY_ID).length).toBe(375);
+    expect(new Set(Object.values(ENEMY_ART_BY_ID)).size).toBe(263);
   });
   it('Kadim Orman Muhafızı, Elit Magma Lordu, Buzul Dev Avcısı ve Malakor kendi çizimlerinde kalır', () => {
     expect(enemyArtKey('boss_forest_guardian')).toBe('boss_forest_guardian');
@@ -236,7 +236,7 @@ describe('v1.26.0: üçüncü beşli düşman paketi', () => {
     for (const k of ['yanki_bosluk_avcisi', 'kor_semender', 'prizma_tas_nobetci', 'demir_yagmaci']) expect(ENEMY_ART_LAYOUT[k].bob ?? 0, k).toBe(0);
   });
   it('aynı bölgenin hazine/elit/boss düşmanları ve önceki paketler etkilenmez', () => {
-    for (const id of ['iron_orbit_7_enemy', 'iron_orbit_9_enemy', 'prism_labyrinth_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['iron_orbit_7_enemy', 'iron_orbit_9_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('amber_dunes_1_enemy')).toBe('kehribar_semender');
     expect(enemyArtKey('glass_forest_8_enemy')).toBe('cam_agac_ruhu');
   });
@@ -310,7 +310,7 @@ describe('v1.28.0: 13 görsel, 33 karşılaşma', () => {
     for (const k of ['safak_ates_ruhu', 'sisin_mimari']) expect(ENEMY_ART_LAYOUT[k].bob).toBeGreaterThan(0);
   });
   it('aynı bölgelerin hazine/elit düşmanları ve önceki setler etkilenmez', () => {
-    for (const id of ['iron_orbit_5_enemy', 'prism_labyrinth_7_enemy']) expect(enemyArtKey(id), id).toBeNull();
+    for (const id of ['iron_orbit_5_enemy', 'prism_labyrinth_9_enemy']) expect(enemyArtKey(id), id).toBeNull();
     expect(enemyArtKey('glass_forest_1_enemy')).toBe('cam_agac_ruhu');
     expect(enemyArtKey('hollow_sun_8_enemy')).toBe('sonuk_ates_ruhu');
   });
@@ -418,7 +418,7 @@ describe('v1.34.0: ikinci hazine seti', () => {
     expect(enemyArtKey('amber_dunes_1_enemy')).toBe('kehribar_semender');
     expect(enemyArtKey('iron_orbit_10_enemy')).toBe('demir_gezegenin_kalbi');
     expect(enemyArtKey('iron_orbit_9_enemy')).toBeNull();
-    expect(enemyArtKey('prism_labyrinth_7_enemy')).toBeNull();
+    expect(enemyArtKey('prism_labyrinth_9_enemy')).toBeNull();
   });
 });
 
@@ -594,11 +594,11 @@ describe('v1.42.0: elit karşılaşmalar 71–75 (son 5)', () => {
       expect((ENEMY_ART_LAYOUT[id].bob ?? 0) > 0, id).toBe(id === 'zero_threshold_9');
     }
   });
-  it('genişleme bölgelerindeki 75 elit aşamanın 65\'i kendi çizimine bağlı; kalan 10 (41–50 paketi) henüz çizimsiz', () => {
+  it('genişleme bölgelerindeki 75 elit aşamanın 66\'sı kendi çizimine bağlı; kalan 9 (41–50 paketi) henüz çizimsiz', () => {
     const ex = WORLD_REGIONS.slice(-25).flatMap((r) => r.stages).filter((s) => s.type === 'elite');
     expect(ex.length).toBe(75);
-    const missing = ex.filter((s) => enemyArtKey(s.enemy.id) !== s.id).map((s) => s.id);
-    expect(missing).toEqual(['prism_labyrinth_7', 'prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']);
+    const missing = ex.filter((s) => !enemyArtKey(s.enemy.id)).map((s) => s.id);
+    expect(missing).toEqual(['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']);
     for (const id of missing) expect(enemyArtKey(id + '_enemy'), id).toBeNull();
   });
   it('önceki paketler ve aynı bölgelerin diğer karşılaşmaları korunur', () => {
@@ -630,7 +630,7 @@ describe('v1.46.0: bölge bossları paket 1 (aşama 8)', () => {
   it('aynı arketipi paylaşan diğer düşmanlar, önceki paketler ve havuz değişmez', () => {
     expect(enemyArtKey('dawn_core_9_enemy')).toBe('dawn_core_9');
     expect(enemyArtKey('sky_10_enemy')).not.toBe('sky_8_enemy');
-    for (const id of ['cosmic_storm_7_enemy', 'immortality_7_enemy', 'eternity_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
+    for (const id of ['iron_orbit_5_enemy', 'aurora_vault_5_enemy', 'dream_marsh_5_enemy']) expect(enemyArtKey(id), id).toBeNull(); // elitler hâlâ vektör
     expect(enemyArtKey('astral_10_enemy')).toBeNull();
   });
 });
@@ -738,7 +738,7 @@ describe('v1.50.0: elit çizimleri paket 3', () => {
       expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
     }
     expect(enemyArtKey('time_rift_9_enemy')).toBe('time_rift_9_enemy');
-    expect(enemyArtKey('eternity_7_enemy')).toBeNull();
+    expect(enemyArtKey('aurora_vault_7_enemy')).toBeNull();
     expect(enemyArtKey('eternal_winter_9_enemy')).not.toBe('eternal_winter_7_enemy');
   });
 });
@@ -767,7 +767,37 @@ describe('v1.51.0: elit çizimleri paket 4', () => {
       expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
     }
     expect(enemyArtKey('dreamscape_9_enemy')).toBe('dreamscape_9_enemy');
-    expect(enemyArtKey('cosmic_storm_5_enemy')).toBeNull();
-    expect(enemyArtKey('immortality_5_enemy')).toBeNull();
+    expect(enemyArtKey('iron_orbit_9_enemy')).toBeNull();
+    expect(enemyArtKey('aurora_vault_9_enemy')).toBeNull();
+  });
+});
+
+describe('v1.52.0: elit çizimleri paket 5', () => {
+  const IDS = ['cosmic_storm_5', 'cosmic_storm_7', 'cosmic_storm_9', 'immortality_5', 'immortality_7', 'immortality_9', 'eternity_5', 'eternity_7', 'eternity_9', 'prism_labyrinth_7'];
+  const FLOAT = ['cosmic_storm_7', 'immortality_5', 'immortality_7', 'immortality_9'];
+  it('10 elit: kimlik = çizim anahtarı = dosya adı; yalnızca Bulut Yaratığı, Zaman Yiyici ve Ruh Biçiciler süzülür', () => {
+    const stages = WORLD_REGIONS.flatMap((r) => r.stages);
+    for (const id of IDS) {
+      const st = stages.find((s) => s.id === id)!;
+      const key = `${id}_enemy`;
+      expect(st.type, id).toBe('elite');
+      expect(st.enemy.id, id).toBe(key);
+      expect(ENEMY_ART_BY_ID[key], id).toBe(key);
+      expect(enemyArtKey(key)).toBe(key);
+      expect(ENEMY_ART_META[key].aspect).toBeGreaterThan(0.45);
+      expect(ENEMY_ART_LAYOUT[key].height).toBeLessThanOrEqual(0.76);
+      expect((ENEMY_ART_LAYOUT[key].bob ?? 0) > 0, id).toBe(FLOAT.includes(id));
+    }
+  });
+  it('aynı adlı düşmanlar kimliğine göre ayrı eşlenir (Yıldırım Golemi, Ruh Biçici, Sonsuzluk Muhafızı ×2)', () => {
+    const name = (id: string) => WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === id)!.enemy.name;
+    for (const [a, b] of [['cosmic_storm_5', 'cosmic_storm_9'], ['immortality_5', 'immortality_9'], ['eternity_5', 'eternity_9']]) {
+      expect(name(a)).toBe(name(b));
+      expect(enemyArtKey(`${a}_enemy`)).not.toBe(enemyArtKey(`${b}_enemy`));
+    }
+    expect(enemyArtKey('rebirth_9_enemy')).toBe('rebirth_9_enemy');
+  });
+  it('genişleme hariç tüm elit aşamaların durumu: 41–50 paketinden yalnızca Prizma Terzisi çizimli oldu', () => {
+    for (const id of ['prism_labyrinth_9', 'iron_orbit_5', 'iron_orbit_7', 'iron_orbit_9', 'aurora_vault_5', 'aurora_vault_7', 'aurora_vault_9', 'dream_marsh_5', 'dream_marsh_7']) expect(enemyArtKey(`${id}_enemy`), id).toBeNull();
   });
 });

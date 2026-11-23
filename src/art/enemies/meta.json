@@ -1050,5 +1050,45 @@
  "rebirth_9_enemy": {
   "aspect": 0.785,
   "footFrac": 1.0
+ },
+ "cosmic_storm_5_enemy": {
+  "aspect": 1.1429,
+  "footFrac": 0.9937
+ },
+ "cosmic_storm_7_enemy": {
+  "aspect": 1.0465,
+  "footFrac": 1.0
+ },
+ "cosmic_storm_9_enemy": {
+  "aspect": 0.9361,
+  "footFrac": 0.9944
+ },
+ "eternity_5_enemy": {
+  "aspect": 1.0811,
+  "footFrac": 0.997
+ },
+ "eternity_7_enemy": {
+  "aspect": 0.9778,
+  "footFrac": 0.9972
+ },
+ "eternity_9_enemy": {
+  "aspect": 1.1077,
+  "footFrac": 0.9969
+ },
+ "immortality_5_enemy": {
+  "aspect": 1.0651,
+  "footFrac": 1.0
+ },
+ "immortality_7_enemy": {
+  "aspect": 0.9778,
+  "footFrac": 1.0
+ },
+ "immortality_9_enemy": {
+  "aspect": 0.8611,
+  "footFrac": 1.0
+ },
+ "prism_labyrinth_7_enemy": {
+  "aspect": 0.7194,
+  "footFrac": 0.9917
  }
 }
