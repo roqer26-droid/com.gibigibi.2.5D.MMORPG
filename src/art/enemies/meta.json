@@ -1126,5 +1126,65 @@
  "prism_labyrinth_9_enemy": {
   "aspect": 0.975,
   "footFrac": 0.9917
+ },
+ "abyss_7_enemy": {
+  "aspect": 1.2544,
+  "footFrac": 0.9895
+ },
+ "ashen_3_enemy": {
+  "aspect": 1.3433,
+  "footFrac": 0.944
+ },
+ "astral_3_enemy": {
+  "aspect": 1.1765,
+  "footFrac": 0.9575
+ },
+ "chaos_3_enemy": {
+  "aspect": 1.2287,
+  "footFrac": 0.9488
+ },
+ "crystal_caves_3_enemy": {
+  "aspect": 1.2,
+  "footFrac": 0.9967
+ },
+ "desert_3_enemy": {
+  "aspect": 0.8944,
+  "footFrac": 0.9944
+ },
+ "moonlit_3_enemy": {
+  "aspect": 0.7306,
+  "footFrac": 0.9917
+ },
+ "mountains_7_enemy": {
+  "aspect": 1.2245,
+  "footFrac": 0.9966
+ },
+ "ocean_3_enemy": {
+  "aspect": 1.1356,
+  "footFrac": 0.9495
+ },
+ "ruins_7_enemy": {
+  "aspect": 1.0588,
+  "footFrac": 0.9941
+ },
+ "spirit_3_enemy": {
+  "aspect": 0.8583,
+  "footFrac": 1.0
+ },
+ "star_gate_3_enemy": {
+  "aspect": 1.2632,
+  "footFrac": 0.9509
+ },
+ "star_gate_8_enemy": {
+  "aspect": 1.2371,
+  "footFrac": 0.9588
+ },
+ "swamp_3_enemy": {
+  "aspect": 0.6778,
+  "footFrac": 1.0
+ },
+ "volcano_7_enemy": {
+  "aspect": 1.1392,
+  "footFrac": 0.962
  }
 }
