@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.89.0 — Dünya Haritası: gerçek hasara bağlı düşman canı tabanı
+- Sorun: 36. seviyede tam efsanevi setle savaşlar 1–3 hamlede bitiyordu. Gerçek oyunda (BattleScene) ölçülen hamle başına ortalama hasar, eski ayarın varsaydığından 3–4 kat yüksekti (36. seviye: varsayım 15.000, ölçüm ~58.000) ve 50. seviyeden sonra eski ayar hiç artmıyordu (canlar ~119.000'de sabitti, hasar seviyeyle büyümeye devam ediyordu). Simülatör özel taşları ve zincirleri modellemediği için bunu göstermemişti.
+- Ölçüm: Savaşçı, Büyücü, Korucu; 8–130. seviye; seviyeye uygun tam set (36+ efsanevi), dağıtılmış pasifler, iyi hamle seçen oyuncu. Sonuç: hamle başına hasar ≈ 163 × seviye^1,64 (`REF_DPM_COEF`, `REF_DPM_EXP`, `src/data/stageHpScaling.ts`).
+- Yeni güç tabanı: Dünya Haritası düşmanının canı, referans hasar × hedef hamle değerinin altına inmez (`WORLD_TARGET_MOVES`: normal 5, hazine 5, elit 8, boss 12). Boss/elit hedefi daha yüksek: boss/elit hasar pasifleri ve Ulti bu savaşlarda hasarı belirgin artırıyor. Taban 12. seviyeye kadar etkisiz, 24. seviyede tam (erken oyun değişmedi). Can = max(temel can × sıra artışı (v1.88.0), güç tabanı).
+- Örnekler (eski → yeni): ocean_4 (Sv36 normal) 157.500 → 290.700; ocean_8 (Sv37 boss) 318.000 → 729.800; chaos_8 (Sv53 boss) 357.030 → 1.315.800; dawn_core_10 (Sv168 boss) 1.048.760 → 8.727.200.
+- Gerçek oyun doğrulaması (yeni canla, iyi oyuncu): 36. seviye normal 5–7 hamle (şanslı açılış tahtasında 2), elit 3–11, boss 6–16 (medyan ~8); 64. seviye normal 4–10, elit 6–12; 100. seviye normal 4–5. Kahraman tüm denemelerde kazandı; düşman saldırısı/sıklığı değişmedi.
+- Seçimli Zindan, Lig ve Boss Avı etkilenmez. Ustalık hedeflerinde hamle sınırı olmadığından yıldızlar etkilenmez.
+
 ## v1.88.0 — Dünya Haritası: aşama sırasına göre düşman canı artışı
 - Yalnızca Dünya Haritası savaşlarında (normal, elit, hazine, boss) düşmanın en yüksek canı haritanın gerçek aşama sırasına göre artar (bölgeler arasında kesintisiz sıra). Tek ayar tablosu `WORLD_HP_BONUS_TABLE` (`src/data/stageHpScaling.ts`): 1–10. aşama %0 → %10, 11–20. aşama %10 → %20, 21–50. aşama %20 → %50 (aralık içinde doğrusal), 50. aşamadan sonra %50 sabit. Yuvarlama en sonda bir kez: yeni can = round(temel can × (1 + yüzde/100)); örn. 50. aşamada 10.000 → 15.000.
 - Düşman saldırısı, saldırı aralığı, savunma ve ödüller değişmedi; animasyon/bekleme süreleri dokunulmadı. Can yüzdesine bağlı boss fazları yeni en yüksek can üzerinden çalışır (Buz Bariyeri yine %50'de). Artış savaş başlarken temel aşama verisinden bir kez hesaplanır: "Tekrar Oyna", "Sonraki Aşama" ve ana menüden devam katlamaz. Seçimli Zindan, Lig ve Boss Avı etkilenmez.
