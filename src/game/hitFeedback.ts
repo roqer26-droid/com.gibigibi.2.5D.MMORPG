@@ -1,6 +1,6 @@
 /**
  * Vuruş sesi ve isabet efekti kararları (saf mantık; ses çalma SoundEngine'de, çizim BattleScene'de).
- * Kaynak: vuruş ve ses paketi (combat-feedback.mjs) — ilk pilot: varsayılan Savaşçı, Kurt Adam, Kristal Golem, Büyücü.
+ * Kaynak: vuruş ve ses paketi (combat-feedback.mjs, hero-sounds.mjs) — v2: 22 kahramanın varsayılan görünümü.
  */
 
 export type HitCue = 'sword' | 'claw' | 'fist' | 'arrow' | 'spell' | 'critical' | 'block';
@@ -19,17 +19,46 @@ export const HIT_FX: Readonly<Record<HitCue, { color: number; durationMs: number
 
 export const HIT_CUES = Object.keys(HIT_FX) as HitCue[];
 
-/** Pilot: yalnızca varsayılan görünüm (görünüm anahtarı = sınıf kimliği). Korucu (`arrow`) bağlandığında buraya eklenir. */
-export const HIT_PILOT: Readonly<Record<string, HitCue>> = {
+/**
+ * Varsayılan görünümdeki 22 kahramanın saldırı sesi (vuruş ve ses paketi v2, `hero-sounds.mjs`). Anahtar sınıf kimliğidir;
+ * kostüm görünümleri (anahtar = kostüm kimliği) burada yoktur ve eski ses akışını kullanır (sonraki güncelleme).
+ */
+export const HERO_ATTACK_SOUNDS: Readonly<Record<string, HitCue>> = {
   warrior: 'sword',
-  werewolf: 'claw',
-  golem: 'fist',
+  paladin: 'sword',
+  ranger: 'arrow',
   mage: 'spell',
+  werewolf: 'claw',
+  vampire: 'sword',
+  bigfoot: 'fist',
+  night_screecher: 'spell',
+  necromancer: 'spell',
+  assassin: 'sword',
+  stormcaller: 'spell',
+  dragonheart: 'sword',
+  fairy: 'spell',
+  kitsune: 'claw',
+  naga: 'sword',
+  siren: 'spell',
+  minotaur: 'sword',
+  golem: 'fist',
+  phoenix: 'spell',
+  djinn: 'spell',
+  demon: 'sword',
+  seraph: 'spell',
 };
+/** Geriye uyumluluk: ilk pilot (v1.82.0) bu tablonun alt kümesiydi. */
+export const HIT_PILOT = HERO_ATTACK_SOUNDS;
 
-/** Görünüm anahtarı pilotsa kahramanın saldırı sesi; değilse null (eski ses akışı). */
+/** Görünüm anahtarı varsayılan kahraman görünümüyse saldırı sesi; kostüm ya da bilinmeyen anahtarsa null (eski ses akışı). */
 export function pilotAttackCue(appearanceKey: string | null | undefined): HitCue | null {
-  return (appearanceKey && HIT_PILOT[appearanceKey]) || null;
+  return appearanceKey && Object.prototype.hasOwnProperty.call(HERO_ATTACK_SOUNDS, appearanceKey) ? HERO_ATTACK_SOUNDS[appearanceKey] : null;
+}
+
+/** `heroHitCue({hero, outcome})` karşılığı: varsayılan kahraman + savaş sonucu → ses; sıyrılmada ya da kahraman yoksa null. */
+export function heroHitCue({ hero, outcome = 'hit' }: { hero: string; outcome?: HitOutcome }): HitCue | null {
+  const attack = pilotAttackCue(hero);
+  return attack ? hitCue({ attack, outcome }) : null;
 }
 
 /** Savaş sonucundan çalınacak ses/efekt: tam engelleme ve kritik, saldırı sesinin yerini alır; ıska/sıyrılmada yok. */

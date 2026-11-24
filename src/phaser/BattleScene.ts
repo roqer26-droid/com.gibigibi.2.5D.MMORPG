@@ -394,7 +394,7 @@ export class BattleScene extends Phaser.Scene {
   /** Oynayan klibin belirteci: yeni klip ya da idle'a dönüş eski klibin zamanlayıcılarını geçersiz kılar */
   private heroClipToken = 0;
   private heroClipAction: CombatAction | null = null;
-  /** Vuruş sesi/isabet efekti pilotu: kahramanın saldırı sesi (yalnızca pilot varsayılan görünümler; yoksa eski ses akışı) */
+  /** Vuruş sesi/isabet efekti: kahramanın saldırı sesi (yalnızca varsayılan görünümler, 22 kahraman; kostümde eski ses akışı) */
   private heroHitCue: HitCue | null = null;
   /** Doğrulama için: isabet olayları (sonuç, ses anahtarı, sahne zamanı) */
   private hitLog: Array<{
@@ -2446,7 +2446,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Düşman hasar tepkisi temas anında gösterilir (hasar hesabı ve durum değişimi anında yapılmıştır)
     this.holdEnemyIdle(380);
-    // Vuruş sesi + isabet efekti (pilot): tek olay, sonuç savaş hesabından (tam kalkan engellemesi / kritik / normal)
+    // Vuruş sesi + isabet efekti (varsayılan görünüm): tek olay, sonuç savaş hesabından (tam kalkan engellemesi / kritik / normal)
     const outcome = hitOutcome({
       crit: isCrit,
       hpDamage,
@@ -3983,7 +3983,7 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Pilot kahramanda ses, kalkan hesabından sonra tek kez seçilir (tam engellemede kalkan sesi)
+    // Varsayılan görünümde ses, kalkan hesabından sonra tek kez seçilir (tam engellemede kalkan sesi)
     if (!this.heroHitCue) SoundEngine.playWeaponHit(this.enemy.isBoss);
     if (this.initData.settings.screenShake) {
       this.cameras.main.shake(this.d(170), this.enemy.isBoss ? 0.012 : 0.007);

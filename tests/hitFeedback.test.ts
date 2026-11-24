@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync } from 'fs';
-import { HIT_CUES, HIT_FX, HIT_PILOT, hitCue, hitOutcome, hitSoundWindow, pilotAttackCue, shouldPlayHitSound } from '../src/game/hitFeedback';
+import { HERO_ATTACK_SOUNDS, HIT_CUES, HIT_FX, heroHitCue, hitCue, hitOutcome, hitSoundWindow, pilotAttackCue, shouldPlayHitSound } from '../src/game/hitFeedback';
 
-describe('v1.82.0: vuruş sesi ve isabet efekti pilotu', () => {
+describe('v1.82.0–v1.83.0: vuruş sesi ve isabet efekti', () => {
   it('yedi ses anahtarı, her birinin MP3 dosyası ve efekt tanımı var', () => {
     expect(HIT_CUES.sort()).toEqual(['arrow', 'block', 'claw', 'critical', 'fist', 'spell', 'sword']);
     for (const c of HIT_CUES) {
@@ -11,13 +11,24 @@ describe('v1.82.0: vuruş sesi ve isabet efekti pilotu', () => {
     }
   });
 
-  it('pilot yalnızca dört varsayılan görünüm; kostümler ve diğer kahramanlar eski ses akışında', () => {
-    expect(HIT_PILOT).toEqual({ warrior: 'sword', werewolf: 'claw', golem: 'fist', mage: 'spell' });
+  it('v2: 22 kahramanın varsayılan görünümü eşleşti; kostümler ve bilinmeyen anahtarlar eski ses akışında', () => {
+    expect(Object.keys(HERO_ATTACK_SOUNDS)).toHaveLength(22);
+    const by = (c: string) => Object.keys(HERO_ATTACK_SOUNDS).filter((h) => HERO_ATTACK_SOUNDS[h] === c).sort();
+    expect(by('sword')).toEqual(['assassin', 'demon', 'dragonheart', 'minotaur', 'naga', 'paladin', 'vampire', 'warrior']);
+    expect(by('claw')).toEqual(['kitsune', 'werewolf']);
+    expect(by('fist')).toEqual(['bigfoot', 'golem']);
+    expect(by('arrow')).toEqual(['ranger']);
+    expect(by('spell')).toEqual(['djinn', 'fairy', 'mage', 'necromancer', 'night_screecher', 'phoenix', 'seraph', 'siren', 'stormcaller']);
     expect(pilotAttackCue('warrior')).toBe('sword');
-    expect(pilotAttackCue('mage')).toBe('spell');
+    expect(pilotAttackCue('ranger')).toBe('arrow');
     expect(pilotAttackCue('warrior_koz_muhafizi')).toBeNull();
-    expect(pilotAttackCue('ranger')).toBeNull();
+    expect(pilotAttackCue('toString')).toBeNull();
     expect(pilotAttackCue(null)).toBeNull();
+    expect(heroHitCue({ hero: 'ranger', outcome: 'hit' })).toBe('arrow');
+    expect(heroHitCue({ hero: 'ranger', outcome: 'critical' })).toBe('critical');
+    expect(heroHitCue({ hero: 'seraph', outcome: 'block' })).toBe('block');
+    expect(heroHitCue({ hero: 'seraph', outcome: 'dodge' })).toBeNull();
+    expect(heroHitCue({ hero: 'mage_ay_kristali', outcome: 'hit' })).toBeNull();
   });
 
   it('sonuç: tam kalkan engellemesi > kritik > normal (kısmen emilen dahil); ıska/sıyrılmada ses yok', () => {

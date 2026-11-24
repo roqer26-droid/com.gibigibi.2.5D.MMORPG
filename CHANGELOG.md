@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.83.0 — Vuruş sesleri v2: 22 kahramanın varsayılan görünümü
+- Vuruş ve ses paketi v2 (`hero-sounds.mjs`) eşleşmesi `HERO_ATTACK_SOUNDS` olarak eklendi: kılıç (Savaşçı, Şövalye, Vampir, Suikastçı, Ejderkalp, Naga, Minotor, İblis), pençe (Kurt Adam, Ruh Tilkisi), yumruk (Koca Ayak, Kristal Golem), ok (Korucu), büyü (Büyücü, Gecenin Çığırtkanı, Ölüm Çağıran, Fırtına Çağıran, Peri, Siren, Anka, Cin, Serafim). Yalnızca varsayılan görünüm; alternatif kostümler ve düşman saldırıları eski ses akışında.
+- MP3'ler ve kurallar v1.82.0 ile aynı (paketteki dosyalar birebir aynı): tam kalkan engellemesi `block`, kritik `critical`, normal ve kısmen emilen hasar kahramanın sesi, sıyrılmada isabet sesi yok; her isabet tek ses; 1× 48 ms / 2× 75 ms yığılma sınırı; ayarlar (sessiz, efekt ses seviyesi) oyundan.
+- Yakın saldırıda isabet karesinde, uzak saldırıda ok/büyü hedefe varınca. Savaş hesabı, tur sırası ve efekt renkleri değişmedi.
+
 ## v1.82.0 — Vuruş sesleri ve isabet efektleri (pilot: Savaşçı, Kurt Adam, Kristal Golem, Büyücü)
 - Vuruş ve ses paketinden 7 MP3 (`src/audio/sfx/`: sword, claw, fist, spell, arrow, critical, block). Mevcut `SoundEngine`'e örnek tabanlı `playHitCue` eklendi: sfx kanalından çalar, sessiz ve efekt ses seviyesi oyun ayarlarına bağlı; ilk dokunuşta (`unlock`) yüklenir, yüklenemezse eski sentez vuruş sesine düşer. 2× hızda perde korunur, kuyruk kısalır.
 - Karar mantığı `src/game/hitFeedback.ts` (paketteki `combat-feedback.mjs` kurallarının TypeScript karşılığı): sonuç = tam kalkan engellemesi `block` > kritik `critical` > normal/kısmen emilen hasar (kahramanın sesi); her vuruşta tek ses; 1× 48 ms / 2× 75 ms içindeki tekrar bastırılır, kritik ve kalkan yakın zamandaki normal sese öncelik alır.
