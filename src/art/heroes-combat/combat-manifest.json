@@ -601,7 +601,207 @@
     }
    },
    "key": "dragonheart"
+  },
+  {
+   "hero": "fairy",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "fairy_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "blossomBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 329,
+        "y": 108
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "fairy_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "fairy"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "kitsune_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "kitsune_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "kitsune"
+  },
+  {
+   "hero": "naga",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "naga_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "naga_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "naga"
+  },
+  {
+   "hero": "siren",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "siren_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lyreWave",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 277,
+        "y": 131
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "siren_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "siren"
   }
  ],
- "batch": 3
+ "batch": 4
 }

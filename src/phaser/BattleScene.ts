@@ -1953,6 +1953,8 @@ export class BattleScene extends Phaser.Scene {
         else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, { edge: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc });
         else this.launchArrow(o.x, o.y, tx, ty, col, travel);
       });
       if (played) {
@@ -2169,18 +2171,25 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Ses dalgası (Gecenin Çığırtkanı): hedefe dönük, ilerledikçe açılan üç mor yay; varışta kısa mor halka. */
-  private launchSonicPulse(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+  private launchSonicPulse(
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+    flightMs: number,
+    tint: { edge: number; core: number; ring: number } = { edge: 0xa855f7, core: 0xf3e8ff, ring: 0xc084fc }
+  ) {
     const g = this.add.graphics();
     const draw = (p: number) => {
       g.clear();
       for (let i = 0; i < 3; i++) {
         const r = 7 + i * 6 + p * 6;
         const a = (1 - i * 0.25) * (1 - p * 0.35);
-        g.lineStyle(4.5 - i, 0xa855f7, a * 0.55);
+        g.lineStyle(4.5 - i, tint.edge, a * 0.55);
         g.beginPath();
         g.arc(-i * 5, 0, r, -0.9, 0.9);
         g.strokePath();
-        g.lineStyle(1.8, 0xf3e8ff, a);
+        g.lineStyle(1.8, tint.core, a);
         g.beginPath();
         g.arc(-i * 5, 0, r, -0.8, 0.8);
         g.strokePath();
@@ -2199,7 +2208,47 @@ export class BattleScene extends Phaser.Scene {
       ease: 'Linear',
       onUpdate: () => draw(st.p),
       onComplete: () => {
-        this.drawShockwave(tx, ty, 0xc084fc, 30);
+        this.drawShockwave(tx, ty, tint.ring, 30);
+        g.destroy();
+      },
+    });
+  }
+
+  /** Pembe kıvılcım (Peri): dönen küçük dört köşeli yıldız ve arkasında sönen pembe parıltılar; varışta pembe halka. */
+  private launchBlossomBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+    const g = this.add.graphics();
+    const star = (r: number, c: number, a: number) => {
+      g.fillStyle(c, a);
+      g.fillPoints([
+        { x: 0, y: -r }, { x: r * 0.28, y: -r * 0.28 }, { x: r, y: 0 }, { x: r * 0.28, y: r * 0.28 },
+        { x: 0, y: r }, { x: -r * 0.28, y: r * 0.28 }, { x: -r, y: 0 }, { x: -r * 0.28, y: -r * 0.28 },
+      ], true);
+    };
+    star(9, 0xf472b6, 0.5);
+    star(5.5, 0xfdf2f8, 1);
+    g.setPosition(sx, sy);
+    this.vfxContainer.add(g);
+    const st = { p: 0 };
+    let lastTrail = 0;
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, flightMs),
+      ease: 'Linear',
+      onUpdate: () => {
+        const x = sx + (tx - sx) * st.p;
+        const y = sy + (ty - sy) * st.p - Math.sin(st.p * Math.PI) * 10;
+        g.setPosition(x, y);
+        g.setRotation(st.p * Math.PI * 1.5);
+        if (st.p - lastTrail > 0.16) {
+          lastTrail = st.p;
+          const t = this.add.circle(x + (Math.random() - 0.5) * 6, y + (Math.random() - 0.5) * 6, 2.2, 0xf9a8d4, 0.9);
+          this.vfxContainer.add(t);
+          this.tweens.add({ targets: t, alpha: 0, y: t.y + 6, duration: 180, onComplete: () => t.destroy() });
+        }
+      },
+      onComplete: () => {
+        this.drawShockwave(tx, ty, 0xf472b6, 30);
         g.destroy();
       },
     });

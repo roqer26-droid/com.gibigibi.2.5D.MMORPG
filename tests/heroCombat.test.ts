@@ -5,10 +5,10 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(24);
+    expect(allCombatClips()).toHaveLength(32);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
-    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart']) {
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren']) {
       const a = combatClip(hero, 'attack')!;
       const h = combatClip(hero, 'hurt')!;
       expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
@@ -23,6 +23,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
     expect(combatClip('phoenix', 'attack')).toBeNull();
+    expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull();
     expect(combatClip(null, 'hurt')).toBeNull();
   });
 
@@ -78,5 +79,14 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(combatClip('night_screecher', 'attack')!.events[0].projectile).toBe('sonicPulse');
     expect(combatClip('warrior', 'hurt')).not.toBeNull();
     expect(combatClip('assassin_mor_sis', 'attack')).toBeNull();
+  });
+
+  it('Paket 4: Ruh Tilkisi/Naga impact 240 ms; Peri pembe kıvılcım, Siren mavi ses dalgası (originPx, 120 ms)', () => {
+    for (const h of ['kitsune', 'naga']) expect(combatClip(h, 'attack')!.events.map((e) => [e.type, e.atMs]), h).toEqual([['impact', 240]]);
+    expect(combatClip('fairy', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'blossomBolt', atMs: 240, suggestedTravelMs: 120, originPx: { x: 329, y: 108 } });
+    expect(combatClip('siren', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'lyreWave', atMs: 240, suggestedTravelMs: 120, originPx: { x: 277, y: 131 } });
+    expect(clipContactMs(combatClip('siren', 'attack')!)).toBe(360);
+    expect(clipContactMs(combatClip('naga', 'attack')!)).toBe(240);
+    expect(combatClip('necromancer', 'attack')!.events[0].projectile).toBe('spiritBolt'); // önceki paketler korunur
   });
 });

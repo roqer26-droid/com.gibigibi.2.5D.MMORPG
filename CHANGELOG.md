@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.76.0 — Saldırı ve hasar alma animasyonları, paket 4 (Peri, Ruh Tilkisi, Naga, Siren)
+- Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk üç paket korundu (toplam 16 kahraman). Idle ile aynı ölçek ve çapa; süzülme ve sıçrama karelerde; bitince idle'a dönülür.
+- Ruh Tilkisi ve Naga: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
+- Peri: `blossomBolt` — 240 ms'de `originPx` noktasından pembe kıvılcım (`launchBlossomBolt`). Siren: `lyreWave` — kısa mavi ses dalgası (ses dalgası efektinin mavi tonu). 120 ms sonra hedefe varınca hasar ve tepki gösterilir; aynalanan kahramanda çıkış noktası da aynalanır.
+
 ## v1.75.0 — Saldırı ve hasar alma animasyonları, paket 3 (Ölüm Çağıran, Suikastçı, Fırtına Çağıran, Ejderkalp)
 - Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk iki paket korundu (toplam 12 kahraman). Idle ile aynı ölçek ve çapa; bitince idle'a dönülür. Alternatif kostümler eski akışı kullanır.
 - Suikastçı ve Ejderkalp: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
