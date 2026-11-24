@@ -43,10 +43,10 @@ export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal:
  * hedef hamle tutsun. Ara seviyelerde doğrusal ara değer; tablonun dışında uç değer.
  */
 export const TYPE_DAMAGE_FACTOR: Readonly<Record<StageType, ReadonlyArray<readonly [number, number]>>> = {
-  normal: [[1, 1], [24, 1], [36, 1.3], [52, 1.1], [64, 1]],
-  treasure: [[1, 1], [24, 1], [36, 1.3], [52, 1.1], [64, 1]],
-  elite: [[1, 1.05], [8, 1.05], [16, 1.25], [36, 1.45], [64, 1.1]],
-  boss: [[1, 0.75], [5, 0.75], [8, 1], [16, 1.9], [36, 1.5], [100, 1.2]],
+  normal: [[1, 1], [24, 1], [36, 1.7], [52, 1.3], [64, 0.9], [100, 1]],
+  treasure: [[1, 1], [24, 1], [36, 1.7], [52, 1.3], [64, 0.9], [100, 1]],
+  elite: [[1, 1.05], [8, 1.05], [16, 1.3], [36, 1.65], [64, 1.1]],
+  boss: [[1, 0.75], [5, 0.75], [8, 0.8], [16, 1.6], [36, 1.5], [100, 1.2]],
 };
 
 /** Türün önerilen seviyedeki hasar çarpanı. */

@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.90.0 — Dünya Haritası: uzun savaşlar (normal 10, elit 20, boss 25 hamle)
+- İstek: ilk aşamalardan itibaren normal savaşlar ortalama en az 10, elitler en az 20 hamle sürsün. Seçilen yöntem: yalnızca Dünya Haritası düşman canı artar; ekipman, pasifler ve Seçimli Zindan / Lig / Boss Avı değişmez.
+- Tek hedef tablosu `WORLD_TARGET_MOVES` (`src/data/stageHpScaling.ts`): normal 10, hazine 10, elit 20, boss 25 (referans kahraman: önerilen seviye, seviyeye uygun tam set — 36+ efsanevi —, dağıtılmış pasifler, iyi hamle seçen oyuncu). Taban artık 1. aşamadan itibaren geçerli (v1.89.0'daki 12→24. seviye kademeli geçiş kaldırıldı).
+- Referans hasar: 1–16. seviye gerçek oyunda ölçülen tablo (`REF_DPM_LOW`: 1 → 950, 5 → 2.100, 12 → 6.200, 16 → 15.400), sonrası 163 × seviye^1,64.
+- Tür hasar çarpanı seviyeye bağlı (`TYPE_DAMAGE_FACTOR`, ölçüm): erken bosslar can/kalkan fazları yüzünden yavaş biter (5. seviye 0,75), boss/elit hasar pasifleri ve Ulti açıldıkça (16–36. seviye) boss ve elitlerde hamle başına hasar 1,5–1,65 kat, 36. seviye civarında normallerde 1,7 kat yüksek ölçüldü.
+- Örnek canlar (v1.89.0 → v1.90.0): forest_1 1.090 → 9.500; forest_5 (boss) 20.500 → 39.400 (v1.88: 5.400); volcano_4 (elit) 96.800 → 318.600; ocean_4 (Sv36 normal) 290.700 → 988.500; ocean_8 (Sv37 boss) 729.800 → 2.273.600; dawn_core_10 (Sv168 boss) 8.727.200 → 21.818.100.
+- Gerçek oyun ölçümü (Savaşçı/Büyücü/Korucu, iyi oyuncu, ortalama hamle): 1. aşama normal 15; 3. seviye hazine 10; 4. seviye elit 19; 5. seviye boss 23; 16. seviye elit 21; 36. seviye boss 25; 64. seviye normal 13, elit 19; 100. seviye normal 10. Son çarpan düzeltmesi 8. seviye boss (31 → hedef 25), 16. seviye boss, 36. seviye normal (~8 → 10) ve elit (~18 → 20) için ölçüme göre yapıldı. Tüm denemeler kazanıldı (en düşük kalan can %9, 36. seviye boss), bu yüzden düşman saldırısı azaltılmadı.
+
 ## v1.89.0 — Dünya Haritası: gerçek hasara bağlı düşman canı tabanı
 - Sorun: 36. seviyede tam efsanevi setle savaşlar 1–3 hamlede bitiyordu. Gerçek oyunda (BattleScene) ölçülen hamle başına ortalama hasar, eski ayarın varsaydığından 3–4 kat yüksekti (36. seviye: varsayım 15.000, ölçüm ~58.000) ve 50. seviyeden sonra eski ayar hiç artmıyordu (canlar ~119.000'de sabitti, hasar seviyeyle büyümeye devam ediyordu). Simülatör özel taşları ve zincirleri modellemediği için bunu göstermemişti.
 - Ölçüm: Savaşçı, Büyücü, Korucu; 8–130. seviye; seviyeye uygun tam set (36+ efsanevi), dağıtılmış pasifler, iyi hamle seçen oyuncu. Sonuç: hamle başına hasar ≈ 163 × seviye^1,64 (`REF_DPM_COEF`, `REF_DPM_EXP`, `src/data/stageHpScaling.ts`).
