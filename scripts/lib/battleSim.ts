@@ -1,3 +1,4 @@
+import { skillPointBudget } from "../../src/data/passiveTree";
 /**
  * Denge aracı: gerçek eşleşme modülü + savaş formülleriyle (becerisiz, çıplak başlangıç ekipmanı)
  * her aşamayı simüle eder. Kullanım:
@@ -60,15 +61,35 @@ export interface FightOptions {
   skills?: boolean;
   /** Zindan güçleri: savaş içi etkileri (Ulti Kıvılcımı, Kare Siper, Hazır Muhafız) simülasyona eklenir */
   relics?: RelicId[];
+  /** Akıllı oyuncu zayıflık taşlarını tercih eder (eşleşen zayıflık taşı 1,45 sayılır) */
+  weakAware?: boolean;
+  /** Pasif puanlarını seviyeye göre dağıt (hasar → kaynak → ortak → savunma, her dalda alt kademeden başlayarak) */
+  passives?: boolean;
+  /** Seviye/eşya seviyesi üst sınırı (varsayılan 50, eski dengeleme betikleriyle uyum) */
+  levelCap?: number;
 }
 
 export function fight(stage: StageDef, classId: HeroClassId, smart: boolean, opts: FightOptions = {}): Result {
   const maxMoves = opts.maxMoves ?? 80;
-  const hero = { ...createInitialSaveState().heroes[classId], level: opts.level ?? Math.min(50, stage.recommendedLevel) };
+  const cap = opts.levelCap ?? 50;
+  const hero = { ...createInitialSaveState().heroes[classId], level: opts.level ?? Math.min(cap, stage.recommendedLevel) };
+  if (opts.passives) {
+    let pts = skillPointBudget(hero.level);
+    const order = { offense: 0, magic: 1, common: 2, defense: 3 } as const;
+    const nodes = [...HERO_CLASSES[classId].skillTree].sort((a, b) => order[a.branch] - order[b.branch] || a.tier - b.tier);
+    const ranks: Record<string, number> = {};
+    for (const n of nodes) {
+      if (pts <= 0) break;
+      const r = Math.min(n.maxRank, pts);
+      ranks[n.id] = r;
+      pts -= r;
+    }
+    hero.skillRanks = ranks;
+  }
   if (opts.gear) {
     const slots: EquipmentSlot[] = ["helmet", "chest", "gloves", "pants", "boots", "weapon", "offhand", "necklace", "ring1", "ring2"];
     hero.equipped = { ...hero.equipped };
-    for (const sl of slots) hero.equipped[sl] = generateEquipmentItem({ level: Math.min(50, hero.level), rarity: opts.gear, slot: sl, preferredClass: classId });
+    for (const sl of slots) hero.equipped[sl] = generateEquipmentItem({ level: Math.min(cap, hero.level), rarity: opts.gear, slot: sl, preferredClass: classId });
   }
   const build = opts.tweakBuild ? opts.tweakBuild(computeHeroBuild(hero)) : computeHeroBuild(hero);
   const e = stage.enemy;
@@ -163,7 +184,9 @@ export function fight(stage: StageDef, classId: HeroClassId, smart: boolean, opt
       for (const m of list) {
         const t = grid.map((r) => [...r]);
         [t[m.a.row][m.a.col], t[m.b.row][m.b.col]] = [t[m.b.row][m.b.col], t[m.a.row][m.a.col]];
-        const n = findMatches(t).matchedSet.size;
+        const fm = findMatches(t).matchedSet;
+        let n = fm.size;
+        if (opts.weakAware) fm.forEach((k) => { const [r, c] = k.split(",").map(Number); if (t[r][c]?.type === (e.weakness as GemType)) n += 0.45; });
         if (n > best) { best = n; pick = m; }
       }
     }

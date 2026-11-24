@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
+import { worldBattleStage } from './data/stageHpScaling';
 import type { EquipPlan } from './game/equipPlanner';
 import { exitNativeApp, onNativeBack } from './native';
 import { findStageById } from './data/world';
@@ -534,12 +535,13 @@ export function App() {
     else if (res.toast) pushToast(res.toast);
   };
 
+  /** Dünya Haritası aşama savaşı (harita ve "Sonraki Aşama"): düşman canı haritadaki sıraya göre artırılır (temel aşamadan bir kez). */
   const handleStartStage = (stage: StageDef) => {
     SoundEngine.unlock();
     setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(null);
-    setActiveStage(stage);
+    setActiveStage(worldBattleStage(stage));
     setRoute('battle');
   };
 

@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.88.0 — Dünya Haritası: aşama sırasına göre düşman canı artışı
+- Yalnızca Dünya Haritası savaşlarında (normal, elit, hazine, boss) düşmanın en yüksek canı haritanın gerçek aşama sırasına göre artar (bölgeler arasında kesintisiz sıra). Tek ayar tablosu `WORLD_HP_BONUS_TABLE` (`src/data/stageHpScaling.ts`): 1–10. aşama %0 → %10, 11–20. aşama %10 → %20, 21–50. aşama %20 → %50 (aralık içinde doğrusal), 50. aşamadan sonra %50 sabit. Yuvarlama en sonda bir kez: yeni can = round(temel can × (1 + yüzde/100)); örn. 50. aşamada 10.000 → 15.000.
+- Düşman saldırısı, saldırı aralığı, savunma ve ödüller değişmedi; animasyon/bekleme süreleri dokunulmadı. Can yüzdesine bağlı boss fazları yeni en yüksek can üzerinden çalışır (Buz Bariyeri yine %50'de). Artış savaş başlarken temel aşama verisinden bir kez hesaplanır: "Tekrar Oyna", "Sonraki Aşama" ve ana menüden devam katlamaz. Seçimli Zindan, Lig ve Boss Avı etkilenmez.
+- Harita aşama listesi ve aşama ayrıntısı yeni canı gösterir. Aşama bazlı düzeltme için `WORLD_HP_STAGE_ADJUST` boş bırakıldı (simülasyonda düzeltme gerektiren aşama çıkmadı).
+- Denge aracı: `scripts/simulate-world-hp.ts` (eski/yeni can ile önerilen seviye, seviyeye uygun tam set ekipman, dağıtılmış pasif puanları, yetenek/Ulti ve zayıflığı tercih eden oyuncu ile hamle karşılaştırması); `battleSim` seçenekleri `weakAware`, `passives`, `levelCap`.
+
 ## v1.87.0 — Pasif ağacı: 10 seviye + ortak Ustalık pasifleri
 - Tüm pasiflerin en yüksek seviyesi 10; her yükseltme 1 puan. Her kahramanın kendi pasifleri eski tam seviyede (3/3 ya da 2/2) verdiği toplam bonusu 10/10'da birebir verir; her seviye bunun onda biri (`src/data/passiveTree.ts`). Ara değerler yuvarlanmaz; yuvarlama nihai yapı değerlerinde tek kez yapılır.
 - Yeni ortak Ustalık pasifleri (her kahramanda aynı, 10/10): Kare Ustalığı %12 (2×2 karede eşleşen taşların hasarı; örtüşme/çizgi kesişiminde taş tek sayılır), Zincir Gücü %10 (2. ve sonraki zincir adımları), Mana Akışı %10 ve Ulti Odağı %10 (taş eşleşmeleri; mevcut sınırlar geçerli), Sağlam Bariyer %12 (oluşturulan tüm kalkanlar), Ağır Darbe Savunması %10 (planlanan ağır saldırı gerçekleşince). Oyunda birebir karşılığı olan iki öneri değiştirildi: Boss Avcısı → Elit Avcısı %8 (elit düşmanlara hasar), Yaşam Bağı → Son Direniş %12 (can %35 ve altındayken alınan hasar azalır).

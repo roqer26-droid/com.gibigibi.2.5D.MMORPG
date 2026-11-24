@@ -1,3 +1,4 @@
+import { worldEnemyMaxHp } from '../data/stageHpScaling';
 import React, { useMemo, useState } from 'react';
 import {
   ArrowLeft,
@@ -270,7 +271,7 @@ const StageScreen: React.FC<{
                             {st.name}
                           </div>
                           <div className="text-xs text-slate-400">
-                            Düşman: {st.enemy.name} ({st.enemy.maxHp.toLocaleString('tr-TR')} Can)
+                            Düşman: {st.enemy.name} ({worldEnemyMaxHp(st.id, st.enemy.maxHp).toLocaleString('tr-TR')} Can)
                           </div>
                           <div className="mt-0.5 flex items-center gap-0.5" data-testid={`stage-stars-${st.id}`} aria-label={`${stageStars(save, st.id).count} / 3 yıldız`}>
                             {(() => {
@@ -351,7 +352,7 @@ const StageScreen: React.FC<{
                     <div className="rounded-lg bg-slate-900 p-2">
                       <div className="text-[10px] text-slate-400">Can</div>
                       <div className="font-bold text-rose-400">
-                        {selectedStage.enemy.maxHp.toLocaleString('tr-TR')}
+                        {worldEnemyMaxHp(selectedStage.id, selectedStage.enemy.maxHp).toLocaleString('tr-TR')}
                       </div>
                     </div>
                     <div className="rounded-lg bg-slate-900 p-2">
