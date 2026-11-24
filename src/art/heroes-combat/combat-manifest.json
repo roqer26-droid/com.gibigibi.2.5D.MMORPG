@@ -1301,7 +1301,501 @@
     }
    },
    "key": "mage_ay_kristali"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "ay_pencesi",
+   "actions": {
+    "attack": {
+     "file": "werewolf_ay_pencesi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "werewolf_ay_pencesi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "werewolf_ay_pencesi"
+  },
+  {
+   "hero": "vampire",
+   "costume": "kizil_kadife",
+   "actions": {
+    "attack": {
+     "file": "vampire_kizil_kadife_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "vampire_kizil_kadife_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "vampire_kizil_kadife"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "kiragi_gezgini",
+   "actions": {
+    "attack": {
+     "file": "bigfoot_kiragi_gezgini_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "bigfoot_kiragi_gezgini_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "bigfoot_kiragi_gezgini"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "firtina_cigligi",
+   "actions": {
+    "attack": {
+     "file": "night_screecher_firtina_cigligi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "sonicPulse",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 316,
+        "y": 192
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "night_screecher_firtina_cigligi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "night_screecher_firtina_cigligi"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "mezar_ayazi",
+   "actions": {
+    "attack": {
+     "file": "necromancer_mezar_ayazi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spiritBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 373,
+        "y": 188
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "necromancer_mezar_ayazi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "necromancer_mezar_ayazi"
+  },
+  {
+   "hero": "assassin",
+   "costume": "kizil_golge",
+   "actions": {
+    "attack": {
+     "file": "assassin_kizil_golge_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "assassin_kizil_golge_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "assassin_kizil_golge"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "kara_bulut",
+   "actions": {
+    "attack": {
+     "file": "stormcaller_kara_bulut_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lightningBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 441,
+        "y": 14
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "stormcaller_kara_bulut_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "stormcaller_kara_bulut"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "safir_ejder",
+   "actions": {
+    "attack": {
+     "file": "dragonheart_safir_ejder_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "dragonheart_safir_ejder_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "dragonheart_safir_ejder"
+  },
+  {
+   "hero": "fairy",
+   "costume": "ciy_bahcesi",
+   "actions": {
+    "attack": {
+     "file": "fairy_ciy_bahcesi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "blossomBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 379,
+        "y": 141
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "fairy_ciy_bahcesi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "fairy_ciy_bahcesi"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "sonbahar_ruhu",
+   "actions": {
+    "attack": {
+     "file": "kitsune_sonbahar_ruhu_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "kitsune_sonbahar_ruhu_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "kitsune_sonbahar_ruhu"
   }
  ],
- "batch": 7
+ "batch": 8
 }

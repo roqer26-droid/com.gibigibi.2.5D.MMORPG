@@ -5,7 +5,7 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(52);
+    expect(allCombatClips()).toHaveLength(72);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
     for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn', 'demon', 'seraph']) {
@@ -17,14 +17,14 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
       expect(h.frameDurationsMs.reduce((x, y) => x + y, 0)).toBe(h.durationMs);
       expect(a.url).toBeTruthy();
     }
-    expect(manifest.textures.filter((t) => t.costume !== 'default').map((t) => `${t.hero}_${t.costume}`).sort()).toEqual(['mage_ay_kristali', 'paladin_gumus_safak', 'ranger_gece_izcisi', 'warrior_koz_muhafizi']);
+    expect(manifest.textures.filter((t) => t.costume !== 'default')).toHaveLength(14);
   });
 
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip('warrior_kutup_celigi', 'attack')).toBeNull();
     expect(combatClip('seraph_gece_mabedi', 'attack')).toBeNull();
     expect(combatClip('phoenix_gunes_taci', 'attack')).toBeNull();
-    expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull();
+    expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull(); // animasyonu olmayan kostüm
     expect(combatClip(null, 'hurt')).toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(clipContactMs(ns)).toBe(360);
     // Paket 1 kayıtları korunur
     expect(clipContactMs(combatClip('ranger', 'attack')!)).toBe(360);
-    expect(combatClip('night_screecher_firtina_cigligi', 'attack')).toBeNull();
+    expect(combatClip('night_screecher_bakir_tutulma', 'attack')).toBeNull();
   });
 
   it('Paket 3: Suikastçı/Ejderkalp impact 240 ms; Ölüm Çağıran ruh büyüsü, Fırtına Çağıran yıldırım (originPx, 120 ms)', () => {
@@ -104,7 +104,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(combatClip('demon', 'attack')!.events.map((e) => [e.type, e.atMs])).toEqual([['impact', 240]]);
     expect(combatClip('seraph', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'radiantCrescent', atMs: 240, suggestedTravelMs: 120, originPx: { x: 388, y: 117 } });
     expect(clipContactMs(combatClip('seraph', 'attack')!)).toBe(360);
-    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(26);
+    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(36);
     expect(combatClip('djinn', 'attack')!.events[0].projectile).toBe('aetherOrb'); // önceki paketler korunur
   });
 
@@ -121,5 +121,25 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(combatClip('ranger', 'attack')!.url).not.toBe(combatClip('ranger_gece_izcisi', 'attack')!.url);
     expect(combatClip('mage_kor_akademisi', 'attack')).toBeNull();
     expect(combatClip('ranger_sonbahar_avcisi', 'hurt')).toBeNull();
+  });
+
+  it('Paket 8: on kostüm (hero + costume); yakın saldırılar impact, uzak saldırılar mermi; varsayılanlar korunur', () => {
+    const melee = ['werewolf_ay_pencesi', 'vampire_kizil_kadife', 'bigfoot_kiragi_gezgini', 'assassin_kizil_golge', 'dragonheart_safir_ejder', 'kitsune_sonbahar_ruhu'];
+    for (const k of melee) {
+      expect(combatClip(k, 'attack')!.events.map((e) => [e.type, e.atMs]), k).toEqual([['impact', 240]]);
+      expect(combatClip(k, 'hurt'), k).not.toBeNull();
+    }
+    const ranged: Array<[string, string, { x: number; y: number }]> = [
+      ['night_screecher_firtina_cigligi', 'sonicPulse', { x: 316, y: 192 }],
+      ['necromancer_mezar_ayazi', 'spiritBolt', { x: 373, y: 188 }],
+      ['stormcaller_kara_bulut', 'lightningBolt', { x: 441, y: 14 }],
+      ['fairy_ciy_bahcesi', 'blossomBolt', { x: 379, y: 141 }],
+    ];
+    for (const [k, proj, o] of ranged) {
+      expect(combatClip(k, 'attack')!.events[0], k).toMatchObject({ type: 'projectileRelease', projectile: proj, atMs: 240, suggestedTravelMs: 120, originPx: o });
+      expect(clipContactMs(combatClip(k, 'attack')!), k).toBe(360);
+    }
+    expect(combatClip('necromancer', 'attack')!.events[0].originPx).toEqual({ x: 380, y: 162 });
+    expect(combatClip('stormcaller_mercan_firtinasi', 'attack')).toBeNull();
   });
 });

@@ -141,7 +141,17 @@ const ORB_TINTS = {
   spirit: { core: 0xdcfce7, halo: 0x22c55e, trail: 0x4ade80, size: 4.5, wobble: 6 },
   ember: { core: 0xfff7ed, halo: 0xf97316, trail: 0xfb923c, size: 4, wobble: 0 },
   aether: { core: 0xccfbf1, halo: 0x14b8a6, trail: 0x2dd4bf, size: 5, wobble: 3 },
+  frost: { core: 0xf0f9ff, halo: 0x38bdf8, trail: 0x7dd3fc, size: 4.5, wobble: 6 },
 } satisfies Record<string, OrbTint>;
+
+/** Kostüme özgü efekt renkleri (ENTEGRASYON.md): Mezar Ayazı buz mavisi ruh kıvılcımı, Kara Bulut kehribar yıldırım.
+ *  Fırtına Çığlığı (mor ses dalgası) ve Çiy Bahçesi (pembe kıvılcım) varsayılan efekt renklerini kullanır. */
+const CLIP_ORB_TINT: Readonly<Record<string, OrbTint>> = {
+  necromancer_mezar_ayazi: ORB_TINTS.frost,
+};
+const CLIP_LIGHTNING_TINT: Readonly<Record<string, { glow: number; mid: number; ring: number }>> = {
+  stormcaller_kara_bulut: { glow: 0xf59e0b, mid: 0xfcd34d, ring: 0xfbbf24 },
+};
 
 export class BattleScene extends Phaser.Scene {
   private initData!: BattleSceneInitData;
@@ -1973,8 +1983,8 @@ export class BattleScene extends Phaser.Scene {
         const pc = CLIP_PROJECTILE_TINT[clip.key] ?? col;
         if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, pc, travel);
         else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
-        else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel);
-        else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, CLIP_ORB_TINT[clip.key] ?? ORB_TINTS.spirit);
+        else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel, CLIP_LIGHTNING_TINT[clip.key]);
         else if (e.projectile === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'emberBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.ember);
         else if (e.projectile === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.aether);
@@ -2355,7 +2365,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Yıldırım (Fırtına Çağıran): çıkış noktasından hedefe uzanan kısa, kırık mavi şimşek; varışta parlama, ardından söner. */
-  private launchLightningBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+  private launchLightningBolt(
+    sx: number,
+    sy: number,
+    tx: number,
+    ty: number,
+    flightMs: number,
+    pal: { glow: number; mid: number; ring: number } = { glow: 0x3b82f6, mid: 0x93c5fd, ring: 0x60a5fa }
+  ) {
     const g = this.add.graphics();
     this.vfxContainer.add(g);
     const n = 7;
@@ -2373,8 +2390,8 @@ export class BattleScene extends Phaser.Scene {
         pts.push([sx + dx * t + px * jag[i] * p, sy + dy * t + py * jag[i] * p]);
       }
       for (const [w, c, a] of [
-        [6, 0x3b82f6, 0.35],
-        [2.6, 0x93c5fd, 0.9],
+        [6, pal.glow, 0.35],
+        [2.6, pal.mid, 0.9],
         [1.2, 0xffffff, 1],
       ] as const) {
         g.lineStyle(w, c, a * alpha);
@@ -2393,7 +2410,7 @@ export class BattleScene extends Phaser.Scene {
       ease: 'Quad.easeIn',
       onUpdate: () => draw(st.p, 1),
       onComplete: () => {
-        this.drawShockwave(tx, ty, 0x60a5fa, 30);
+        this.drawShockwave(tx, ty, pal.ring, 30);
         const fade = { a: 1 };
         this.tweens.add({ targets: fade, a: 0, duration: 110, onUpdate: () => draw(1, fade.a), onComplete: () => g.destroy() });
       },

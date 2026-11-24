@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.80.0 — Saldırı ve hasar alma animasyonları, paket 8 (on kostüm)
+- `hero` + `costume` çiftiyle on kostüm klibi: Kurt Adam / Ay Pençesi, Vampir / Kızıl Kadife, Koca Ayak / Kırağı Gezgini, Gecenin Çığırtkanı / Fırtına Çığlığı, Ölüm Çağıran / Mezar Ayazı, Suikastçı / Kızıl Gölge, Fırtına Çağıran / Kara Bulut, Ejderkalp / Safir Ejder, Peri / Çiy Bahçesi, Ruh Tilkisi / Sonbahar Ruhu. Önceki yedi paket korundu (36 görünüm). Klip seçili kostümün bekleme sheet'iyle aynı ölçek ve çapada oynar, bitince aynı kostümün bekleme döngüsüne döner.
+- Yakın saldırılar `impact` anında (240 ms); uzak saldırılar 240 ms'de `originPx`'ten, 120 ms yolculuk.
+- Kostüme özgü efekt renkleri (ENTEGRASYON.md): Fırtına Çığlığı mor ses dalgası, Mezar Ayazı buz mavisi ruh kıvılcımı (`ORB_TINTS.frost`), Kara Bulut kehribar yıldırım (`CLIP_LIGHTNING_TINT`), Çiy Bahçesi pembe çiçek kıvılcımı. Yıldırım efektine renk paleti parametresi eklendi.
+
 ## v1.79.0 — Saldırı ve hasar alma animasyonları, paket 7 (ilk dört kahramanın birer kostümü)
 - Kostüm klipleri `hero` + `costume` çiftiyle bağlandı: Savaşçı / Köz Muhafızı, Şövalye / Gümüş Şafak, Korucu / Gece İzcisi, Büyücü / Ay Kristali. Önceki altı paketin kayıtları korundu. Klip, seçili kostümün bekleme sheet'iyle aynı ölçek ve çapada oynar ve aynı kostümün bekleme döngüsüne döner; animasyonu olmayan kostümler eski statik poz akışını kullanır.
 - Köz Muhafızı ve Gümüş Şafak: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
