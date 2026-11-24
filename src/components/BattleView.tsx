@@ -298,7 +298,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
     const battleScene = new BattleScene(initData);
     sceneRef.current = battleScene;
-    if (import.meta.env.VITE_E2E) (window as unknown as { __battleScene?: BattleScene }).__battleScene = battleScene;
+    if (import.meta.env.VITE_E2E) {
+      (window as unknown as { __battleScene?: BattleScene }).__battleScene = battleScene;
+      (window as unknown as { __sound?: typeof SoundEngine }).__sound = SoundEngine;
+    }
 
     const game = new Phaser.Game({
       type: Phaser.AUTO,

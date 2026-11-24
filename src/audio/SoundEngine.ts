@@ -1,4 +1,9 @@
 import { GameSettings, GemType } from '../types/game';
+import { HIT_CUES, shouldPlayHitSound, type HitCue, type LastHitSound } from '../game/hitFeedback';
+
+/** Vuruş ses dosyaları (vuruş ve ses paketi): anahtar başına bir MP3. */
+const HIT_SFX_URL = import.meta.glob('./sfx/*.mp3', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
+const hitSfxUrl = (cue: HitCue): string | undefined => HIT_SFX_URL[`./sfx/${cue}.mp3`];
 
 type MusicMode = 'none' | 'menu' | 'battle' | 'boss';
 
@@ -40,7 +45,86 @@ class SoundEngineImpl {
   }
 
   public unlock() {
-    this.ensureContext();
+    const ctx = this.ensureContext();
+    if (ctx) void this.loadHitSounds(ctx);
+  }
+
+  // --- Vuruş sesleri (MP3): yalnızca sfx kanalından çalar, sessiz/ses seviyesi ayarlarına bağlıdır ---
+  private hitBuffers = new Map<HitCue, AudioBuffer>();
+  private hitLoading: Promise<void> | null = null;
+  private lastHit: (LastHitSound & { src: AudioBufferSourceNode; gain: GainNode; end: number }) | null = null;
+  /** Doğrulama için: çalınan/bastırılan vuruş sesleri */
+  public hitLog: Array<{ cue: HitCue; played: boolean; at: number; reason?: string }> = [];
+
+  private loadHitSounds(ctx: AudioContext): Promise<void> {
+    this.hitLoading ??= Promise.allSettled(
+      HIT_CUES.map(async (cue) => {
+        const url = hitSfxUrl(cue);
+        if (!url) throw new Error(`ses yok: ${cue}`);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`ses yüklenemedi: ${cue}`);
+        this.hitBuffers.set(cue, await ctx.decodeAudioData(await res.arrayBuffer()));
+      })
+    ).then(() => undefined);
+    return this.hitLoading;
+  }
+
+  /** Vuruş sesleri hazır mı (test ve yedek davranış için). */
+  public hitSoundsReady(cue?: HitCue): boolean {
+    return cue ? this.hitBuffers.has(cue) : this.hitBuffers.size === HIT_CUES.length;
+  }
+
+  /**
+   * Tek bir vuruş sesi çalar. 2× hızda perde korunur, kuyruk kısalır. Yığılma penceresindeki tekrar bastırılır;
+   * kritik/kalkan sesi yakın zamanda çalan normal sesin yerini alır. Dosya yüklenemediyse sentez vuruş sesine düşer.
+   * Sessizde hiçbir şey çalmaz. Dönüş: ses çalındı mı.
+   */
+  public playHitCue(cue: HitCue, speed = 1): boolean {
+    const log = (played: boolean, reason?: string) => {
+      this.hitLog.push({ cue, played, at: typeof performance !== 'undefined' ? performance.now() : 0, reason });
+      if (this.hitLog.length > 60) this.hitLog.shift();
+      return played;
+    };
+    const ctx = this.ensureContext();
+    if (!ctx || !this.sfxGain) return log(false, 'no-audio');
+    if (this.settings.muted || this.settings.sfxVolume <= 0) return log(false, 'muted');
+    const now = ctx.currentTime;
+    if (!shouldPlayHitSound(this.lastHit, now, cue, speed)) return log(false, 'stacked');
+    const buf = this.hitBuffers.get(cue);
+    if (!buf) {
+      void this.loadHitSounds(ctx);
+      this.playWeaponHit(cue === 'critical');
+      this.lastHit = null;
+      return log(true, 'fallback');
+    }
+    const prev = this.lastHit;
+    if (prev && prev.end > now) {
+      prev.gain.gain.cancelScheduledValues(now);
+      prev.gain.gain.setTargetAtTime(0, now, 0.004);
+      try {
+        prev.src.stop(now + 0.018);
+      } catch {
+        /* zaten durdu */
+      }
+    }
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = buf;
+    const length = buf.duration * (speed >= 2 ? 0.72 : 1);
+    const fade = Math.min(0.035, length / 3);
+    gain.gain.setValueAtTime(0.83, now);
+    gain.gain.setValueAtTime(0.83, now + length - fade);
+    gain.gain.linearRampToValueAtTime(0, now + length);
+    src.connect(gain);
+    gain.connect(this.sfxGain);
+    src.onended = () => {
+      src.disconnect();
+      gain.disconnect();
+    };
+    src.start(now);
+    src.stop(now + length);
+    this.lastHit = { time: now, priority: cue === 'block' || cue === 'critical', src, gain, end: now + length };
+    return log(true);
   }
 
   public updateSettings(settings: GameSettings) {
