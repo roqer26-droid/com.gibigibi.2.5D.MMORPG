@@ -1,3 +1,4 @@
+import { barrierDamage, barrierIntent, barrierMatch, barrierMove, boardBossPhase, crackBarrier, seedBarrierMove, type BoardBarrier } from "../game/boardBossPhase";
 import Phaser from "phaser";
 import { HERO_CLASSES } from "../data/classes";
 import {
@@ -467,6 +468,8 @@ export class BattleScene extends Phaser.Scene {
   private enemyHp = 500;
   private enemyMaxHp = 500;
   private enemyShield = 0;
+  private boardPhase?: ReturnType<typeof boardBossPhase>;
+  private boardBarrier?: BoardBarrier;
   private enemyTurnCounter = 2;
   /** Düşmanın bir sonraki eylemi: bir kez seçilir, eylem gerçekleşene ya da faz değişene kadar sabit kalır */
   private plannedAction: EnemyAction = { kind: "attack", power: 1 };
@@ -582,6 +585,8 @@ export class BattleScene extends Phaser.Scene {
     this.enemyMaxHp = this.enemy.maxHp;
     this.enemyHp = this.enemyMaxHp;
     this.enemyShield = 0;
+    this.boardPhase = boardBossPhase(this.enemy);
+    this.boardBarrier = undefined;
     this.enemyTurnCounter = this.enemy.attackInterval;
     this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
     this.setFlags = freshSetFlags();
@@ -1760,6 +1765,15 @@ export class BattleScene extends Phaser.Scene {
     while (true) {
       const { matchedSet, spawns, squares } = this.findMatches();
       if (matchedSet.size === 0) break;
+      if (this.boardPhase && this.boardBarrier?.remaining &&
+          barrierMatch(this.tileGrid(), matchedSet, this.boardPhase.element)) {
+        const next = crackBarrier(this.boardBarrier, this.turnNumber);
+        if (next !== this.boardBarrier) {
+          this.boardBarrier = next;
+          this.spawnBannerText(next.remaining > 0 ? "BUZ BARİYERİ ÇATLADI!" : "BUZ BARİYERİ KIRILDI!", "#7dd3fc");
+          this.emitSnapshot();
+        }
+      }
 
       // Her kaskad adımı tek bir saldırı eylemidir: aynı adımdaki tüm taş türleri/hasar kayıtları saldırı görselini bir kez oynatır
       this.stepActionId = ++this.attackActionSeq;
@@ -2401,7 +2415,9 @@ export class BattleScene extends Phaser.Scene {
       shieldAbsorbed = absorbed;
     }
 
-    this.enemyHp = Math.max(0, this.enemyHp - hpDamage);
+    const appliedHpDamage = this.damageEnemyHp(hpDamage);
+    shieldAbsorbed += hpDamage - appliedHpDamage;
+    hpDamage = appliedHpDamage;
     this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 4);
     this.lastDealt = dmg;
     // Vampir — Kan Bağı: her oyuncu turunda verilen ilk doğrudan hasar için bir kez can yeniler
@@ -2454,7 +2470,7 @@ export class BattleScene extends Phaser.Scene {
     });
     const pilotCue = this.heroHitCue
       ? hitCue({ attack: this.heroHitCue, outcome })
-      : null;
+      : this.boardBarrier?.remaining && outcome === "block" ? "block" : null;
     const showHit = () => {
       if (!this.enemySprite || !this.enemySprite.active) return;
       if (pilotCue) {
@@ -2520,7 +2536,9 @@ export class BattleScene extends Phaser.Scene {
       );
     };
 
-    const label = isCrit
+    const label = this.boardPhase && hpDamage < dmg
+      ? (hpDamage === 0 ? "ENGELLENDİ!" : `-${hpDamage}`)
+      : isCrit
       ? `KRİTİK! -${dmg}`
       : isWeak
         ? `ZAYIFLIK! -${dmg}`
@@ -3494,8 +3512,27 @@ export class BattleScene extends Phaser.Scene {
     };
   }
 
+  private damageEnemyHp(damage: number) {
+    const applied = barrierDamage(this.boardPhase, this.enemyPhase, this.boardBarrier,
+      this.enemyHp, this.enemyMaxHp, damage);
+    this.enemyHp = Math.max(0, this.enemyHp - applied);
+    if (this.boardPhase && this.enemyPhase === 1 &&
+        this.enemyHp <= Math.ceil(this.enemyMaxHp * this.boardPhase.threshold)) {
+      this.handlePhaseChange();
+    }
+    return applied;
+  }
+
   private checkBossPhaseTransitions() {
     if (!this.enemy.isBoss || this.enemyHp <= 0) return;
+    if (this.boardPhase && this.enemyPhase === 1 &&
+        this.enemyHp <= Math.ceil(this.enemyMaxHp * this.boardPhase.threshold)) {
+      this.enemyPhase = 2;
+      this.boardBarrier = { remaining: this.boardPhase.matches, lastTurn: this.turnNumber };
+      this.spawnBannerText("BUZ BARİYERİ · İKİ AYRI BUZ EŞLEŞMESİ", "#38bdf8");
+      SoundEngine.playBossRoar();
+      return;
+    }
     const pct = this.enemyHp / this.enemyMaxHp;
 
     if (
@@ -3514,16 +3551,6 @@ export class BattleScene extends Phaser.Scene {
     ) {
       this.enemyEnraged = true;
       this.spawnBannerText("ORMAN MUHAFIZI ÖFKELENDİ!", "#ef4444");
-    } else if (
-      this.enemy.bossId === "frost_queen" &&
-      this.enemyPhase === 1 &&
-      pct <= 0.55
-    ) {
-      this.enemyPhase = 2;
-      this.enemyShield += Math.round(this.enemyMaxHp * 0.2);
-      this.freezeRandomTiles(3);
-      this.spawnBannerText("BUZ BARİYERİ & TAŞ DONDURMA!", "#38bdf8");
-      SoundEngine.playBossRoar();
     } else if (
       this.enemy.bossId === "infernal_dragon" &&
       this.enemyPhase === 1 &&
@@ -3684,11 +3711,11 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemyBurnTurns > 0) {
       this.enemyBurnTurns -= 1;
       const burnDmg = Math.round(this.initData.build.stats.attack * 0.75);
-      this.enemyHp = Math.max(0, this.enemyHp - burnDmg);
+      const dealt = this.damageEnemyHp(burnDmg);
       this.spawnFloatingText(
         this.enemyContainer.x,
         this.enemyContainer.y - 25,
-        `YANMA -${burnDmg}`,
+        `YANMA -${dealt}`,
         "#fb923c",
       );
       if (this.enemyHp <= 0) {
@@ -3701,11 +3728,11 @@ export class BattleScene extends Phaser.Scene {
     if (this.companionBurn.turns > 0) {
       this.companionBurn.turns -= 1;
       const cb = this.companionBurn.perTurn;
-      this.enemyHp = Math.max(0, this.enemyHp - cb);
+      const dealt = this.damageEnemyHp(cb);
       this.spawnFloatingText(
         this.enemyContainer.x - 22,
         this.enemyContainer.y - 40,
-        `KÖZ -${cb}`,
+        `KÖZ -${dealt}`,
         "#fdba74",
       );
       if (this.enemyHp <= 0) {
@@ -3718,11 +3745,11 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemyPoisonTurns > 0) {
       this.enemyPoisonTurns -= 1;
       const poisonDmg = Math.round(this.initData.build.stats.attack * 0.8);
-      this.enemyHp = Math.max(0, this.enemyHp - poisonDmg);
+      const dealt = this.damageEnemyHp(poisonDmg);
       this.spawnFloatingText(
         this.enemyContainer.x + 22,
         this.enemyContainer.y - 12,
-        `ZEHİR -${poisonDmg}`,
+        `ZEHİR -${dealt}`,
         "#a3e635",
       );
       if (this.enemyHp <= 0) {
@@ -3738,11 +3765,11 @@ export class BattleScene extends Phaser.Scene {
         this.initData.build.stats.attack *
           (1.1 + this.initData.build.passives.bleedPowerPct / 100),
       );
-      this.enemyHp = Math.max(0, this.enemyHp - bleedDmg);
+      const dealt = this.damageEnemyHp(bleedDmg);
       this.spawnFloatingText(
         this.enemyContainer.x - 24,
         this.enemyContainer.y - 14,
-        `KANAMA -${bleedDmg}`,
+        `KANAMA -${dealt}`,
         "#fb7185",
       );
       if (this.enemyHp <= 0) {
@@ -3771,7 +3798,7 @@ export class BattleScene extends Phaser.Scene {
         0x4ade80,
         95,
       );
-      this.enemyHp = Math.max(0, this.enemyHp - sumDmg);
+      const dealt = this.damageEnemyHp(sumDmg);
       this.heroHp = Math.min(
         this.heroMaxHp,
         this.heroHp + Math.round(sumDmg * 0.2),
@@ -3779,7 +3806,7 @@ export class BattleScene extends Phaser.Scene {
       this.spawnFloatingText(
         this.enemyContainer.x,
         this.enemyContainer.y + 30,
-        `${this.summonLabel} -${sumDmg}`,
+        `${this.summonLabel} -${dealt}`,
         "#86efac",
       );
       if (this.enemyHp <= 0) {
@@ -3858,6 +3885,16 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
+    if (this.boardPhase && this.boardBarrier?.remaining) {
+      const element = this.boardPhase.element;
+      for (const { row, col } of seedBarrierMove(this.tileGrid(), element)) {
+        const tv = this.grid[row][col]!;
+        tv.tile.type = element;
+        tv.gemSprite.setTexture(`gem_${element}`);
+        const pos = this.cellToWorld(row, col);
+        this.spawnGemBurst(pos.x, pos.y, element);
+      }
+    }
     this.turnNumber += 1;
     this.comboCount = 0;
     this.huntRuleUsed = false;
@@ -3918,7 +3955,7 @@ export class BattleScene extends Phaser.Scene {
               100,
           ),
         );
-        this.enemyHp = Math.max(0, this.enemyHp - counter);
+        const dealt = this.damageEnemyHp(counter);
         this.drawLightningArc(
           this.heroContainer.x,
           this.heroContainer.y - 10,
@@ -3929,7 +3966,7 @@ export class BattleScene extends Phaser.Scene {
         this.spawnFloatingText(
           this.enemyContainer.x,
           this.enemyContainer.y - 34,
-          `KARŞI SALDIRI -${counter}`,
+          `KARŞI SALDIRI -${dealt}`,
           "#f0abfc",
         );
         if (this.enemyHp <= 0) {
@@ -4059,11 +4096,11 @@ export class BattleScene extends Phaser.Scene {
           1,
           Math.round((rawAtk * this.initData.build.passives.thornsPct) / 100),
         );
-        this.enemyHp = Math.max(0, this.enemyHp - reflect);
+        const dealt = this.damageEnemyHp(reflect);
         this.spawnFloatingText(
           this.enemyContainer.x,
           this.enemyContainer.y - 30,
-          `DİKEN -${reflect}`,
+          `DİKEN -${dealt}`,
           "#f0abfc",
           15,
         );
@@ -5499,7 +5536,9 @@ export class BattleScene extends Phaser.Scene {
   private showHintMove() {
     const moves = this.findPossibleMoves();
     if (moves.length === 0) return;
-    const m = moves[0];
+    const m = (this.boardPhase && this.boardBarrier?.remaining
+      ? barrierMove(this.tileGrid(), this.boardPhase.element)
+      : undefined) ?? moves[0];
     const p1 = this.cellToWorld(m.a.row, m.a.col);
     const p2 = this.cellToWorld(m.b.row, m.b.col);
     this.hintGraphics.clear();
@@ -6514,6 +6553,7 @@ export class BattleScene extends Phaser.Scene {
         staggerTurns: this.enemyStaggerTurns,
       }),
       phaseNotice: this.phaseNotice,
+      barrierIntent: barrierIntent(this.boardPhase, this.enemyPhase, this.boardBarrier),
       comboCount: this.comboCount,
       turnPhase: this.turnPhase,
       skillCooldowns: { ...this.skillCooldowns },

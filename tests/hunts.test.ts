@@ -48,7 +48,7 @@ describe('hunt definitions', () => {
     expect(lines[1].text).toBe('Nefes saldırısı 2 turda bir');
     expect(lines[1].note).toBe('İlk nefes 2 tur sonra');
     expect(getHuntRuleLines(frozen, 2)[0].text).toBe('Ateş eşleşmesi 1 buzu çözer');
-    expect(getHuntRuleLines(frozen, 2)[1].text).toBe('Buz Bariyeri %55 canda');
+    expect(getHuntRuleLines(frozen, 2)[1].note).toContain('%50 canda Buz Bariyeri');
   });
 });
 

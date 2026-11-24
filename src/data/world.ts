@@ -262,7 +262,7 @@ const CORE_REGIONS: RegionDef[] = [
         regionId: 'mountains',
         stageNumber: 5,
         name: 'BOSS: Buz Kraliçesi',
-        description: 'Tahtadaki taşları dondurabilen Buz Kraliçesi! Ateş taşlarıyla buzları erit!',
+        description: '%50 canda Buz Bariyeri açılır. Bariyeri kırmak için iki ayrı hamlede buz eşleştir.',
         type: 'boss',
         recommendedLevel: 10,
         enemy: {

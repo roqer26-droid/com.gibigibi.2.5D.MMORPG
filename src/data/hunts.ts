@@ -1,3 +1,4 @@
+import { barrierIntent, boardBossPhase } from '../game/boardBossPhase';
 import type { BossId, GameSaveState, GemType, HuntId, HuntRecord } from '../types/game';
 
 /** Av özel kuralının türü. Kurallar her oyuncu turunun ilk ateş eşleşmesinde işler. */
@@ -82,7 +83,7 @@ export function getHuntRuleLines(hunt: HuntDef, attackInterval: number): HuntRul
   if (hunt.rule.kind === 'thaw_first_fire') {
     return [
       { icon: 'flame', text: `Ateş eşleşmesi ${hunt.rule.amount} buzu çözer`, note },
-      { icon: 'snowflake', text: 'Buz Bariyeri %55 canda' },
+      { icon: 'snowflake', text: 'Buz Bariyeri', note: barrierIntent(boardBossPhase({ isBoss: true, bossId: hunt.bossId }))?.description },
     ];
   }
   return [

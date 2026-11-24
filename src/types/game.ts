@@ -703,6 +703,7 @@ export interface GameSaveState {
   lastSavedAt: number;
 }
 
+import type { barrierIntent } from '../game/boardBossPhase';
 import type { IntentView } from '../game/enemyIntent';
 
 export interface BattleCombatSnapshot {
@@ -742,6 +743,7 @@ export interface BattleCombatSnapshot {
   enemyNextWarning: string;
   /** Düşmanın gerçek eylem planından üretilen niyet (simge + metin + kalan tur) */
   enemyIntent: IntentView;
+  barrierIntent?: ReturnType<typeof barrierIntent>;
   /** Boss fazı değişince kısa bildirim; `seq` her yeni bildirimde artar */
   phaseNotice?: { seq: number; text: string };
   comboCount: number;

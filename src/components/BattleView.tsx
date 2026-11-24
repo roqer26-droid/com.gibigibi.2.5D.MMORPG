@@ -29,6 +29,7 @@ import {
 import { SoundEngine } from '../audio/SoundEngine';
 import { HERO_CLASSES } from '../data/classes';
 import { ARENA_IMAGES } from '../data/huntArt';
+import { barrierIntent, boardBossPhase } from '../game/boardBossPhase';
 import { describeIntent, type IntentIcon } from '../game/enemyIntent';
 import { describeWeakness } from '../game/weaknessInfo';
 import { GemIcon } from './GemIcon';
@@ -162,6 +163,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       frozenTurns: 0,
       staggerTurns: 0,
     }),
+    barrierIntent: barrierIntent(boardBossPhase(stage.enemy)),
     comboCount: 0,
     turnPhase: 'player',
     skillCooldowns: {},
@@ -169,6 +171,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
   });
 
   // Boss faz değişimi: kısa bildirim niyet alanının yerine geçer, sonra yeni planı gösterir
+  const [showBarrier, setShowBarrier] = useState(false);
   const [phaseNotice, setPhaseNotice] = useState<string | null>(null);
   const [showWeak, setShowWeak] = useState(false);
   const lastNoticeSeq = useRef(0);
@@ -347,6 +350,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (outcome) return;
+      if (e.key === 'Escape' && showBarrier && snapshot.barrierIntent) {
+        setShowBarrier(false);
+        return;
+      }
       if (e.key === 'Escape' && showWeak) {
         setShowWeak(false);
         return;
@@ -377,7 +384,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [paused, outcome, showSkillBook, showWeak, cls.ultimateSkill.id, loadout]);
+  }, [paused, outcome, showSkillBook, showWeak, showBarrier, snapshot.barrierIntent, cls.ultimateSkill.id, loadout]);
 
   const skillIcon = (key: string) => {
     switch (key) {
@@ -506,12 +513,14 @@ export const BattleView: React.FC<BattleViewProps> = ({
             </div>
             <div
               className={`relative mt-0.5 h-3 w-full overflow-hidden rounded-full bg-slate-800 border ${
-                stage.enemy.isBoss ? 'border-rose-500/60' : 'border-slate-700'
+                snapshot.barrierIntent?.active ? 'border-sky-300' : stage.enemy.isBoss ? 'border-rose-500/60' : 'border-slate-700'
               }`}
             >
               <div
                 className={`h-full transition-all duration-300 ${
-                  stage.enemy.isBoss
+                  snapshot.barrierIntent?.active
+                    ? 'bg-gradient-to-r from-blue-700 via-sky-500 to-cyan-300'
+                    : stage.enemy.isBoss
                     ? 'bg-gradient-to-r from-rose-700 via-red-500 to-orange-400'
                     : 'bg-gradient-to-r from-rose-600 to-red-400'
                 }`}
@@ -556,7 +565,23 @@ export const BattleView: React.FC<BattleViewProps> = ({
                   >
                     <GemIcon gem={snapshot.enemyWeakness} size={12} />
                   </button>
-                  {phaseNotice ? (
+                  {snapshot.barrierIntent && (
+                    <button
+                      type="button"
+                      data-testid="barrier-intent"
+                      aria-label={snapshot.barrierIntent.description}
+                      aria-expanded={showBarrier}
+                      onClick={() => {
+                        setShowWeak(false);
+                        setShowBarrier(v => !v);
+                      }}
+                      className="relative flex h-[18px] shrink-0 items-center gap-0.5 whitespace-nowrap rounded border border-sky-400/55 bg-sky-950/70 px-1 text-[10px] font-bold text-sky-200 before:absolute before:-inset-y-2 before:inset-x-0 before:content-['']"
+                    >
+                      <Snowflake className="h-3 w-3" />
+                      {snapshot.barrierIntent.text}
+                    </button>
+                  )}
+                  {phaseNotice && !boardBossPhase(stage.enemy) ? (
                     <div
                       className="intent-notice flex h-[18px] min-w-0 items-center gap-1 rounded-md border border-amber-400/60 bg-amber-950/60 px-1.5 text-[11px] font-extrabold text-amber-200"
                       data-testid="phase-notice"
@@ -570,6 +595,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                         it.urgent ? 'intent-urgent border-rose-400/70 bg-rose-950/60 text-rose-100' : 'border-slate-700 bg-slate-900/70 text-slate-100'
                       }`}
                       data-testid="intent-text"
+                      title={it.text}
                     >
                       <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} />
                       <span className="truncate">{it.text}</span>
@@ -581,6 +607,24 @@ export const BattleView: React.FC<BattleViewProps> = ({
           </div>
         </div>
       </div>
+
+      {showBarrier && snapshot.barrierIntent && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowBarrier(false)} aria-hidden="true" />
+          <div
+            role="dialog"
+            aria-label="Buz Bariyeri"
+            className="fantasy-panel fixed left-2 right-2 z-50 mx-auto flex max-w-sm items-start gap-3 rounded-2xl border border-sky-400/60 p-3"
+            style={{ top: 'calc(62px + env(safe-area-inset-top, 0px))' }}
+          >
+            <p className="flex-1 text-sm text-sky-100">{snapshot.barrierIntent.description}</p>
+            <button type="button" aria-label="Kapat" onClick={() => setShowBarrier(false)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Zayıflık açıklaması: ekran sınırlarına sığar, dışına dokunmak kapatır */}
       {showWeak && (() => {

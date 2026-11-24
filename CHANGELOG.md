@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.85.0 — Buz Kraliçesi: Buz Bariyeri (tahta fazı)
+- Gönderilen yama uygulandı (`src/game/boardBossPhase.ts`). Buz Kraliçesi %50 canda Buz Bariyeri açar: o anda ölümcül vuruş bile canı yarıda durdurur; bariyer açıkken tüm doğrudan hasar ve yanma/zehir/kanama/köz/çağırma/karşı saldırı/diken hasarı 0 olur ("ENGELLENDİ!", kalkan sesi). Bariyer, açıldığı turdan sonraki iki ayrı turda yapılan buz eşleşmesiyle kırılır (aynı turdaki ikinci eşleşme sayılmaz).
+- Eski Buz Kraliçesi fazı (%55'te kalkan + 3 taş dondurma) kaldırıldı. Tahtada buz hamlesi yoksa tur başında en fazla üç sıradan taş buza çevrilerek bir hamle açılır (donmuş ve özel taşlar korunur); ipucu bariyer açıkken buz hamlesini gösterir.
+- Arayüz: niyet satırında "Bariyer %50" / "Buz 0/2" çipi (dokununca açıklama, Esc kapatır), bariyer açıkken buz renkli can çubuğu; aşama ve av açıklamaları güncellendi.
+
 ## v1.84.0 — Vuruş sesi tüm kostümlerde: ses kahramandan (heroId)
 - Vuruş sesi artık görünüm anahtarı (`costumeId`) yerine yalnızca kahraman kimliğinden (`heroId`) seçilir (`heroAttackCue`). Kahramanın varsayılan görünümü ve tüm kostümleri — sonradan eklenecekler dahil — aynı ses kaydını kullanır; kostüm başına ses tanımı ya da MP3 kopyası yoktur (örn. Savaşçı, Köz Muhafızı ve Kutup Çeliği aynı kılıç sesi).
 - Animasyon ve görsel efekt seçimi `heroId + costumeId` ile sürer: kostüm kendi saldırı klibini, vuruş karesini, atış çıkış noktasını ve efekt rengini kullanır; ses yakın saldırıda o klibin `impact` anında, uzak saldırıda ok/büyü varışında çalar. Kostümün saldırı klibi yoksa eski animasyon zamanlaması kullanılır, ses yine kahramandan gelir.
