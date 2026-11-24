@@ -48,7 +48,7 @@ import {
   HIT_FX,
   hitCue,
   hitOutcome,
-  pilotAttackCue,
+  heroAttackCue,
   type HitCue,
   type HitOutcome,
 } from "../game/hitFeedback";
@@ -394,7 +394,7 @@ export class BattleScene extends Phaser.Scene {
   /** Oynayan klibin belirteci: yeni klip ya da idle'a dönüş eski klibin zamanlayıcılarını geçersiz kılar */
   private heroClipToken = 0;
   private heroClipAction: CombatAction | null = null;
-  /** Vuruş sesi/isabet efekti: kahramanın saldırı sesi (yalnızca varsayılan görünümler, 22 kahraman; kostümde eski ses akışı) */
+  /** Vuruş sesi/isabet efekti: kahramanın saldırı sesi (heroId'den; varsayılan görünüm ve tüm kostümler aynı ses) */
   private heroHitCue: HitCue | null = null;
   /** Doğrulama için: isabet olayları (sonuç, ses anahtarı, sahne zamanı) */
   private hitLog: Array<{
@@ -2446,7 +2446,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Düşman hasar tepkisi temas anında gösterilir (hasar hesabı ve durum değişimi anında yapılmıştır)
     this.holdEnemyIdle(380);
-    // Vuruş sesi + isabet efekti (varsayılan görünüm): tek olay, sonuç savaş hesabından (tam kalkan engellemesi / kritik / normal)
+    // Vuruş sesi + isabet efekti (kahramanın sesi, her görünümde): tek olay, sonuç savaş hesabından (tam kalkan engellemesi / kritik / normal)
     const outcome = hitOutcome({
       crit: isCrit,
       hpDamage,
@@ -3983,7 +3983,7 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Varsayılan görünümde ses, kalkan hesabından sonra tek kez seçilir (tam engellemede kalkan sesi)
+    // Ses kalkan hesabından sonra tek kez seçilir (tam engellemede kalkan sesi)
     if (!this.heroHitCue) SoundEngine.playWeaponHit(this.enemy.isBoss);
     if (this.initData.settings.screenShake) {
       this.cameras.main.shake(this.d(170), this.enemy.isBoss ? 0.012 : 0.007);
@@ -6022,9 +6022,9 @@ export class BattleScene extends Phaser.Scene {
   private setupHeroIdleSheet() {
     const hero = this.initData.hero;
     const key = idleSheetKey(hero.classId, hero.costumeId);
-    this.heroHitCue = pilotAttackCue(
-      key ?? (hero.costumeId ? null : hero.classId),
-    );
+    // Vuruş sesi kahramandan (heroId): varsayılan görünüm ve tüm kostümler aynı sesi kullanır; kostüme ait animasyon/efekt
+    // ise görünüm anahtarıyla (key = heroId ya da costumeId) aşağıda ayrı seçilir
+    this.heroHitCue = heroAttackCue(hero.classId);
     const texKey = key ? `hero_idle_${key}` : "";
     const ref = key ? idleReference(key) : null;
     if (

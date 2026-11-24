@@ -1,6 +1,6 @@
 /**
  * Vuruş sesi ve isabet efekti kararları (saf mantık; ses çalma SoundEngine'de, çizim BattleScene'de).
- * Kaynak: vuruş ve ses paketi (combat-feedback.mjs, hero-sounds.mjs) — v2: 22 kahramanın varsayılan görünümü.
+ * Kaynak: vuruş ve ses paketi (combat-feedback.mjs, hero-sounds.mjs) — ses kahramandan (heroId), tüm kostümler dahil.
  */
 
 export type HitCue = 'sword' | 'claw' | 'fist' | 'arrow' | 'spell' | 'critical' | 'block';
@@ -20,8 +20,8 @@ export const HIT_FX: Readonly<Record<HitCue, { color: number; durationMs: number
 export const HIT_CUES = Object.keys(HIT_FX) as HitCue[];
 
 /**
- * Varsayılan görünümdeki 22 kahramanın saldırı sesi (vuruş ve ses paketi v2, `hero-sounds.mjs`). Anahtar sınıf kimliğidir;
- * kostüm görünümleri (anahtar = kostüm kimliği) burada yoktur ve eski ses akışını kullanır (sonraki güncelleme).
+ * 22 kahramanın saldırı sesi (vuruş ve ses paketi v2, `hero-sounds.mjs`). Anahtar yalnızca kahraman kimliğidir (`heroId`);
+ * kahramanın tüm görünümleri (varsayılan + kostümler) bu sesi paylaşır.
  */
 export const HERO_ATTACK_SOUNDS: Readonly<Record<string, HitCue>> = {
   warrior: 'sword',
@@ -50,14 +50,33 @@ export const HERO_ATTACK_SOUNDS: Readonly<Record<string, HitCue>> = {
 /** Geriye uyumluluk: ilk pilot (v1.82.0) bu tablonun alt kümesiydi. */
 export const HIT_PILOT = HERO_ATTACK_SOUNDS;
 
-/** Görünüm anahtarı varsayılan kahraman görünümüyse saldırı sesi; kostüm ya da bilinmeyen anahtarsa null (eski ses akışı). */
-export function pilotAttackCue(appearanceKey: string | null | undefined): HitCue | null {
-  return appearanceKey && Object.prototype.hasOwnProperty.call(HERO_ATTACK_SOUNDS, appearanceKey) ? HERO_ATTACK_SOUNDS[appearanceKey] : null;
+const ownSound = (heroId: string | null | undefined): HitCue | null =>
+  heroId && Object.prototype.hasOwnProperty.call(HERO_ATTACK_SOUNDS, heroId) ? HERO_ATTACK_SOUNDS[heroId] : null;
+
+/**
+ * Kahramanın vuruş sesi — yalnızca `heroId` üzerinden. Varsayılan görünüm ve tüm kostümler (gelecekte eklenecekler dahil)
+ * aynı ses kaydını kullanır; kostüm başına ses tanımı ya da MP3 yoktur. Bilinmeyen kahramanda null (eski ses akışı).
+ */
+export function heroAttackCue(heroId: string | null | undefined): HitCue | null {
+  return ownSound(heroId);
 }
 
-/** `heroHitCue({hero, outcome})` karşılığı: varsayılan kahraman + savaş sonucu → ses; sıyrılmada ya da kahraman yoksa null. */
+/**
+ * Bir görünümün (kahraman + kostüm) vuruş sesi: kostüm yok sayılır, ses kahramandan gelir.
+ * (Animasyon ve görsel efekt ise `heroId + costumeId` ile ayrı seçilir: heroCombat / CLIP_FX.)
+ */
+export function appearanceAttackCue(heroId: string, _costumeId?: string | null): HitCue | null {
+  return heroAttackCue(heroId);
+}
+
+/** v1.82.0 uyumluluğu: anahtar bir kahraman kimliğiyse sesi (kostüm kimliği verilirse null). Yeni kod `heroAttackCue` kullanır. */
+export function pilotAttackCue(appearanceKey: string | null | undefined): HitCue | null {
+  return ownSound(appearanceKey);
+}
+
+/** `heroHitCue({hero, outcome})` karşılığı: kahraman + savaş sonucu → ses; sıyrılmada ya da kahraman yoksa null. */
 export function heroHitCue({ hero, outcome = 'hit' }: { hero: string; outcome?: HitOutcome }): HitCue | null {
-  const attack = pilotAttackCue(hero);
+  const attack = heroAttackCue(hero);
   return attack ? hitCue({ attack, outcome }) : null;
 }
 

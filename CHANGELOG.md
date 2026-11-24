@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.84.0 — Vuruş sesi tüm kostümlerde: ses kahramandan (heroId)
+- Vuruş sesi artık görünüm anahtarı (`costumeId`) yerine yalnızca kahraman kimliğinden (`heroId`) seçilir (`heroAttackCue`). Kahramanın varsayılan görünümü ve tüm kostümleri — sonradan eklenecekler dahil — aynı ses kaydını kullanır; kostüm başına ses tanımı ya da MP3 kopyası yoktur (örn. Savaşçı, Köz Muhafızı ve Kutup Çeliği aynı kılıç sesi).
+- Animasyon ve görsel efekt seçimi `heroId + costumeId` ile sürer: kostüm kendi saldırı klibini, vuruş karesini, atış çıkış noktasını ve efekt rengini kullanır; ses yakın saldırıda o klibin `impact` anında, uzak saldırıda ok/büyü varışında çalar. Kostümün saldırı klibi yoksa eski animasyon zamanlaması kullanılır, ses yine kahramandan gelir.
+- Kurallar değişmedi: normal → kahramanın sesi, kritik → kritik, tam kalkan engellemesi → kalkan, kısmi engellemede kalan hasara göre normal/kritik, sıyrılmada ses yok; her isabet tek ses; ses ayarları ve 1×/2× yığılma sınırı korunur.
+
 ## v1.83.0 — Vuruş sesleri v2: 22 kahramanın varsayılan görünümü
 - Vuruş ve ses paketi v2 (`hero-sounds.mjs`) eşleşmesi `HERO_ATTACK_SOUNDS` olarak eklendi: kılıç (Savaşçı, Şövalye, Vampir, Suikastçı, Ejderkalp, Naga, Minotor, İblis), pençe (Kurt Adam, Ruh Tilkisi), yumruk (Koca Ayak, Kristal Golem), ok (Korucu), büyü (Büyücü, Gecenin Çığırtkanı, Ölüm Çağıran, Fırtına Çağıran, Peri, Siren, Anka, Cin, Serafim). Yalnızca varsayılan görünüm; alternatif kostümler ve düşman saldırıları eski ses akışında.
 - MP3'ler ve kurallar v1.82.0 ile aynı (paketteki dosyalar birebir aynı): tam kalkan engellemesi `block`, kritik `critical`, normal ve kısmen emilen hasar kahramanın sesi, sıyrılmada isabet sesi yok; her isabet tek ses; 1× 48 ms / 2× 75 ms yığılma sınırı; ayarlar (sessiz, efekt ses seviyesi) oyundan.

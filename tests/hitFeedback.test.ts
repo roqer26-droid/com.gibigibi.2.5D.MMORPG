@@ -35,6 +35,7 @@ describe('v1.82.0–v1.83.0: vuruş sesi ve isabet efekti', () => {
     expect(hitOutcome({ crit: false, hpDamage: 120, absorbed: 0 })).toBe('hit');
     expect(hitOutcome({ crit: false, hpDamage: 40, absorbed: 80 })).toBe('hit');
     expect(hitOutcome({ crit: true, hpDamage: 200, absorbed: 0 })).toBe('critical');
+    expect(hitOutcome({ crit: true, hpDamage: 40, absorbed: 80 })).toBe('critical'); // kısmi engelleme: kalan hasar kritik
     expect(hitOutcome({ crit: true, hpDamage: 0, absorbed: 200 })).toBe('block');
     expect(hitOutcome({ crit: false, hpDamage: 0, absorbed: 50 })).toBe('block');
     expect(hitCue({ attack: 'sword', outcome: 'hit' })).toBe('sword');
