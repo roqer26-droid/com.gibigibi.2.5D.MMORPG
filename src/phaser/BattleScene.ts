@@ -123,6 +123,20 @@ export interface BattleSceneInitData {
   arenaImage?: string;
 }
 
+/** Küre biçimli mermi efektlerinin renkleri: ruh büyüsü (yeşil, dalgalı), kor (turuncu, düz), eter küresi (turkuaz, hafif dalgalı). */
+interface OrbTint {
+  core: number;
+  halo: number;
+  trail: number;
+  size: number;
+  wobble: number;
+}
+const ORB_TINTS = {
+  spirit: { core: 0xdcfce7, halo: 0x22c55e, trail: 0x4ade80, size: 4.5, wobble: 6 },
+  ember: { core: 0xfff7ed, halo: 0xf97316, trail: 0xfb923c, size: 4, wobble: 0 },
+  aether: { core: 0xccfbf1, halo: 0x14b8a6, trail: 0x2dd4bf, size: 5, wobble: 3 },
+} satisfies Record<string, OrbTint>;
+
 export class BattleScene extends Phaser.Scene {
   private initData!: BattleSceneInitData;
 
@@ -1954,6 +1968,8 @@ export class BattleScene extends Phaser.Scene {
         else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'emberBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.ember);
+        else if (e.projectile === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.aether);
         else if (e.projectile === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, { edge: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc });
         else this.launchArrow(o.x, o.y, tx, ty, col, travel);
       });
@@ -2255,9 +2271,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Ruh büyüsü (Ölüm Çağıran): hafif dalgalanarak ilerleyen küçük yeşil ruh küresi ve sönen iz; varışta yeşil halka. */
-  private launchSpiritBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
-    const halo = this.add.circle(sx, sy, 9, 0x22c55e, 0.35);
-    const core = this.add.circle(sx, sy, 4.5, 0xdcfce7, 0.95);
+  private launchSpiritBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number, tint: OrbTint = ORB_TINTS.spirit) {
+    const halo = this.add.circle(sx, sy, tint.size + 4.5, tint.halo, 0.35);
+    const core = this.add.circle(sx, sy, tint.size, tint.core, 0.95);
     this.vfxContainer.add(halo);
     this.vfxContainer.add(core);
     const nx = -(ty - sy);
@@ -2271,20 +2287,20 @@ export class BattleScene extends Phaser.Scene {
       duration: Math.max(40, flightMs),
       ease: 'Linear',
       onUpdate: () => {
-        const w = Math.sin(st.p * Math.PI * 2) * 6 * (1 - st.p);
+        const w = Math.sin(st.p * Math.PI * 2) * tint.wobble * (1 - st.p);
         const x = sx + (tx - sx) * st.p + (nx / nl) * w;
         const y = sy + (ty - sy) * st.p + (ny / nl) * w;
         halo.setPosition(x, y);
         core.setPosition(x, y);
         if (st.p - lastTrail > 0.18) {
           lastTrail = st.p;
-          const t = this.add.circle(x, y, 4, 0x4ade80, 0.5);
+          const t = this.add.circle(x, y, 4, tint.trail, 0.5);
           this.vfxContainer.add(t);
           this.tweens.add({ targets: t, alpha: 0, scale: 0.3, duration: 160, onComplete: () => t.destroy() });
         }
       },
       onComplete: () => {
-        this.drawShockwave(tx, ty, 0x4ade80, 32);
+        this.drawShockwave(tx, ty, tint.trail, 32);
         halo.destroy();
         core.destroy();
       },

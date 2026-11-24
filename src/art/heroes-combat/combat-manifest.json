@@ -801,7 +801,207 @@
     }
    },
    "key": "siren"
+  },
+  {
+   "hero": "minotaur",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "minotaur_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "minotaur_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "minotaur"
+  },
+  {
+   "hero": "golem",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "golem_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "golem_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "golem"
+  },
+  {
+   "hero": "phoenix",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "phoenix_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "emberBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 347,
+        "y": 187
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "phoenix_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "phoenix"
+  },
+  {
+   "hero": "djinn",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "djinn_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "aetherOrb",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 391,
+        "y": 92
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "djinn_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "djinn"
   }
  ],
- "batch": 4
+ "batch": 5
 }

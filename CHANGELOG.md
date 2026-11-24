@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.77.0 — Saldırı ve hasar alma animasyonları, paket 5 (Minotor, Kristal Golem, Anka, Cin)
+- Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk dört paket korundu (toplam 20 kahraman). Idle ile aynı ölçek ve çapa; Anka ve Cin'in havadaki yüksekliği karelerde; bitince idle'a dönülür.
+- Minotor ve Kristal Golem: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
+- Anka: `emberBolt` — gagadan küçük turuncu kor. Cin: `aetherOrb` — avuçtan küçük turkuaz küre. Küre efektleri ortak `launchSpiritBolt` + renk/dalga ayarı (`ORB_TINTS`). 240 ms'de `originPx`'ten çıkar, 120 ms sonra varınca hasar ve tepki gösterilir; aynalanan kahramanda çıkış noktası da aynalanır.
+
 ## v1.76.0 — Saldırı ve hasar alma animasyonları, paket 4 (Peri, Ruh Tilkisi, Naga, Siren)
 - Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk üç paket korundu (toplam 16 kahraman). Idle ile aynı ölçek ve çapa; süzülme ve sıçrama karelerde; bitince idle'a dönülür.
 - Ruh Tilkisi ve Naga: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).

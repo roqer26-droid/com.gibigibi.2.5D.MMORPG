@@ -5,10 +5,10 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(32);
+    expect(allCombatClips()).toHaveLength(40);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
-    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren']) {
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn']) {
       const a = combatClip(hero, 'attack')!;
       const h = combatClip(hero, 'hurt')!;
       expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
@@ -22,7 +22,8 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
 
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
-    expect(combatClip('phoenix', 'attack')).toBeNull();
+    expect(combatClip('seraph', 'attack')).toBeNull();
+    expect(combatClip('phoenix_gunes_taci', 'attack')).toBeNull();
     expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull();
     expect(combatClip(null, 'hurt')).toBeNull();
   });
@@ -88,5 +89,14 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(clipContactMs(combatClip('siren', 'attack')!)).toBe(360);
     expect(clipContactMs(combatClip('naga', 'attack')!)).toBe(240);
     expect(combatClip('necromancer', 'attack')!.events[0].projectile).toBe('spiritBolt'); // önceki paketler korunur
+  });
+
+  it('Paket 5: Minotor/Kristal Golem impact 240 ms; Anka turuncu kor, Cin turkuaz küre (originPx, 120 ms)', () => {
+    for (const h of ['minotaur', 'golem']) expect(combatClip(h, 'attack')!.events.map((e) => [e.type, e.atMs]), h).toEqual([['impact', 240]]);
+    expect(combatClip('phoenix', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'emberBolt', atMs: 240, suggestedTravelMs: 120, originPx: { x: 347, y: 187 } });
+    expect(combatClip('djinn', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'aetherOrb', atMs: 240, suggestedTravelMs: 120, originPx: { x: 391, y: 92 } });
+    expect(clipContactMs(combatClip('djinn', 'attack')!)).toBe(360);
+    expect(clipContactMs(combatClip('golem', 'attack')!)).toBe(240);
+    expect(combatClip('siren', 'attack')!.events[0].projectile).toBe('lyreWave'); // önceki paketler korunur
   });
 });
