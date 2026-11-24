@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.86.0 — Hızlı Tekrar ve Ustalık Hedefleri
+- Dünya Haritası aşama zaferinde alt bölüm: yan yana "Tekrar Oyna" ve "Sonraki Aşama"; harita ve ana menü dönüşü erişilebilir. Düğmelerin üstünde aşamanın yıldız durumu ("1/3 yıldız" / "3/3 yıldız · Ustalık tamamlandı") ve "Eksik ustalık hedefi" başlığı altında eksik hedeflerin mevcut açıklamaları. Yıldızlar zafer kaydı yazıldıktan sonraki güncel kayıttan okunur (bu savaşta kazanılan yıldız eksik görünmez). Ödül/hedef alanı kayarken düğme alanı panelin altında sabit kalır; 360×640'ta yatay kaydırma yok, uzun hedef metinleri sarar.
+- Sıradaki aşama dünya rotasının gerçek sırasına ve mevcut açılma kuralına göre seçilir (`src/game/quickReplay.ts`, `nextRouteStage`): bölge bossundan sonra sıradaki bölgenin ilk aşaması; kilitliyse düğme pasif; rotanın son (500.) aşamasında düğmenin yerinde "Haritaya Dön".
+- "Tekrar Oyna" aynı aşamayı aynı kahramanla yeni savaş olarak başlatır (tahta, sayaçlar ve hedeflerin savaş içi ilerlemesi sıfır; kayıttaki yıldızlar korunur). Geçişler zafer kaydı tamamlanınca açılır; ilk dokunuş kilitler, çift dokunma tek savaş başlatır ve aynı zaferin ödülü ikinci kez verilmez. Seçimli Zindan, Boss Avı ve Lig kendi zafer akışlarını kullanır.
+
 ## v1.85.0 — Buz Kraliçesi: Buz Bariyeri (tahta fazı)
 - Gönderilen yama uygulandı (`src/game/boardBossPhase.ts`). Buz Kraliçesi %50 canda Buz Bariyeri açar: o anda ölümcül vuruş bile canı yarıda durdurur; bariyer açıkken tüm doğrudan hasar ve yanma/zehir/kanama/köz/çağırma/karşı saldırı/diken hasarı 0 olur ("ENGELLENDİ!", kalkan sesi). Bariyer, açıldığı turdan sonraki iki ayrı turda yapılan buz eşleşmesiyle kırılır (aynı turdaki ikinci eşleşme sayılmaz).
 - Eski Buz Kraliçesi fazı (%55'te kalkan + 3 taş dondurma) kaldırıldı. Tahtada buz hamlesi yoksa tur başında en fazla üç sıradan taş buza çevrilerek bir hamle açılır (donmuş ve özel taşlar korunur); ipucu bariyer açıkken buz hamlesini gösterir.

@@ -31,6 +31,7 @@ import { HERO_CLASSES } from '../data/classes';
 import { ARENA_IMAGES } from '../data/huntArt';
 import { barrierIntent, boardBossPhase } from '../game/boardBossPhase';
 import { describeIntent, type IntentIcon } from '../game/enemyIntent';
+import { createTransitionGate, nextRouteStage, victoryStarStatus } from '../game/quickReplay';
 import { describeWeakness } from '../game/weaknessInfo';
 import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
@@ -206,6 +207,9 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const [showSkillBook, setShowSkillBook] = useState(false);
   const [confirmForfeit, setConfirmForfeit] = useState(false);
   const [battleKey, setBattleKey] = useState(0);
+  // Hızlı tekrar / sonraki aşama: zafer kaydı tamamlanınca açılır, ilk dokunuş kilitler (çift dokunma tek savaş başlatır)
+  const transitionGate = useRef(createTransitionGate());
+  const [transitioning, setTransitioning] = useState(false);
   const [outcome, setOutcome] = useState<{
     victory: boolean;
     xpGained?: number;
@@ -243,6 +247,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
     if (!parent) return;
 
     setOutcome(null);
+    transitionGate.current.reset();
+    setTransitioning(false);
     forfeitedRef.current = false;
     let resolved = false;
     // Savaş sonucu kimliği: aynı sonuç ikinci kez işlenirse yoldaş parçası tekrar verilmez
@@ -414,6 +420,16 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   const ultiReady = snapshot.heroUlti >= snapshot.heroMaxUlti && snapshot.turnPhase === 'player';
   const nextStage = getNextStageAfter(stage.id);
+  // Dünya Haritası aşama zaferi (lig, av ve zindan kendi zafer akışlarını kullanır)
+  const isWorldStage = !isLeague && !hunt && !dungeon;
+  const victoryRecorded = !!outcome?.victory && save.completedStages.includes(stage.id);
+  const nextChoice = isWorldStage ? nextRouteStage(save, stage.id) : null;
+  const starStatus = isWorldStage && outcome?.victory ? victoryStarStatus(save, stage.id) : null;
+  const go = (fn: () => void) => {
+    if (!transitionGate.current.take(victoryRecorded)) return;
+    setTransitioning(true);
+    fn();
+  };
 
   return (
     <div className="game-no-scroll flex h-full w-full flex-col bg-[#080b14] overflow-hidden">
@@ -1349,6 +1365,106 @@ export const BattleView: React.FC<BattleViewProps> = ({
                   </div>
                 )}
 
+                {isWorldStage ? (
+                  <div
+                    className="sticky -bottom-6 -mx-6 mt-4 border-t border-amber-500/25 bg-[#0d1120]/95 px-4 pb-5 pt-3 backdrop-blur-sm"
+                    data-testid="victory-actions"
+                  >
+                    {starStatus && (
+                      <div className="mb-2.5 text-left" data-testid="victory-star-status">
+                        <div className="flex items-center justify-center gap-1 text-[13px] font-extrabold text-amber-200">
+                          {starStatus.stars.map((on, i) => (
+                            <Star key={i} className={`h-4 w-4 ${on ? 'fill-amber-300 text-amber-300' : 'text-slate-600'}`} />
+                          ))}
+                          <span className="ml-1" data-testid="victory-star-count">
+                            {starStatus.complete ? '3/3 yıldız · Ustalık tamamlandı' : `${starStatus.count}/3 yıldız`}
+                          </span>
+                        </div>
+                        {starStatus.missing.length > 0 && (
+                          <div className="mt-1.5 rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-2" data-testid="victory-missing">
+                            <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400">Eksik ustalık hedefi</p>
+                            <ul className="mt-0.5 space-y-0.5">
+                              {starStatus.missing.map((m) => (
+                                <li key={m} className="flex items-start gap-1.5 break-words text-[12px] leading-snug text-slate-200" data-testid="victory-missing-item">
+                                  <span className="text-slate-500">☆</span>
+                                  <span className="min-w-0 flex-1">{m}.</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-testid="victory-replay"
+                        disabled={!victoryRecorded || transitioning}
+                        onClick={() => go(() => setBattleKey((k) => k + 1))}
+                        className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-amber-400/50 bg-slate-900 px-2 py-3 text-sm font-extrabold text-amber-100 hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        <RotateCcw className="h-4 w-4 shrink-0" />
+                        <span className="truncate">Tekrar Oyna</span>
+                      </button>
+                      {nextChoice?.kind === 'next' ? (
+                        <button
+                          type="button"
+                          data-testid="victory-next"
+                          data-next-stage={nextChoice.stage.id}
+                          disabled={!nextChoice.unlocked || !victoryRecorded || transitioning}
+                          aria-disabled={!nextChoice.unlocked}
+                          title={nextChoice.unlocked ? nextChoice.stage.name : `${nextChoice.stage.name} kilitli`}
+                          onClick={() => {
+                            if (nextChoice.unlocked) go(() => onNextStage(nextChoice.stage));
+                          }}
+                          className="gold-btn flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-45 disabled:grayscale"
+                        >
+                          <Swords className="h-4 w-4 shrink-0" />
+                          <span className="truncate">Sonraki Aşama</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          data-testid="victory-next-map"
+                          onClick={onExitToMap}
+                          className="gold-btn flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-sm font-black text-slate-950"
+                        >
+                          <Map className="h-4 w-4 shrink-0" />
+                          <span className="truncate">Haritaya Dön</span>
+                        </button>
+                      )}
+                    </div>
+                    {nextChoice?.kind === 'next' && (
+                      <p className="mt-1.5 truncate text-center text-[11px] text-slate-400" data-testid="victory-next-name">
+                        {nextChoice.unlocked ? `Sıradaki: ${nextChoice.stage.name}` : `${nextChoice.stage.name} kilitli`}
+                      </p>
+                    )}
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {nextChoice?.kind === 'next' && (
+                        <button
+                          type="button"
+                          data-testid="victory-map"
+                          onClick={onExitToMap}
+                          className={`flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800 ${onExitToMenu ? '' : 'col-span-2'}`}
+                        >
+                          <Map className="h-4 w-4" />
+                          {exitLabel}
+                        </button>
+                      )}
+                      {onExitToMenu && (
+                        <button
+                          type="button"
+                          onClick={onExitToMenu}
+                          data-testid="battle-exit-menu"
+                          className={`flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800 ${nextChoice?.kind === 'next' ? '' : 'col-span-2'}`}
+                        >
+                          <Home className="h-4 w-4" />
+                          Ana Menüye Dön
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
                 <div className="mt-5 flex flex-col gap-2.5">
                   {nextStage && (
                     <button
@@ -1390,6 +1506,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     </button>
                   )}
                 </div>
+                )}
               </>
             ) : (
               <>
