@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WORLD_REGIONS } from '../src/data/world';
-import { WORLD_HP_BONUS_TABLE, WORLD_TARGET_MOVES, applyWorldHpBonus, referenceDamagePerMove, worldBattleStage, worldEnemyMaxHp, worldHpBonusPct, worldPowerFloorHp, worldStageOrder } from '../src/data/stageHpScaling';
+import { WORLD_HP_BONUS_TABLE, TYPE_DAMAGE_FACTOR, WORLD_TARGET_MOVES, applyWorldHpBonus, referenceDamagePerMove, worldBattleStage, worldEnemyMaxHp, worldHpBonusPct, worldPowerFloorHp, worldStageOrder } from '../src/data/stageHpScaling';
 import { HUNTS } from '../src/data/hunts';
 import { findStageById } from '../src/data/world';
 import { boardBossPhase, barrierDamage } from '../src/game/boardBossPhase';
@@ -29,8 +29,9 @@ describe('Dünya Haritası düşman canı artışı', () => {
     const r2first = WORLD_REGIONS[1].stages[0];
     expect(worldStageOrder(r2first.id)).toBe(WORLD_REGIONS[0].stages.length + 1);
     expect(applyWorldHpBonus(50, 10000)).toBe(15000);
-    expect(worldEnemyMaxHp(ROUTE[0].id, 380)).toBe(380);
-    expect(worldEnemyMaxHp(ROUTE[4].id, 1000)).toBe(Math.round(1000 * (1 + 40 / 9 / 100)));
+    expect(applyWorldHpBonus(1, 380)).toBe(380);
+    expect(applyWorldHpBonus(5, 1000)).toBe(Math.round(1000 * (1 + 40 / 9 / 100)));
+    expect(worldEnemyMaxHp(ROUTE[4].id, 10_000_000)).toBe(applyWorldHpBonus(5, 10_000_000));
     expect(worldEnemyMaxHp('bilinmeyen', 1000)).toBe(1000);
   });
 
@@ -63,22 +64,20 @@ describe('Dünya Haritası düşman canı artışı', () => {
     expect(w.enemy.maxHp - dealt).toBe(Math.ceil(w.enemy.maxHp * 0.5));
   });
 
-  it('güç tabanı: can, referans hasar × hedef hamlenin altına inmez; 12. seviyeye kadar etkisiz, 24. seviyeden tam', () => {
+  it('güç tabanı: tek hedef tablosu (normal 10, hazine 10, elit 20, boss 25), 1. aşamadan itibaren; can hiç düşmez', () => {
+    expect(WORLD_TARGET_MOVES).toEqual({ normal: 10, treasure: 10, elite: 20, boss: 25 });
+    expect(referenceDamagePerMove(1)).toBeCloseTo(950);
+    expect(referenceDamagePerMove(16)).toBeCloseTo(15400, -2);
     expect(referenceDamagePerMove(36)).toBeGreaterThan(55000);
     expect(referenceDamagePerMove(36)).toBeLessThan(62000);
-    expect(worldPowerFloorHp('normal', 12)).toBe(0);
-    expect(worldPowerFloorHp('boss', 5)).toBe(0);
-    expect(worldPowerFloorHp('normal', 36)).toBe(Math.round((referenceDamagePerMove(36) * WORLD_TARGET_MOVES.normal) / 100) * 100);
-    expect(worldPowerFloorHp('boss', 36)).toBeGreaterThan(worldPowerFloorHp('elite', 36));
-    expect(worldPowerFloorHp('elite', 36)).toBeGreaterThan(worldPowerFloorHp('normal', 36));
+    for (let l = 1; l < 200; l++) expect(referenceDamagePerMove(l + 1)).toBeGreaterThan(referenceDamagePerMove(l));
     for (const [i, st] of ROUTE.entries()) {
       const hp = worldBattleStage(st).enemy.maxHp;
       expect(hp).toBe(Math.max(applyWorldHpBonus(i + 1, st.enemy.maxHp), worldPowerFloorHp(st.type, st.recommendedLevel)));
       expect(hp).toBeGreaterThanOrEqual(applyWorldHpBonus(i + 1, st.enemy.maxHp));
-      if (st.recommendedLevel <= 12) expect(hp).toBe(applyWorldHpBonus(i + 1, st.enemy.maxHp));
+      // referans hasarla en az hedef hamle
+      expect(hp / (referenceDamagePerMove(st.recommendedLevel) * TYPE_DAMAGE_FACTOR[st.type])).toBeGreaterThanOrEqual(WORLD_TARGET_MOVES[st.type] * 0.995) // yüzlere yuvarlama payı;
     }
-    // 36. seviye normal aşama: tam efsanevi sette ortalama hasarla en az 5 hamle
-    const ocean4 = ROUTE.find((s) => s.id === 'ocean_4')!;
-    expect(worldBattleStage(ocean4).enemy.maxHp / referenceDamagePerMove(36)).toBeGreaterThanOrEqual(4.99);
+    expect(worldBattleStage(ROUTE[0]).enemy.maxHp).toBe(9500);
   });
 });
