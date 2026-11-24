@@ -1001,7 +1001,107 @@
     }
    },
    "key": "djinn"
+  },
+  {
+   "hero": "demon",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "demon_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "demon_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "demon"
+  },
+  {
+   "hero": "seraph",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "seraph_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "radiantCrescent",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 388,
+        "y": 117
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "seraph_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "seraph"
   }
  ],
- "batch": 5
+ "batch": 6
 }

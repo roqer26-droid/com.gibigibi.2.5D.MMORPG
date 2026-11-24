@@ -1970,6 +1970,7 @@ export class BattleScene extends Phaser.Scene {
         else if (e.projectile === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'emberBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.ember);
         else if (e.projectile === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.aether);
+        else if (e.projectile === 'radiantCrescent') this.launchRadiantCrescent(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, { edge: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc });
         else this.launchArrow(o.x, o.y, tx, ty, col, travel);
       });
@@ -2265,6 +2266,44 @@ export class BattleScene extends Phaser.Scene {
       },
       onComplete: () => {
         this.drawShockwave(tx, ty, 0xf472b6, 30);
+        g.destroy();
+      },
+    });
+  }
+
+  /** Altın ışık hilali (Serafim): hedefe dönük, ilerledikçe hafif büyüyen parlak hilal; varışta altın halka. */
+  private launchRadiantCrescent(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+    const g = this.add.graphics();
+    const draw = (p: number) => {
+      g.clear();
+      const r = 12 + p * 5;
+      g.lineStyle(7, 0xf59e0b, 0.3);
+      g.beginPath();
+      g.arc(-4, 0, r, -1.15, 1.15);
+      g.strokePath();
+      g.lineStyle(3.6, 0xfde047, 0.9);
+      g.beginPath();
+      g.arc(-4, 0, r, -1.05, 1.05);
+      g.strokePath();
+      g.lineStyle(1.4, 0xfffbeb, 1);
+      g.beginPath();
+      g.arc(-4, 0, r, -0.85, 0.85);
+      g.strokePath();
+    };
+    draw(0);
+    g.setPosition(sx, sy);
+    g.setRotation(Math.atan2(ty - sy, tx - sx));
+    this.vfxContainer.add(g);
+    const st = { p: 0 };
+    this.tweens.add({ targets: g, x: tx, y: ty, duration: Math.max(40, flightMs), ease: 'Linear' });
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, flightMs),
+      ease: 'Linear',
+      onUpdate: () => draw(st.p),
+      onComplete: () => {
+        this.drawShockwave(tx, ty, 0xfacc15, 32);
         g.destroy();
       },
     });

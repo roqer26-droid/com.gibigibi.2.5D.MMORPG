@@ -5,10 +5,10 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(40);
+    expect(allCombatClips()).toHaveLength(44);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
-    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn']) {
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn', 'demon', 'seraph']) {
       const a = combatClip(hero, 'attack')!;
       const h = combatClip(hero, 'hurt')!;
       expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
@@ -22,7 +22,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
 
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
-    expect(combatClip('seraph', 'attack')).toBeNull();
+    expect(combatClip('seraph_gece_mabedi', 'attack')).toBeNull();
     expect(combatClip('phoenix_gunes_taci', 'attack')).toBeNull();
     expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull();
     expect(combatClip(null, 'hurt')).toBeNull();
@@ -98,5 +98,13 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(clipContactMs(combatClip('djinn', 'attack')!)).toBe(360);
     expect(clipContactMs(combatClip('golem', 'attack')!)).toBe(240);
     expect(combatClip('siren', 'attack')!.events[0].projectile).toBe('lyreWave'); // önceki paketler korunur
+  });
+
+  it('Paket 6: İblis impact 240 ms; Serafim altın ışık hilali (originPx, 120 ms); 22 kahramanın tamamı', () => {
+    expect(combatClip('demon', 'attack')!.events.map((e) => [e.type, e.atMs])).toEqual([['impact', 240]]);
+    expect(combatClip('seraph', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'radiantCrescent', atMs: 240, suggestedTravelMs: 120, originPx: { x: 388, y: 117 } });
+    expect(clipContactMs(combatClip('seraph', 'attack')!)).toBe(360);
+    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(22);
+    expect(combatClip('djinn', 'attack')!.events[0].projectile).toBe('aetherOrb'); // önceki paketler korunur
   });
 });

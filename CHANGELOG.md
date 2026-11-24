@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.78.0 — Saldırı ve hasar alma animasyonları, paket 6 (İblis, Serafim)
+- İblis ve Serafim'in varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk beş paket korundu. Artık 22 kahramanın tamamının varsayılan görünümünde çizilmiş savaş klibi var. Idle ile aynı ölçek ve çapa; Serafim'in havadaki yüksekliği karelerde; bitince idle'a dönülür.
+- İblis: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
+- Serafim: `radiantCrescent` — 240 ms'de `originPx`'ten kısa altın ışık hilali (`launchRadiantCrescent`); 120 ms sonra varınca hasar ve tepki. Aynalanan kahramanda çıkış noktası da aynalanır.
+
 ## v1.77.0 — Saldırı ve hasar alma animasyonları, paket 5 (Minotor, Kristal Golem, Anka, Cin)
 - Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk dört paket korundu (toplam 20 kahraman). Idle ile aynı ölçek ve çapa; Anka ve Cin'in havadaki yüksekliği karelerde; bitince idle'a dönülür.
 - Minotor ve Kristal Golem: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
