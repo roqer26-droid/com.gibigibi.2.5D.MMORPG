@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import manifest from '../src/art/heroes-combat/combat-manifest.json';
 import { COMBAT_ORIGIN, COMBAT_SOURCE_FRAME, allCombatClips, clipContactMs, clipEventsBetween, clipFrameAt, clipFrameStarts, combatClip } from '../src/data/heroCombat';
-import { IDLE_ORIGIN } from '../src/data/heroIdle';
+import { IDLE_ORIGIN, idleSheetKey } from '../src/data/heroIdle';
+import { COSTUMES } from '../src/data/costumes';
+import { hasHeroArt } from '../src/data/heroArt';
+import { HERO_CLASS_LIST } from '../src/data/classes';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(72);
+    expect(allCombatClips()).toHaveLength(132);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
     for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn', 'demon', 'seraph']) {
@@ -17,14 +20,10 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
       expect(h.frameDurationsMs.reduce((x, y) => x + y, 0)).toBe(h.durationMs);
       expect(a.url).toBeTruthy();
     }
-    expect(manifest.textures.filter((t) => t.costume !== 'default')).toHaveLength(14);
+    expect(manifest.textures.filter((t) => t.costume !== 'default')).toHaveLength(44);
   });
 
-  it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
-    expect(combatClip('warrior_kutup_celigi', 'attack')).toBeNull();
-    expect(combatClip('seraph_gece_mabedi', 'attack')).toBeNull();
-    expect(combatClip('phoenix_gunes_taci', 'attack')).toBeNull();
-    expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull(); // animasyonu olmayan kostüm
+  it('kaydı olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip(null, 'hurt')).toBeNull();
   });
 
@@ -67,7 +66,6 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(clipContactMs(ns)).toBe(360);
     // Paket 1 kayıtları korunur
     expect(clipContactMs(combatClip('ranger', 'attack')!)).toBe(360);
-    expect(combatClip('night_screecher_bakir_tutulma', 'attack')).toBeNull();
   });
 
   it('Paket 3: Suikastçı/Ejderkalp impact 240 ms; Ölüm Çağıran ruh büyüsü, Fırtına Çağıran yıldırım (originPx, 120 ms)', () => {
@@ -79,7 +77,6 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     // önceki paketler korunur; alternatif kostüm eski akışta
     expect(combatClip('night_screecher', 'attack')!.events[0].projectile).toBe('sonicPulse');
     expect(combatClip('warrior', 'hurt')).not.toBeNull();
-    expect(combatClip('assassin_mor_sis', 'attack')).toBeNull();
   });
 
   it('Paket 4: Ruh Tilkisi/Naga impact 240 ms; Peri pembe kıvılcım, Siren mavi ses dalgası (originPx, 120 ms)', () => {
@@ -104,7 +101,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(combatClip('demon', 'attack')!.events.map((e) => [e.type, e.atMs])).toEqual([['impact', 240]]);
     expect(combatClip('seraph', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'radiantCrescent', atMs: 240, suggestedTravelMs: 120, originPx: { x: 388, y: 117 } });
     expect(clipContactMs(combatClip('seraph', 'attack')!)).toBe(360);
-    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(36);
+    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(66);
     expect(combatClip('djinn', 'attack')!.events[0].projectile).toBe('aetherOrb'); // önceki paketler korunur
   });
 
@@ -119,8 +116,6 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     // varsayılan görünümün klibi ayrı kalır
     expect(combatClip('ranger', 'attack')!.events[0].originPx).toEqual({ x: 351, y: 116 });
     expect(combatClip('ranger', 'attack')!.url).not.toBe(combatClip('ranger_gece_izcisi', 'attack')!.url);
-    expect(combatClip('mage_kor_akademisi', 'attack')).toBeNull();
-    expect(combatClip('ranger_sonbahar_avcisi', 'hurt')).toBeNull();
   });
 
   it('Paket 8: on kostüm (hero + costume); yakın saldırılar impact, uzak saldırılar mermi; varsayılanlar korunur', () => {
@@ -140,6 +135,33 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
       expect(clipContactMs(combatClip(k, 'attack')!), k).toBe(360);
     }
     expect(combatClip('necromancer', 'attack')!.events[0].originPx).toEqual({ x: 380, y: 162 });
-    expect(combatClip('stormcaller_mercan_firtinasi', 'attack')).toBeNull();
+  });
+
+  it('Paket 9 sonrası tam kapsam: 22 varsayılan görünüm + 44 kostümün her birinde saldırı ve hasar alma klibi, idle sheet anahtarıyla aynı', () => {
+    const heroes = HERO_CLASS_LIST.map((c) => c.id).filter((id) => hasHeroArt(id));
+    expect(heroes).toHaveLength(22);
+    expect(COSTUMES).toHaveLength(44);
+    for (const h of heroes) {
+      const key = idleSheetKey(h);
+      expect(key, h).toBe(h);
+      for (const a of ['attack', 'hurt'] as const) expect(combatClip(key, a), `${h} ${a}`).not.toBeNull();
+    }
+    for (const c of COSTUMES) {
+      const key = idleSheetKey(c.heroId, c.id);
+      expect(key, c.id).toBe(c.id); // savaşta seçili kostümün kaydı çağrılır
+      const atk = combatClip(key, 'attack')!;
+      const hurt = combatClip(key, 'hurt')!;
+      expect(atk, c.id).not.toBeNull();
+      expect(hurt, c.id).not.toBeNull();
+      expect([atk.columns, atk.rows, atk.frameCount, atk.durationMs], c.id).toEqual([4, 2, 8, 520]);
+      expect([hurt.columns, hurt.rows, hurt.frameCount, hurt.durationMs], c.id).toEqual([4, 1, 4, 260]);
+      expect(atk.events, c.id).toHaveLength(1);
+      expect(atk.url).not.toBe(combatClip(c.heroId, 'attack')!.url); // kostüm klibi varsayılandan ayrı
+    }
+    // paket kimliği farklı olan kostümler mevcut kimliklere eşlendi
+    expect(combatClip('naga_yakut_tahti', 'attack')!.events[0].type).toBe('impact');
+    expect(combatClip('djinn_gece_sarayi', 'attack')!.events[0]).toMatchObject({ projectile: 'aetherOrb', originPx: { x: 387, y: 118 } });
+    expect(combatClip('seraph_gunes_mabedi', 'attack')!.events[0]).toMatchObject({ projectile: 'radiantCrescent', originPx: { x: 378, y: 121 } });
+    expect(combatClip('stormcaller_mercan_firtinasi', 'attack')!.events[0]).toMatchObject({ projectile: 'lightningBolt', originPx: { x: 447, y: 63 } });
   });
 });

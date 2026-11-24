@@ -131,11 +131,12 @@ interface OrbTint {
   size: number;
   wobble: number;
 }
-/** Çizilmiş savaş klibi anahtarına göre ok/büyü rengi (yalnızca kostümün çizimiyle uyumlu sabit renk gerekenler). */
-const CLIP_PROJECTILE_TINT: Readonly<Record<string, number>> = {
-  ranger_gece_izcisi: 0xcbd5e1, // gümüş ok
-  mage_ay_kristali: 0xbfdbfe, // mavi-beyaz büyü
-};
+/** Üç tonlu efekt paleti: dış parıltı, iç çekirdek, iz/varış halkası. */
+interface FxPalette {
+  glow: number;
+  core: number;
+  ring: number;
+}
 
 const ORB_TINTS = {
   spirit: { core: 0xdcfce7, halo: 0x22c55e, trail: 0x4ade80, size: 4.5, wobble: 6 },
@@ -144,13 +145,41 @@ const ORB_TINTS = {
   frost: { core: 0xf0f9ff, halo: 0x38bdf8, trail: 0x7dd3fc, size: 4.5, wobble: 6 },
 } satisfies Record<string, OrbTint>;
 
-/** Kostüme özgü efekt renkleri (ENTEGRASYON.md): Mezar Ayazı buz mavisi ruh kıvılcımı, Kara Bulut kehribar yıldırım.
- *  Fırtına Çığlığı (mor ses dalgası) ve Çiy Bahçesi (pembe kıvılcım) varsayılan efekt renklerini kullanır. */
-const CLIP_ORB_TINT: Readonly<Record<string, OrbTint>> = {
-  necromancer_mezar_ayazi: ORB_TINTS.frost,
-};
-const CLIP_LIGHTNING_TINT: Readonly<Record<string, { glow: number; mid: number; ring: number }>> = {
-  stormcaller_kara_bulut: { glow: 0xf59e0b, mid: 0xfcd34d, ring: 0xfbbf24 },
+/** Efekt türlerinin varsayılan paletleri (varsayılan görünümler). */
+const FX_DEFAULT = {
+  sonicPulse: { glow: 0xa855f7, core: 0xf3e8ff, ring: 0xc084fc },
+  lyreWave: { glow: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc },
+  lightningBolt: { glow: 0x3b82f6, core: 0x93c5fd, ring: 0x60a5fa },
+  blossomBolt: { glow: 0xf472b6, core: 0xfdf2f8, ring: 0xf9a8d4 },
+  radiantCrescent: { glow: 0xf59e0b, core: 0xfffbeb, ring: 0xfde047 },
+} satisfies Record<string, FxPalette>;
+
+/**
+ * Kostüme özgü efekt rengi (seçili kostümün çizimine göre; Paket 7–9). `color`: ok/küçük büyü rengi (yoksa taş rengi),
+ * `orb`: küre efektleri (ruh/kor/eter), `fx`: ses dalgası, yıldırım, kıvılcım ve hilal paleti. Kaydı olmayan görünüm varsayılanı kullanır.
+ */
+const CLIP_FX: Readonly<Record<string, { color?: number; orb?: OrbTint; fx?: FxPalette }>> = {
+  // Paket 7
+  ranger_gece_izcisi: { color: 0xcbd5e1 }, // gümüş ok
+  mage_ay_kristali: { color: 0xbfdbfe }, // mavi-beyaz büyü
+  // Paket 8 (ENTEGRASYON.md): Fırtına Çığlığı mor ses dalgası ve Çiy Bahçesi pembe kıvılcım varsayılan paletlerdir
+  necromancer_mezar_ayazi: { orb: ORB_TINTS.frost }, // buz mavisi ruh kıvılcımı
+  stormcaller_kara_bulut: { fx: { glow: 0xf59e0b, core: 0xfcd34d, ring: 0xfbbf24 } }, // kehribar yıldırım
+  // Paket 9: seçili kostümün baskın rengi
+  ranger_sonbahar_avcisi: { color: 0xfb923c }, // sonbahar turuncusu ok
+  mage_kor_akademisi: { color: 0xf97316 }, // kor büyüsü
+  night_screecher_bakir_tutulma: { fx: { glow: 0xc2410c, core: 0xffedd5, ring: 0xfb923c } }, // bakır ses dalgası
+  necromancer_zehirli_lahit: { orb: { core: 0xf7fee7, halo: 0x65a30d, trail: 0xa3e635, size: 4.5, wobble: 6 } }, // zehir yeşili
+  stormcaller_mercan_firtinasi: { fx: { glow: 0xf59e0b, core: 0xfde68a, ring: 0xfbbf24 } }, // Kehribar Yıldırımı
+  fairy_yildiz_tozu: { fx: { glow: 0x8b5cf6, core: 0xf5f3ff, ring: 0xc4b5fd } }, // yıldız tozu (lavanta)
+  siren_ay_gelgiti: { fx: { glow: 0x94a3b8, core: 0xf8fafc, ring: 0xcbd5e1 } }, // ay gümüşü dalga
+  siren_mercan_ezgisi: { fx: { glow: 0xfb7185, core: 0xffe4e6, ring: 0xfda4af } }, // mercan dalga
+  phoenix_gunes_taci: { orb: { core: 0xfffbeb, halo: 0xf59e0b, trail: 0xfbbf24, size: 4, wobble: 0 } }, // güneş koru
+  phoenix_kutup_ankasi: { orb: { core: 0xf0f9ff, halo: 0x0ea5e9, trail: 0x7dd3fc, size: 4, wobble: 0 } }, // buz koru
+  djinn_kum_sarayi: { orb: { core: 0xfef3c7, halo: 0xd97706, trail: 0xfbbf24, size: 5, wobble: 3 } }, // kum küresi
+  djinn_gece_sarayi: { orb: { core: 0xfee2e2, halo: 0xdc2626, trail: 0xf87171, size: 5, wobble: 3 } }, // Kızıl Ferman
+  seraph_gece_mabedi: { fx: { glow: 0x6366f1, core: 0xeef2ff, ring: 0xa5b4fc } }, // gece gümüşü-çivit hilal
+  seraph_gunes_mabedi: { fx: { glow: 0x10b981, core: 0xecfdf5, ring: 0x6ee7b7 } }, // Gece Yaprağı (yeşil)
 };
 
 export class BattleScene extends Phaser.Scene {
@@ -1979,17 +2008,18 @@ export class BattleScene extends Phaser.Scene {
         if (e.type !== 'projectileRelease' || !foe.active) return;
         const o = this.clipPointWorld('attack', e.originPx ?? { x: COMBAT_SOURCE_FRAME.w * 0.7, y: COMBAT_SOURCE_FRAME.h * 0.3 });
         const travel = e.suggestedTravelMs ?? 120;
-        // Kostüme özgü mermi rengi (örn. Gece İzcisi gümüş ok, Ay Kristali mavi-beyaz büyü); yoksa taş rengi
-        const pc = CLIP_PROJECTILE_TINT[clip.key] ?? col;
-        if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, pc, travel);
-        else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
-        else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, CLIP_ORB_TINT[clip.key] ?? ORB_TINTS.spirit);
-        else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel, CLIP_LIGHTNING_TINT[clip.key]);
-        else if (e.projectile === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel);
-        else if (e.projectile === 'emberBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.ember);
-        else if (e.projectile === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.aether);
-        else if (e.projectile === 'radiantCrescent') this.launchRadiantCrescent(o.x, o.y, tx, ty, travel);
-        else if (e.projectile === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, { edge: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc });
+        // Seçili kostümün efekt rengi (CLIP_FX); kaydı yoksa efekt türünün varsayılanı, ok/küçük büyüde taş rengi
+        const cfx = CLIP_FX[clip.key] ?? {};
+        const pc = cfx.color ?? col;
+        const p = e.projectile;
+        if (p === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, pc, travel);
+        else if (p === 'sonicPulse' || p === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, cfx.fx ?? FX_DEFAULT[p]);
+        else if (p === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, cfx.orb ?? ORB_TINTS.spirit);
+        else if (p === 'emberBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, cfx.orb ?? ORB_TINTS.ember);
+        else if (p === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, cfx.orb ?? ORB_TINTS.aether);
+        else if (p === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel, cfx.fx ?? FX_DEFAULT.lightningBolt);
+        else if (p === 'blossomBolt') this.launchBlossomBolt(o.x, o.y, tx, ty, travel, cfx.fx ?? FX_DEFAULT.blossomBolt);
+        else if (p === 'radiantCrescent') this.launchRadiantCrescent(o.x, o.y, tx, ty, travel, cfx.fx ?? FX_DEFAULT.radiantCrescent);
         else this.launchArrow(o.x, o.y, tx, ty, pc, travel);
       });
       if (played) {
@@ -2212,7 +2242,7 @@ export class BattleScene extends Phaser.Scene {
     tx: number,
     ty: number,
     flightMs: number,
-    tint: { edge: number; core: number; ring: number } = { edge: 0xa855f7, core: 0xf3e8ff, ring: 0xc084fc }
+    tint: FxPalette = FX_DEFAULT.sonicPulse
   ) {
     const g = this.add.graphics();
     const draw = (p: number) => {
@@ -2220,7 +2250,7 @@ export class BattleScene extends Phaser.Scene {
       for (let i = 0; i < 3; i++) {
         const r = 7 + i * 6 + p * 6;
         const a = (1 - i * 0.25) * (1 - p * 0.35);
-        g.lineStyle(4.5 - i, tint.edge, a * 0.55);
+        g.lineStyle(4.5 - i, tint.glow, a * 0.55);
         g.beginPath();
         g.arc(-i * 5, 0, r, -0.9, 0.9);
         g.strokePath();
@@ -2250,7 +2280,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   /** Pembe kıvılcım (Peri): dönen küçük dört köşeli yıldız ve arkasında sönen pembe parıltılar; varışta pembe halka. */
-  private launchBlossomBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+  private launchBlossomBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number, pal: FxPalette = FX_DEFAULT.blossomBolt) {
     const g = this.add.graphics();
     const star = (r: number, c: number, a: number) => {
       g.fillStyle(c, a);
@@ -2259,8 +2289,8 @@ export class BattleScene extends Phaser.Scene {
         { x: 0, y: r }, { x: -r * 0.28, y: r * 0.28 }, { x: -r, y: 0 }, { x: -r * 0.28, y: -r * 0.28 },
       ], true);
     };
-    star(9, 0xf472b6, 0.5);
-    star(5.5, 0xfdf2f8, 1);
+    star(9, pal.glow, 0.5);
+    star(5.5, pal.core, 1);
     g.setPosition(sx, sy);
     this.vfxContainer.add(g);
     const st = { p: 0 };
@@ -2277,33 +2307,33 @@ export class BattleScene extends Phaser.Scene {
         g.setRotation(st.p * Math.PI * 1.5);
         if (st.p - lastTrail > 0.16) {
           lastTrail = st.p;
-          const t = this.add.circle(x + (Math.random() - 0.5) * 6, y + (Math.random() - 0.5) * 6, 2.2, 0xf9a8d4, 0.9);
+          const t = this.add.circle(x + (Math.random() - 0.5) * 6, y + (Math.random() - 0.5) * 6, 2.2, pal.ring, 0.9);
           this.vfxContainer.add(t);
           this.tweens.add({ targets: t, alpha: 0, y: t.y + 6, duration: 180, onComplete: () => t.destroy() });
         }
       },
       onComplete: () => {
-        this.drawShockwave(tx, ty, 0xf472b6, 30);
+        this.drawShockwave(tx, ty, pal.glow, 30);
         g.destroy();
       },
     });
   }
 
   /** Altın ışık hilali (Serafim): hedefe dönük, ilerledikçe hafif büyüyen parlak hilal; varışta altın halka. */
-  private launchRadiantCrescent(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+  private launchRadiantCrescent(sx: number, sy: number, tx: number, ty: number, flightMs: number, pal: FxPalette = FX_DEFAULT.radiantCrescent) {
     const g = this.add.graphics();
     const draw = (p: number) => {
       g.clear();
       const r = 12 + p * 5;
-      g.lineStyle(7, 0xf59e0b, 0.3);
+      g.lineStyle(7, pal.glow, 0.3);
       g.beginPath();
       g.arc(-4, 0, r, -1.15, 1.15);
       g.strokePath();
-      g.lineStyle(3.6, 0xfde047, 0.9);
+      g.lineStyle(3.6, pal.ring, 0.9);
       g.beginPath();
       g.arc(-4, 0, r, -1.05, 1.05);
       g.strokePath();
-      g.lineStyle(1.4, 0xfffbeb, 1);
+      g.lineStyle(1.4, pal.core, 1);
       g.beginPath();
       g.arc(-4, 0, r, -0.85, 0.85);
       g.strokePath();
@@ -2321,7 +2351,7 @@ export class BattleScene extends Phaser.Scene {
       ease: 'Linear',
       onUpdate: () => draw(st.p),
       onComplete: () => {
-        this.drawShockwave(tx, ty, 0xfacc15, 32);
+        this.drawShockwave(tx, ty, pal.ring, 32);
         g.destroy();
       },
     });
@@ -2371,7 +2401,7 @@ export class BattleScene extends Phaser.Scene {
     tx: number,
     ty: number,
     flightMs: number,
-    pal: { glow: number; mid: number; ring: number } = { glow: 0x3b82f6, mid: 0x93c5fd, ring: 0x60a5fa }
+    pal: FxPalette = FX_DEFAULT.lightningBolt
   ) {
     const g = this.add.graphics();
     this.vfxContainer.add(g);
@@ -2391,7 +2421,7 @@ export class BattleScene extends Phaser.Scene {
       }
       for (const [w, c, a] of [
         [6, pal.glow, 0.35],
-        [2.6, pal.mid, 0.9],
+        [2.6, pal.core, 0.9],
         [1.2, 0xffffff, 1],
       ] as const) {
         g.lineStyle(w, c, a * alpha);

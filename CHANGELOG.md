@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.81.0 — Saldırı ve hasar alma animasyonları, paket 9 (kalan 30 kostüm) — tam kapsam
+- Kalan 30 kostümün saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri `hero` + `costume` çiftiyle bağlandı; ilk sekiz paket korundu. Artık 22 varsayılan görünümün ve 44 kostümün tamamında çizilmiş savaş klibi var (66 görünüm, 132 sheet). Klip seçili kostümün bekleme sheet'iyle aynı ölçek/çapada oynar ve aynı kostümün bekleme döngüsüne döner.
+- Paket kimliği farklı yedi kostüm mevcut kimliklere eşlendi (kayıtlar bozulmaz): `murdum_gecidi`→`bigfoot_yosun_bekcisi`, `yesil_pence`→`assassin_mor_sis`, `kehribar_yildirimi`→`stormcaller_mercan_firtinasi`, `firuze_pul`→`dragonheart_kor_pulu`, `safir_gelgit`→`naga_yakut_tahti`, `kizil_firman`→`djinn_gece_sarayi`, `gece_yapragi`→`seraph_gunes_mabedi`.
+- Uzak saldırı efektleri seçili kostümün renginde: kostüm efekt renkleri tek tabloda (`CLIP_FX`: ok/büyü rengi, küre paleti, ses dalgası/yıldırım/kıvılcım/hilal paleti); kıvılcım ve hilal efektlerine de palet parametresi eklendi. Kaydı olmayan görünüm efekt türünün varsayılan rengini kullanır.
+
 ## v1.80.0 — Saldırı ve hasar alma animasyonları, paket 8 (on kostüm)
 - `hero` + `costume` çiftiyle on kostüm klibi: Kurt Adam / Ay Pençesi, Vampir / Kızıl Kadife, Koca Ayak / Kırağı Gezgini, Gecenin Çığırtkanı / Fırtına Çığlığı, Ölüm Çağıran / Mezar Ayazı, Suikastçı / Kızıl Gölge, Fırtına Çağıran / Kara Bulut, Ejderkalp / Safir Ejder, Peri / Çiy Bahçesi, Ruh Tilkisi / Sonbahar Ruhu. Önceki yedi paket korundu (36 görünüm). Klip seçili kostümün bekleme sheet'iyle aynı ölçek ve çapada oynar, bitince aynı kostümün bekleme döngüsüne döner.
 - Yakın saldırılar `impact` anında (240 ms); uzak saldırılar 240 ms'de `originPx`'ten, 120 ms yolculuk.

@@ -1795,7 +1795,1501 @@
     }
    },
    "key": "kitsune_sonbahar_ruhu"
+  },
+  {
+   "hero": "warrior",
+   "costume": "kutup_celigi",
+   "actions": {
+    "attack": {
+     "file": "warrior_kutup_celigi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "warrior_kutup_celigi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "warrior_kutup_celigi"
+  },
+  {
+   "hero": "paladin",
+   "costume": "zumrut_yemini",
+   "actions": {
+    "attack": {
+     "file": "paladin_zumrut_yemini_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "paladin_zumrut_yemini_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "paladin_zumrut_yemini"
+  },
+  {
+   "hero": "ranger",
+   "costume": "sonbahar_avcisi",
+   "actions": {
+    "attack": {
+     "file": "ranger_sonbahar_avcisi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "arrow",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 426,
+        "y": 129
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "ranger_sonbahar_avcisi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "ranger_sonbahar_avcisi"
+  },
+  {
+   "hero": "mage",
+   "costume": "kor_akademisi",
+   "actions": {
+    "attack": {
+     "file": "mage_kor_akademisi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spell",
+       "suggestedTravelMs": 140,
+       "atMs": 240,
+       "originPx": {
+        "x": 455,
+        "y": 130
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "mage_kor_akademisi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "mage_kor_akademisi"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "kanli_ay",
+   "actions": {
+    "attack": {
+     "file": "werewolf_kanli_ay_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "werewolf_kanli_ay_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "werewolf_kanli_ay"
+  },
+  {
+   "hero": "vampire",
+   "costume": "buz_soylusu",
+   "actions": {
+    "attack": {
+     "file": "vampire_buz_soylusu_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "vampire_buz_soylusu_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "vampire_buz_soylusu"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "murdum_gecidi",
+   "actions": {
+    "attack": {
+     "file": "bigfoot_murdum_gecidi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "bigfoot_murdum_gecidi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "bigfoot_yosun_bekcisi"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "bakir_tutulma",
+   "actions": {
+    "attack": {
+     "file": "night_screecher_bakir_tutulma_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "sonicPulse",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 254,
+        "y": 180
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "night_screecher_bakir_tutulma_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "night_screecher_bakir_tutulma"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "zehirli_lahit",
+   "actions": {
+    "attack": {
+     "file": "necromancer_zehirli_lahit_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spiritBolt",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 375,
+        "y": 189
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "necromancer_zehirli_lahit_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "necromancer_zehirli_lahit"
+  },
+  {
+   "hero": "assassin",
+   "costume": "yesil_pence",
+   "actions": {
+    "attack": {
+     "file": "assassin_yesil_pence_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "assassin_yesil_pence_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "assassin_mor_sis"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "kehribar_yildirimi",
+   "actions": {
+    "attack": {
+     "file": "stormcaller_kehribar_yildirimi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lightningBolt",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 447,
+        "y": 63
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "stormcaller_kehribar_yildirimi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "stormcaller_mercan_firtinasi"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "firuze_pul",
+   "actions": {
+    "attack": {
+     "file": "dragonheart_firuze_pul_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "dragonheart_firuze_pul_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "dragonheart_kor_pulu"
+  },
+  {
+   "hero": "fairy",
+   "costume": "yildiz_tozu",
+   "actions": {
+    "attack": {
+     "file": "fairy_yildiz_tozu_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "blossomBolt",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 362,
+        "y": 119
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "fairy_yildiz_tozu_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "fairy_yildiz_tozu"
+  },
+  {
+   "hero": "kitsune",
+   "costume": "ay_tilsimi",
+   "actions": {
+    "attack": {
+     "file": "kitsune_ay_tilsimi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "kitsune_ay_tilsimi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "kitsune_ay_tilsimi"
+  },
+  {
+   "hero": "naga",
+   "costume": "zumrut_taht",
+   "actions": {
+    "attack": {
+     "file": "naga_zumrut_taht_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "naga_zumrut_taht_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "naga_zumrut_taht"
+  },
+  {
+   "hero": "naga",
+   "costume": "safir_gelgit",
+   "actions": {
+    "attack": {
+     "file": "naga_safir_gelgit_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "naga_safir_gelgit_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "naga_yakut_tahti"
+  },
+  {
+   "hero": "siren",
+   "costume": "ay_gelgiti",
+   "actions": {
+    "attack": {
+     "file": "siren_ay_gelgiti_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lyreWave",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 357,
+        "y": 141
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "siren_ay_gelgiti_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "siren_ay_gelgiti"
+  },
+  {
+   "hero": "siren",
+   "costume": "mercan_ezgisi",
+   "actions": {
+    "attack": {
+     "file": "siren_mercan_ezgisi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lyreWave",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 333,
+        "y": 140
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "siren_mercan_ezgisi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "siren_mercan_ezgisi"
+  },
+  {
+   "hero": "minotaur",
+   "costume": "bronz_labirent",
+   "actions": {
+    "attack": {
+     "file": "minotaur_bronz_labirent_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "minotaur_bronz_labirent_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "minotaur_bronz_labirent"
+  },
+  {
+   "hero": "minotaur",
+   "costume": "buz_labirenti",
+   "actions": {
+    "attack": {
+     "file": "minotaur_buz_labirenti_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "minotaur_buz_labirenti_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "minotaur_buz_labirenti"
+  },
+  {
+   "hero": "golem",
+   "costume": "ametist_cekirdek",
+   "actions": {
+    "attack": {
+     "file": "golem_ametist_cekirdek_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "golem_ametist_cekirdek_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "golem_ametist_cekirdek"
+  },
+  {
+   "hero": "golem",
+   "costume": "zumrut_cekirdek",
+   "actions": {
+    "attack": {
+     "file": "golem_zumrut_cekirdek_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "golem_zumrut_cekirdek_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "golem_zumrut_cekirdek"
+  },
+  {
+   "hero": "phoenix",
+   "costume": "gunes_taci",
+   "actions": {
+    "attack": {
+     "file": "phoenix_gunes_taci_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "emberBolt",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 298,
+        "y": 189
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "phoenix_gunes_taci_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "phoenix_gunes_taci"
+  },
+  {
+   "hero": "phoenix",
+   "costume": "kutup_ankasi",
+   "actions": {
+    "attack": {
+     "file": "phoenix_kutup_ankasi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "emberBolt",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 355,
+        "y": 205
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "phoenix_kutup_ankasi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "phoenix_kutup_ankasi"
+  },
+  {
+   "hero": "djinn",
+   "costume": "kum_sarayi",
+   "actions": {
+    "attack": {
+     "file": "djinn_kum_sarayi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "aetherOrb",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 397,
+        "y": 107
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "djinn_kum_sarayi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "djinn_kum_sarayi"
+  },
+  {
+   "hero": "djinn",
+   "costume": "kizil_firman",
+   "actions": {
+    "attack": {
+     "file": "djinn_kizil_firman_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "aetherOrb",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 387,
+        "y": 118
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "djinn_kizil_firman_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "djinn_gece_sarayi"
+  },
+  {
+   "hero": "demon",
+   "costume": "obsidyen_yemini",
+   "actions": {
+    "attack": {
+     "file": "demon_obsidyen_yemini_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "demon_obsidyen_yemini_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "demon_obsidyen_yemini"
+  },
+  {
+   "hero": "demon",
+   "costume": "soluk_alev",
+   "actions": {
+    "attack": {
+     "file": "demon_soluk_alev_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "demon_soluk_alev_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "demon_soluk_alev"
+  },
+  {
+   "hero": "seraph",
+   "costume": "gece_mabedi",
+   "actions": {
+    "attack": {
+     "file": "seraph_gece_mabedi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "radiantCrescent",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 381,
+        "y": 117
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "seraph_gece_mabedi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "seraph_gece_mabedi"
+  },
+  {
+   "hero": "seraph",
+   "costume": "gece_yapragi",
+   "actions": {
+    "attack": {
+     "file": "seraph_gece_yapragi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "radiantCrescent",
+       "suggestedTravelMs": 120,
+       "atMs": 240,
+       "originPx": {
+        "x": 378,
+        "y": 121
+       }
+      }
+     ]
+    },
+    "hurt": {
+     "file": "seraph_gece_yapragi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "seraph_gunes_mabedi"
   }
  ],
- "batch": 8
+ "batch": 9
 }
