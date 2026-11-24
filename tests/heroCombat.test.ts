@@ -5,10 +5,10 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(8);
+    expect(allCombatClips()).toHaveLength(16);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
-    for (const hero of ['warrior', 'paladin', 'ranger', 'mage']) {
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher']) {
       const a = combatClip(hero, 'attack')!;
       const h = combatClip(hero, 'hurt')!;
       expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
@@ -51,5 +51,20 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(clipEventsBetween(a, -1, 200)).toEqual([]);
     expect(clipEventsBetween(a, 200, 240)).toHaveLength(1);
     expect(clipEventsBetween(a, 240, 520)).toEqual([]);
+  });
+
+  it('Paket 2: Kurt Adam/Vampir/Koca Ayak impact 240 ms; Gecenin Çığırtkanı ses dalgası (originPx, 120 ms yolculuk)', () => {
+    for (const h of ['werewolf', 'vampire', 'bigfoot']) {
+      const a = combatClip(h, 'attack')!;
+      expect(a.events.map((e) => [e.type, e.atMs]), h).toEqual([['impact', 240]]);
+      expect(clipContactMs(a)).toBe(240);
+    }
+    const ns = combatClip('night_screecher', 'attack')!;
+    expect(ns.events).toHaveLength(1);
+    expect(ns.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'sonicPulse', atMs: 240, suggestedTravelMs: 120, originPx: { x: 314, y: 198 } });
+    expect(clipContactMs(ns)).toBe(360);
+    // Paket 1 kayıtları korunur
+    expect(clipContactMs(combatClip('ranger', 'attack')!)).toBe(360);
+    expect(combatClip('night_screecher_firtina_cigligi', 'attack')).toBeNull();
   });
 });

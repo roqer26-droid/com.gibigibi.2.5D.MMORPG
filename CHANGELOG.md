@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.74.0 — Saldırı ve hasar alma animasyonları, paket 2 (Kurt Adam, Vampir, Koca Ayak, Gecenin Çığırtkanı)
+- Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; Paket 1 kayıtları korundu (toplam 8 kahraman). Kareler idle ile aynı dikey ölçek ve ayak noktasında; bitince idle'a dönülür.
+- Kurt Adam, Vampir, Koca Ayak: hasar göstergesi, ses ve düşman tepkisi `impact` anında (240 ms).
+- Gecenin Çığırtkanı: `projectileRelease` anında (240 ms) `originPx` noktasından kısa mor ses dalgası (`launchSonicPulse`) çıkar; 120 ms sonra hedefe varınca hasar ve tepki gösterilir. Bu klipte pençe temas efekti çizilmez.
+- 2× hızda kareler, vuruş anı ve dalga yolculuğu birlikte yarıya iner (sahne saati).
+
 ## v1.73.0 — Çizilmiş saldırı ve hasar alma animasyonları (Savaşçı, Şövalye, Korucu, Büyücü)
 - Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri (`src/art/heroes-combat/`, `src/data/heroCombat.ts`). Kareler idle ile aynı dikey piksel ölçeğinde ve aynı ayak noktasında (372/384) çizilir; klip bir kez oynar ve idle döngüsüne döner (boyut/konum sıçraması yok). Kostüm seçiliyse eski statik poz davranışı sürer.
 - Zamanlama `frameDurationsMs` ile sahne saatinde: 2× hızda kareler, vuruş işaretleri ve mermi yolculuğu birlikte (tek kez) yarıya iner. Savaşçı/Şövalye: hasar sayısı, ses ve düşman tepkisi `impact` anında (240 ms). Korucu/Büyücü: ok ya da büyü `projectileRelease` karesinde çizimdeki `originPx` noktasından çıkar, hedefe varınca (240+120 / 240+140 ms) sonuç gösterilir. Hasarı savaş motoru bir kez hesaplar.

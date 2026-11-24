@@ -1950,6 +1950,7 @@ export class BattleScene extends Phaser.Scene {
         const o = this.clipPointWorld('attack', e.originPx ?? { x: COMBAT_SOURCE_FRAME.w * 0.7, y: COMBAT_SOURCE_FRAME.h * 0.3 });
         const travel = e.suggestedTravelMs ?? 120;
         if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, col, travel);
+        else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
         else this.launchArrow(o.x, o.y, tx, ty, col, travel);
       });
       if (played) {
@@ -1957,7 +1958,8 @@ export class BattleScene extends Phaser.Scene {
         if (profile.type === 'melee_weapon') {
           const sweep = Math.min(130, contact);
           this.time.delayedCall(contact - sweep, () => cont.active && this.drawSweepTrail(tx - dir * 6, ty + 4, dir, profile.trail ?? 'thin', col, crit, sweep));
-        } else if (profile.type === 'melee_unarmed') {
+        } else if (profile.type === 'melee_unarmed' && clip.events.some((e) => e.type === 'impact')) {
+          // Temas efekti yalnızca yakın vuruşta (mermi çıkaran klipte efekt mermidir)
           this.time.delayedCall(contact, () => cont.active && this.drawContactBurst(profile.style ?? 'fist', tx, ty, dir, col));
         }
         return contact;
@@ -2160,6 +2162,43 @@ export class BattleScene extends Phaser.Scene {
         this.drawShockwave(tx, ty, color, 38);
         halo.destroy();
         core.destroy();
+      },
+    });
+  }
+
+  /** Ses dalgası (Gecenin Çığırtkanı): hedefe dönük, ilerledikçe açılan üç mor yay; varışta kısa mor halka. */
+  private launchSonicPulse(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+    const g = this.add.graphics();
+    const draw = (p: number) => {
+      g.clear();
+      for (let i = 0; i < 3; i++) {
+        const r = 7 + i * 6 + p * 6;
+        const a = (1 - i * 0.25) * (1 - p * 0.35);
+        g.lineStyle(4.5 - i, 0xa855f7, a * 0.55);
+        g.beginPath();
+        g.arc(-i * 5, 0, r, -0.9, 0.9);
+        g.strokePath();
+        g.lineStyle(1.8, 0xf3e8ff, a);
+        g.beginPath();
+        g.arc(-i * 5, 0, r, -0.8, 0.8);
+        g.strokePath();
+      }
+    };
+    draw(0);
+    g.setPosition(sx, sy);
+    g.setRotation(Math.atan2(ty - sy, tx - sx));
+    this.vfxContainer.add(g);
+    const st = { p: 0 };
+    this.tweens.add({ targets: g, x: tx, y: ty, duration: Math.max(40, flightMs), ease: 'Linear' });
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, flightMs),
+      ease: 'Linear',
+      onUpdate: () => draw(st.p),
+      onComplete: () => {
+        this.drawShockwave(tx, ty, 0xc084fc, 30);
+        g.destroy();
       },
     });
   }

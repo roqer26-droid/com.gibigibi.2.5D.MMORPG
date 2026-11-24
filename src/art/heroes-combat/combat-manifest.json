@@ -207,6 +207,201 @@
     }
    },
    "key": "mage"
+  },
+  {
+   "hero": "werewolf",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "werewolf_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "werewolf_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "werewolf"
+  },
+  {
+   "hero": "vampire",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "vampire_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "vampire_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "vampire"
+  },
+  {
+   "hero": "bigfoot",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "bigfoot_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "bigfoot_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "bigfoot"
+  },
+  {
+   "hero": "night_screecher",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "night_screecher_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "sonicPulse",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 314,
+        "y": 198
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "night_screecher_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "night_screecher"
   }
- ]
+ ],
+ "batch": 2
 }
