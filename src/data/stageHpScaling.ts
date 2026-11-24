@@ -29,8 +29,12 @@ export const WORLD_HP_STAGE_ADJUST: Readonly<Record<string, number>> = {};
  */
 export const REF_DPM_COEF = 163;
 export const REF_DPM_EXP = 1.64;
-/** Referans kahramanın aşamayı bitirmesi hedeflenen ortalama hamle sayısı (zayıf hamle seçen ya da daha düşük ekipmanlı oyuncu için daha uzun). */
-export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 5, treasure: 5, elite: 7, boss: 9 };
+/**
+ * Referans hasarla hedeflenen ortalama hamle (zayıf hamle seçen ya da daha düşük ekipmanlı oyuncu için daha uzun).
+ * Boss ve elitte daha yüksek: boss/elit hasar pasifleri ve Ulti (altın = her zaman zayıflık) bu savaşlarda hasarı belirgin artırır;
+ * ölçümde 9 hamlelik boss hedefi 36. seviyede 3–5 hamlede bitiyordu.
+ */
+export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 5, treasure: 5, elite: 8, boss: 12 };
 
 /** Referans kahramanın hamle başına ortalama hasarı (önerilen seviyede). */
 export const referenceDamagePerMove = (level: number): number => REF_DPM_COEF * Math.pow(Math.max(1, level), REF_DPM_EXP);
