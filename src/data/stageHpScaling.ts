@@ -5,7 +5,7 @@
  * Düşmanın saldırısı, saldırı sıklığı, savunması ve ödüller değişmez.
  */
 import { WORLD_REGIONS } from './world';
-import type { StageDef } from '../types/game';
+import type { StageDef, StageType } from '../types/game';
 
 /** Tek ayar tablosu: [ilk aşama, son aşama, başlangıç %, bitiş %] */
 export const WORLD_HP_BONUS_TABLE: ReadonlyArray<{ from: number; to: number; startPct: number; endPct: number }> = [
@@ -19,6 +19,39 @@ export const WORLD_HP_BONUS_TABLE: ReadonlyArray<{ from: number; to: number; sta
  * Boş: denge ölçümlerinde düzeltme gerektiren aşama çıkmadı (bkz. CHANGELOG v1.88.0).
  */
 export const WORLD_HP_STAGE_ADJUST: Readonly<Record<string, number>> = {};
+
+/**
+ * Güç tabanı (v1.89.0). Referans kahraman: aşamanın önerilen seviyesinde, seviyeye uygun tam set (36. seviyeden itibaren
+ * tam efsanevi), pasif puanları dağıtılmış, iyi hamle seçen oyuncu (en büyük eşleşme, 4-5'li ve özel taş öncelikli, Ulti dolunca Ulti).
+ * Hamle başına ortalama hasar gerçek oyunda (BattleScene) Savaşçı/Büyücü/Korucu ile 8–130. seviyelerde ölçüldü ve
+ * REF_DPM_COEF × seviye^REF_DPM_EXP ile uyumlu çıktı (36 → ~58.000, 64 → ~150.000, 100 → ~310.000; bkz. CHANGELOG v1.89.0).
+ * Dünya Haritası düşmanının canı, bu hasarla aşama türünün hedef hamle sayısında bitmeyecek değerin altına inmez.
+ */
+export const REF_DPM_COEF = 163;
+export const REF_DPM_EXP = 1.64;
+/** Referans kahramanın aşamayı bitirmesi hedeflenen ortalama hamle sayısı (zayıf hamle seçen ya da daha düşük ekipmanlı oyuncu için daha uzun). */
+export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 5, treasure: 5, elite: 7, boss: 9 };
+
+/** Referans kahramanın hamle başına ortalama hasarı (önerilen seviyede). */
+export const referenceDamagePerMove = (level: number): number => REF_DPM_COEF * Math.pow(Math.max(1, level), REF_DPM_EXP);
+
+/**
+ * Taban kademeli devreye girer: önerilen seviye 12 ve altında etkisiz (erken oyun mevcut ayarıyla kalır), 24 ve üstünde tam.
+ * Ölçümler 8. seviyeden başlar; erken aşamalarda sorun gözlenmedi.
+ */
+export const POWER_FLOOR_BLEND = { fromLevel: 12, fullLevel: 24 } as const;
+
+const smoothStep = (t: number) => {
+  const c = Math.min(1, Math.max(0, t));
+  return c * c * (3 - 2 * c);
+};
+
+/** Güç tabanı: referans hasar × hedef hamle × kademeli geçiş (yüzlere yuvarlanır). */
+export function worldPowerFloorHp(type: StageType, recommendedLevel: number): number {
+  const { fromLevel, fullLevel } = POWER_FLOOR_BLEND;
+  const blend = smoothStep((recommendedLevel - fromLevel) / (fullLevel - fromLevel));
+  return Math.round((referenceDamagePerMove(recommendedLevel) * WORLD_TARGET_MOVES[type] * blend) / 100) * 100;
+}
 
 const ROUTE: StageDef[] = WORLD_REGIONS.flatMap((r) => r.stages);
 const BY_ID = new Map(ROUTE.map((s, i) => [s.id, { stage: s, order: i + 1 }]));
@@ -39,10 +72,21 @@ export function worldHpBonusPct(order: number): number {
   return order > last.to ? last.endPct : 0;
 }
 
-/** Dünya Haritası savaşında düşmanın en yüksek canı (temel can × artış × varsa aşama düzeltmesi, en sonda yuvarlanır). */
+/** Sıra yüzdesi uygulanmış can (temel can × artış, en sonda yuvarlanır). */
+export function applyWorldHpBonus(order: number, baseMaxHp: number): number {
+  return Math.round(baseMaxHp * (1 + worldHpBonusPct(order) / 100));
+}
+
+/**
+ * Dünya Haritası savaşında düşmanın en yüksek canı: max(temel can × sıra artışı, güç tabanı) × varsa aşama düzeltmesi.
+ * Bilinmeyen aşamada temel can değişmez.
+ */
 export function worldEnemyMaxHp(stageId: string, baseMaxHp: number): number {
-  const pct = worldHpBonusPct(worldStageOrder(stageId));
-  return Math.round(baseMaxHp * (1 + pct / 100) * (WORLD_HP_STAGE_ADJUST[stageId] ?? 1));
+  const entry = BY_ID.get(stageId);
+  if (!entry) return baseMaxHp;
+  const scaled = applyWorldHpBonus(entry.order, baseMaxHp);
+  const floor = worldPowerFloorHp(entry.stage.type, entry.stage.recommendedLevel);
+  return Math.round(Math.max(scaled, floor) * (WORLD_HP_STAGE_ADJUST[stageId] ?? 1));
 }
 
 /**
