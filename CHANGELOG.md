@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.79.0 — Saldırı ve hasar alma animasyonları, paket 7 (ilk dört kahramanın birer kostümü)
+- Kostüm klipleri `hero` + `costume` çiftiyle bağlandı: Savaşçı / Köz Muhafızı, Şövalye / Gümüş Şafak, Korucu / Gece İzcisi, Büyücü / Ay Kristali. Önceki altı paketin kayıtları korundu. Klip, seçili kostümün bekleme sheet'iyle aynı ölçek ve çapada oynar ve aynı kostümün bekleme döngüsüne döner; animasyonu olmayan kostümler eski statik poz akışını kullanır.
+- Köz Muhafızı ve Gümüş Şafak: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
+- Gece İzcisi: 240 ms'de `originPx`'ten gümüş ok (120 ms). Ay Kristali: mavi-beyaz büyü (140 ms). Kostüme özgü mermi rengi `CLIP_PROJECTILE_TINT` tablosunda; diğerleri taş rengini kullanır.
+
 ## v1.78.0 — Saldırı ve hasar alma animasyonları, paket 6 (İblis, Serafim)
 - İblis ve Serafim'in varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk beş paket korundu. Artık 22 kahramanın tamamının varsayılan görünümünde çizilmiş savaş klibi var. Idle ile aynı ölçek ve çapa; Serafim'in havadaki yüksekliği karelerde; bitince idle'a dönülür.
 - İblis: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).

@@ -131,6 +131,12 @@ interface OrbTint {
   size: number;
   wobble: number;
 }
+/** Çizilmiş savaş klibi anahtarına göre ok/büyü rengi (yalnızca kostümün çizimiyle uyumlu sabit renk gerekenler). */
+const CLIP_PROJECTILE_TINT: Readonly<Record<string, number>> = {
+  ranger_gece_izcisi: 0xcbd5e1, // gümüş ok
+  mage_ay_kristali: 0xbfdbfe, // mavi-beyaz büyü
+};
+
 const ORB_TINTS = {
   spirit: { core: 0xdcfce7, halo: 0x22c55e, trail: 0x4ade80, size: 4.5, wobble: 6 },
   ember: { core: 0xfff7ed, halo: 0xf97316, trail: 0xfb923c, size: 4, wobble: 0 },
@@ -1963,7 +1969,9 @@ export class BattleScene extends Phaser.Scene {
         if (e.type !== 'projectileRelease' || !foe.active) return;
         const o = this.clipPointWorld('attack', e.originPx ?? { x: COMBAT_SOURCE_FRAME.w * 0.7, y: COMBAT_SOURCE_FRAME.h * 0.3 });
         const travel = e.suggestedTravelMs ?? 120;
-        if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, col, travel);
+        // Kostüme özgü mermi rengi (örn. Gece İzcisi gümüş ok, Ay Kristali mavi-beyaz büyü); yoksa taş rengi
+        const pc = CLIP_PROJECTILE_TINT[clip.key] ?? col;
+        if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, pc, travel);
         else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel);
@@ -1972,7 +1980,7 @@ export class BattleScene extends Phaser.Scene {
         else if (e.projectile === 'aetherOrb') this.launchSpiritBolt(o.x, o.y, tx, ty, travel, ORB_TINTS.aether);
         else if (e.projectile === 'radiantCrescent') this.launchRadiantCrescent(o.x, o.y, tx, ty, travel);
         else if (e.projectile === 'lyreWave') this.launchSonicPulse(o.x, o.y, tx, ty, travel, { edge: 0x38bdf8, core: 0xe0f2fe, ring: 0x7dd3fc });
-        else this.launchArrow(o.x, o.y, tx, ty, col, travel);
+        else this.launchArrow(o.x, o.y, tx, ty, pc, travel);
       });
       if (played) {
         this.heroAnimBusy = true;

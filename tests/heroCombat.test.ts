@@ -5,7 +5,7 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(44);
+    expect(allCombatClips()).toHaveLength(52);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
     for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart', 'fairy', 'kitsune', 'naga', 'siren', 'minotaur', 'golem', 'phoenix', 'djinn', 'demon', 'seraph']) {
@@ -17,11 +17,11 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
       expect(h.frameDurationsMs.reduce((x, y) => x + y, 0)).toBe(h.durationMs);
       expect(a.url).toBeTruthy();
     }
-    expect(manifest.textures.every((t) => t.costume === 'default')).toBe(true);
+    expect(manifest.textures.filter((t) => t.costume !== 'default').map((t) => `${t.hero}_${t.costume}`).sort()).toEqual(['mage_ay_kristali', 'paladin_gumus_safak', 'ranger_gece_izcisi', 'warrior_koz_muhafizi']);
   });
 
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
-    expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
+    expect(combatClip('warrior_kutup_celigi', 'attack')).toBeNull();
     expect(combatClip('seraph_gece_mabedi', 'attack')).toBeNull();
     expect(combatClip('phoenix_gunes_taci', 'attack')).toBeNull();
     expect(combatClip('fairy_yildiz_tozu', 'attack')).toBeNull();
@@ -104,7 +104,22 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     expect(combatClip('demon', 'attack')!.events.map((e) => [e.type, e.atMs])).toEqual([['impact', 240]]);
     expect(combatClip('seraph', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'radiantCrescent', atMs: 240, suggestedTravelMs: 120, originPx: { x: 388, y: 117 } });
     expect(clipContactMs(combatClip('seraph', 'attack')!)).toBe(360);
-    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(22);
+    expect(new Set(allCombatClips().map((c) => c.key)).size).toBe(26);
     expect(combatClip('djinn', 'attack')!.events[0].projectile).toBe('aetherOrb'); // önceki paketler korunur
+  });
+
+  it('Paket 7: dört kostüm (hero + costume çifti); varsayılan klipler korunur; animasyonu olmayan kostüm eski akışta', () => {
+    for (const k of ['warrior_koz_muhafizi', 'paladin_gumus_safak']) {
+      expect(combatClip(k, 'attack')!.events.map((e) => [e.type, e.atMs]), k).toEqual([['impact', 240]]);
+      expect(combatClip(k, 'hurt'), k).not.toBeNull();
+    }
+    expect(combatClip('ranger_gece_izcisi', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'arrow', atMs: 240, suggestedTravelMs: 120, originPx: { x: 456, y: 114 } });
+    expect(combatClip('mage_ay_kristali', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'spell', atMs: 240, suggestedTravelMs: 140, originPx: { x: 455, y: 87 } });
+    expect(clipContactMs(combatClip('mage_ay_kristali', 'attack')!)).toBe(380);
+    // varsayılan görünümün klibi ayrı kalır
+    expect(combatClip('ranger', 'attack')!.events[0].originPx).toEqual({ x: 351, y: 116 });
+    expect(combatClip('ranger', 'attack')!.url).not.toBe(combatClip('ranger_gece_izcisi', 'attack')!.url);
+    expect(combatClip('mage_kor_akademisi', 'attack')).toBeNull();
+    expect(combatClip('ranger_sonbahar_avcisi', 'hurt')).toBeNull();
   });
 });

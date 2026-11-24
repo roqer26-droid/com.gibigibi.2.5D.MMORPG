@@ -1101,7 +1101,207 @@
     }
    },
    "key": "seraph"
+  },
+  {
+   "hero": "warrior",
+   "costume": "koz_muhafizi",
+   "actions": {
+    "attack": {
+     "file": "warrior_koz_muhafizi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "warrior_koz_muhafizi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "warrior_koz_muhafizi"
+  },
+  {
+   "hero": "paladin",
+   "costume": "gumus_safak",
+   "actions": {
+    "attack": {
+     "file": "paladin_gumus_safak_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "paladin_gumus_safak_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "paladin_gumus_safak"
+  },
+  {
+   "hero": "ranger",
+   "costume": "gece_izcisi",
+   "actions": {
+    "attack": {
+     "file": "ranger_gece_izcisi_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "arrow",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 456,
+        "y": 114
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "ranger_gece_izcisi_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "ranger_gece_izcisi"
+  },
+  {
+   "hero": "mage",
+   "costume": "ay_kristali",
+   "actions": {
+    "attack": {
+     "file": "mage_ay_kristali_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spell",
+       "suggestedTravelMs": 140,
+       "originPx": {
+        "x": 455,
+        "y": 87
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "mage_ay_kristali_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "mage_ay_kristali"
   }
  ],
- "batch": 6
+ "batch": 7
 }
