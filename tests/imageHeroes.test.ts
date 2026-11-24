@@ -59,7 +59,8 @@ describe('image heroes data', () => {
       expect(CLASS_SKILLS[id]).toEqual(IMAGE_HERO_SKILLS[id]);
       expect(getSkillLoadout(id, 4).some((s) => s.id === IMAGE_HERO_SKILLS[id][0].id)).toBe(false);
       expect(getSkillLoadout(id, 5).some((s) => s.id === IMAGE_HERO_SKILLS[id][0].id)).toBe(true);
-      expect(HERO_CLASSES[id].skillTree.length).toBe(12);
+      expect(HERO_CLASSES[id].skillTree.filter((n) => n.branch !== 'common').length).toBe(12); // + 8 ortak Ustalık pasifi
+      expect(HERO_CLASSES[id].skillTree.length).toBe(20);
       expect(HERO_CLASSES[id].unlockCondition?.text).toBeTruthy();
       expect(HERO_CLASSES[id].unlockCost).toBeUndefined();
     }

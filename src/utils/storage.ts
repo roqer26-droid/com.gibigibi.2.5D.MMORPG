@@ -1,4 +1,5 @@
-import { HERO_CLASS_LIST } from '../data/classes';
+import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
+import { migrateHeroPassives, PASSIVE_MAX_RANK } from '../data/passiveTree';
 import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
 import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
@@ -22,7 +23,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 type RawSave = Record<string, unknown>;
 
@@ -51,6 +52,36 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   10: (raw) => raw,
   // v11 -> v12: seviye iksirleri (`potions`) eklendi; eksikse boş başlar.
   11: (raw) => raw,
+  // v12 -> v13: pasifler 10 seviyeye çıktı. Eski yatırım eski bonusu karşılayan en düşük yeni seviyeye taşınır
+  // (3'lük: 1→4, 2→7, 3→10; 2'lik: 1→5, 2→10); harcanmamış puanlar korunur; yeni puan hızına (seviye başına 3) göre eksik
+  // bütçe harcanmamış puan olarak eklenir. Sürüm adımı olduğu için yalnızca bir kez çalışır.
+  12: (raw) => {
+    const heroes = raw.heroes as Record<string, { level?: number; skillPoints?: number; skillRanks?: Record<string, number> }> | undefined;
+    if (!heroes || typeof heroes !== 'object') return raw;
+    const out: Record<string, unknown> = {};
+    for (const [id, h] of Object.entries(heroes)) {
+      const cls = HERO_CLASSES[id as HeroClassId];
+      if (!cls || !h || typeof h !== 'object') {
+        out[id] = h;
+        continue;
+      }
+      const m = migrateHeroPassives(cls.skillTree, {
+        level: Math.max(1, Math.floor(Number(h.level) || 1)),
+        skillPoints: Number(h.skillPoints) || 0,
+        // Pasif seviyeleri 0–10 aralığında tam sayı (bozuk/elle düzenlenmiş değerler kırpılır)
+      skillRanks:
+        h.skillRanks && typeof h.skillRanks === 'object'
+          ? Object.fromEntries(
+              Object.entries(h.skillRanks)
+                .map(([k, r]) => [k, Math.min(PASSIVE_MAX_RANK, Math.floor(finiteOr(r, 0)))] as const)
+                .filter(([, r]) => r > 0)
+            )
+          : {},
+      });
+      out[id] = { ...h, skillRanks: m.skillRanks, skillPoints: m.skillPoints };
+    }
+    return { ...raw, heroes: out };
+  },
 };
 
 function readVersion(raw: RawSave): number {

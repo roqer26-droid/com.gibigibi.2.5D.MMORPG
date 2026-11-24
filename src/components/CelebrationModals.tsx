@@ -1,3 +1,4 @@
+import { SKILL_POINTS_PER_LEVEL } from '../data/passiveTree';
 import React from 'react';
 import { Sparkles, ShieldCheck, ArrowUpCircle } from 'lucide-react';
 import { RARITY_META, SLOT_LABELS } from '../data/skills';
@@ -26,7 +27,7 @@ export const LevelUpModal: React.FC<{
           Kahramanın artık daha güçlü! Can, Saldırı, Savunma ve Mana değerlerin arttı.
         </p>
         <div className="mt-4 rounded-xl border border-purple-400/40 bg-purple-950/40 p-3 text-sm font-bold text-purple-200">
-          +{levelsGained} Yeni Yetenek Puanı Kazandın!
+          +{levelsGained * SKILL_POINTS_PER_LEVEL} Yeni Yetenek Puanı Kazandın!
         </div>
         <button
           type="button"

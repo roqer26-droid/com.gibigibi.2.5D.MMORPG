@@ -59,6 +59,18 @@ export function findSquares(grid: MatchGrid): Square[] {
   return out;
 }
 
+/** Karelerin kapsadığı hücreler (örtüşen kareler ve çizgiyle kesişen taşlar tek kez). */
+export function squareCellKeys(squares: readonly Square[]): Set<string> {
+  const out = new Set<string>();
+  for (const sq of squares) {
+    out.add(`${sq.row},${sq.col}`);
+    out.add(`${sq.row},${sq.col + 1}`);
+    out.add(`${sq.row + 1},${sq.col}`);
+    out.add(`${sq.row + 1},${sq.col + 1}`);
+  }
+  return out;
+}
+
 /** (r,c) hücresini içeren bir 2×2 kare var mı? */
 function hasSquareAt(grid: MatchGrid, r: number, c: number): boolean {
   const t = typeAt(grid, r, c);

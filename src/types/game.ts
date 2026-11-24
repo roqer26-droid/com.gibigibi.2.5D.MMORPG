@@ -123,11 +123,18 @@ export interface SkillTreeNode {
   id: string;
   name: string;
   description: string;
-  branch: 'offense' | 'magic' | 'defense';
+  /** 'common': tüm kahramanlarda aynı Ustalık pasifleri */
+  branch: 'offense' | 'magic' | 'defense' | 'common';
   tier: 1 | 2 | 3 | 4;
+  /** En yüksek seviye (tüm pasiflerde 10) */
   maxRank: number;
   requires?: string;
+  /** Seviye başına istatistik (gösterim için; hesap `statAtMax` × seviye / maxRank ile yapılır) */
   statPerRank?: Partial<StatBlock>;
+  /** 10/10'daki toplam istatistik */
+  statAtMax?: Partial<StatBlock>;
+  /** Eski (10 seviye öncesi) değerler: kayıt geçişi ve eşdeğerlik testleri için */
+  legacy?: { maxRank: number; statPerRank?: Partial<StatBlock>; valuePerRank?: number };
   passiveEffect?: {
     type:
       | 'fire_dmg'
@@ -149,8 +156,18 @@ export interface SkillTreeNode {
       | 'bleed_power'
       | 'dodge_counter'
       | 'storm_overload'
-      | 'dragon_scale';
+      | 'dragon_scale'
+      | 'square_dmg'
+      | 'chain_dmg'
+      | 'mana_flow'
+      | 'ulti_focus'
+      | 'last_stand'
+      | 'shield_boost'
+      | 'heavy_guard'
+      | 'elite_dmg';
     valuePerRank: number;
+    /** 10/10'daki toplam değer */
+    valueAtMax?: number;
   };
 }
 

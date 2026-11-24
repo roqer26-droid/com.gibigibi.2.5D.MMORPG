@@ -53,6 +53,8 @@ import {
   type HitCue,
   type HitOutcome,
 } from "../game/hitFeedback";
+import { boostedShield, chainDamageMult, gainMult, incomingDamageMult, squareDamageMult } from "../game/passiveCombat";
+import { squareCellKeys } from "../game/match3";
 import {
   COMBAT_ORIGIN,
   COMBAT_SOURCE_FRAME,
@@ -395,6 +397,9 @@ export class BattleScene extends Phaser.Scene {
   /** Oynayan klibin belirteci: yeni klip ya da idle'a dönüş eski klibin zamanlayıcılarını geçersiz kılar */
   private heroClipToken = 0;
   private heroClipAction: CombatAction | null = null;
+  /** Doğrulama için: ortak Ustalık pasiflerinin uygulanan çarpanları */
+  private passiveLog: Array<Record<string, unknown>> = [];
+  private defenseLog: Array<{ kind: string; before: number; mult: number }> = [];
   /** Vuruş sesi/isabet efekti: kahramanın saldırı sesi (heroId'den; varsayılan görünüm ve tüm kostümler aynı ses) */
   private heroHitCue: HitCue | null = null;
   /** Doğrulama için: isabet olayları (sonuç, ses anahtarı, sahne zamanı) */
@@ -560,14 +565,17 @@ export class BattleScene extends Phaser.Scene {
         Math.round(resolved.startHeroHp ?? this.heroMaxHp),
       ),
     );
-    this.heroShield =
-      resolved.build.passives.startShield +
-      (resolved.build.relicEffects
-        ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp)
-        : 0);
+    // Başlangıç kalkanı da "oluşturulan kalkan"dır: Sağlam Bariyer uygulanır
+    this.heroShield = boostedShield(
+      Math.round(resolved.build.passives.startShield) +
+        (resolved.build.relicEffects
+          ? relicStartShield(resolved.build.relicEffects, this.heroMaxHp)
+          : 0),
+      resolved.build.passives.shieldBoostPct ?? 0,
+    );
     // Kocaayak — Sağlam Duruş: savaş başında maksimum canın %8'i kadar kalkan
     if (this.initData.hero.classId === "bigfoot")
-      this.heroShield += bigfootStartShield(this.heroMaxHp);
+      this.heroShield += this.boostShield(bigfootStartShield(this.heroMaxHp));
     this.relicFlags = freshRelicFlags();
     this.mastery = createMasteryState();
     this.huntCharges = 0;
@@ -1632,7 +1640,7 @@ export class BattleScene extends Phaser.Scene {
       );
     }
     if (res.shield > 0) {
-      this.heroShield += res.shield;
+      this.heroShield += this.boostShield(res.shield);
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 168,
@@ -1683,7 +1691,7 @@ export class BattleScene extends Phaser.Scene {
       );
     }
     if (res.shield > 0) {
-      this.heroShield += res.shield;
+      this.heroShield += this.boostShield(res.shield);
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 120,
@@ -2002,12 +2010,16 @@ export class BattleScene extends Phaser.Scene {
       golden: [],
     };
 
+    // Kare Ustalığı: karelerin kapsadığı ve bu adımda yok edilen taşlar (örtüşme/çizgi kesişimi tek kez sayılır)
+    const squareKeys = squareCellKeys(squares);
+    const squareCounts: Record<GemType, number> = { fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0, golden: 0 };
     for (const k of allDestroyed) {
       const [r, c] = k.split(",").map(Number);
       const tv = this.grid[r]?.[c];
       if (!tv) continue;
       const gType = tv.tile.type;
       counts[gType] += 1;
+      if (squareKeys.has(k)) squareCounts[gType] += 1;
       const pos = this.cellToWorld(r, c);
       centers[gType].push(pos);
 
@@ -2086,7 +2098,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Launch glowing orbs to Hero or Enemy & apply combat effects!
     this.initData.onMatchStats(counts, this.comboCount, false);
-    this.applyGemCombatEffects(counts, centers);
+    this.applyGemCombatEffects(counts, centers, squareCounts);
 
     this.emitSnapshot();
     await this.waitMs(185);
@@ -2095,8 +2107,17 @@ export class BattleScene extends Phaser.Scene {
   private applyGemCombatEffects(
     counts: Record<GemType, number>,
     centers: Record<GemType, { x: number; y: number }[]>,
+    squareCounts?: Record<GemType, number>,
   ) {
     const build = this.initData.build;
+    // Ortak Ustalık pasifleri: kare (tür başına, karedeki taş payı), zincir (2. adım ve sonrası), taş manası/ulti
+    const P = build.passives;
+    const sqM = (t: GemType) => squareDamageMult(P.squareDmgPct ?? 0, squareCounts?.[t] ?? 0, counts[t]);
+    const chainM = chainDamageMult(P.chainDmgPct ?? 0, this.comboCount);
+    const manaM = gainMult(P.manaFlowPct ?? 0);
+    const ultiM = gainMult(P.ultiFocusPct ?? 0);
+    this.passiveLog.push({ combo: this.comboCount, square: { ...(squareCounts ?? {}) }, counts: { ...counts }, sq: Object.fromEntries((Object.keys(counts) as GemType[]).map((t) => [t, sqM(t)])), chain: chainM, mana: manaM, ulti: ultiM });
+    if (this.passiveLog.length > 40) this.passiveLog.shift();
     const classId = this.initData.hero.classId;
     const actionId = this.stepActionId;
     // Fırtına Çağıran: kombo 3+ iken yıldırımlar aşırı yüklenir
@@ -2123,7 +2144,7 @@ export class BattleScene extends Phaser.Scene {
           build.passives.gemBonuses.fire +
           (classId === "dragonheart" ? 40 : 0)) /
           100;
-      const dmg = Math.round(atk * (0.34 * counts.fire) * comboMult * bonus);
+      const dmg = Math.round(atk * (0.34 * counts.fire) * comboMult * bonus * sqM("fire") * chainM);
       const critFire = this.rollCrit("fire");
       if (classId === "warrior" || classId === "dragonheart") {
         this.heroRageStacks = Math.min(12, this.heroRageStacks + 1);
@@ -2153,8 +2174,8 @@ export class BattleScene extends Phaser.Scene {
           build.passives.gemBonuses.frost +
           (classId === "mage" || classId === "stormcaller" ? 35 : 0)) /
           100;
-      const manaGain = Math.round(counts.frost * 5.2 * comboMult * bonus);
-      const dmg = Math.round(atk * 0.16 * counts.frost * elemBoost * comboMult);
+      const manaGain = Math.round(counts.frost * 5.2 * comboMult * bonus * manaM);
+      const dmg = Math.round(atk * 0.16 * counts.frost * elemBoost * comboMult * sqM("frost") * chainM);
       const critFrost = this.rollCrit("frost");
       this.launchOrbs(
         centers.frost,
@@ -2201,8 +2222,9 @@ export class BattleScene extends Phaser.Scene {
           bonus *
           (1 + build.passives.natureHealOnlyPct / 100),
       );
-      const shieldAmt = Math.round(
-        (16 + build.stats.defense * 0.9) * counts.nature * 0.55 * bonus,
+      const shieldAmt = boostedShield(
+        Math.round((16 + build.stats.defense * 0.9) * counts.nature * 0.55 * bonus),
+        P.shieldBoostPct ?? 0,
       );
       // Kök Filizi: eşik, eşleşmenin iyileştirmesi uygulanmadan önce kontrol edilir
       let sproutHeal = 0;
@@ -2263,7 +2285,7 @@ export class BattleScene extends Phaser.Scene {
           (classId === "stormcaller" || classId === "assassin" ? 40 : 0)) /
           100;
       const dmg = Math.round(
-        atk * 0.31 * counts.lightning * elemBoost * comboMult * bonus,
+        atk * 0.31 * counts.lightning * elemBoost * comboMult * bonus * sqM("lightning") * chainM,
       );
       const critLightning = counts.lightning < 4 && this.rollCrit("lightning");
       this.launchOrbs(
@@ -2291,9 +2313,9 @@ export class BattleScene extends Phaser.Scene {
           (classId === "mage" ? 35 : 0) +
           (classId === "necromancer" ? 40 : 0)) /
           100;
-      const ultiGain = Math.round(counts.arcane * 6.8 * bonus);
+      const ultiGain = Math.round(counts.arcane * 6.8 * bonus * ultiM);
       const dmg = Math.round(
-        atk * 0.28 * counts.arcane * elemBoost * comboMult,
+        atk * 0.28 * counts.arcane * elemBoost * comboMult * sqM("arcane") * chainM,
       );
       const critArcane = this.rollCrit("arcane");
       this.launchOrbs(
@@ -2318,10 +2340,10 @@ export class BattleScene extends Phaser.Scene {
     // 6. GOLDEN SPECIAL GEM -> Omni-Bonus!
     if (counts.golden > 0) {
       const bonus = 1 + build.passives.gemBonuses.golden / 100;
-      const dmg = Math.round(atk * 0.55 * counts.golden * comboMult * bonus);
-      const manaGain = 15 * counts.golden;
+      const dmg = Math.round(atk * 0.55 * counts.golden * comboMult * bonus * sqM("golden") * chainM);
+      const manaGain = Math.round(15 * counts.golden * manaM);
       const healAmt = Math.round(this.heroMaxHp * 0.05 * counts.golden);
-      const ultiGain = 14 * counts.golden;
+      const ultiGain = Math.round(14 * counts.golden * ultiM);
       this.launchOrbs(
         centers.golden,
         this.enemyContainer.x,
@@ -2333,7 +2355,7 @@ export class BattleScene extends Phaser.Scene {
           this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
           this.heroShield = Math.max(
             this.heroShield,
-            capGemShield(this.heroShield + 35 * counts.golden, this.heroMaxHp),
+            capGemShield(this.heroShield + boostedShield(35 * counts.golden, P.shieldBoostPct ?? 0), this.heroMaxHp),
           );
           this.attackActionId = actionId;
           this.dealHeroAttackToEnemy(dmg, "golden", true, true);
@@ -2388,6 +2410,10 @@ export class BattleScene extends Phaser.Scene {
     if (isWeak)
       dmg = Math.round(dmg * (1.45 + build.passives.weaknessBonusPct / 100));
     if (isRes) dmg = Math.round(dmg * 0.72);
+    // Elit Avcısı (ortak Ustalık): elit aşama düşmanlarına verilen hasar
+    if (this.initData.stage.type === "elite" && (build.passives.eliteDmgPct ?? 0) > 0) {
+      dmg = Math.round(dmg * (1 + build.passives.eliteDmgPct / 100));
+    }
     if (this.enemy.isBoss && build.passives.bossDmgPct > 0) {
       dmg = Math.round(dmg * (1 + build.passives.bossDmgPct / 100));
     }
@@ -4005,6 +4031,19 @@ export class BattleScene extends Phaser.Scene {
       isBoss: this.enemy.isBoss,
       heroMaxHp: this.heroMaxHp,
     });
+    // Ağır Darbe Savunması (planlanan ağır saldırı gerçekleşince) ve Son Direniş (can ≤ %35)
+    {
+      const P = this.initData.build.passives;
+      const m = incomingDamageMult({
+        heavy: action.kind !== "attack",
+        hpRatio: this.heroHp / this.heroMaxHp,
+        heavyGuardPct: P.heavyGuardPct ?? 0,
+        lastStandPct: P.lastStandPct ?? 0,
+      });
+      this.defenseLog.push({ kind: action.kind, before: dmg, mult: m });
+      if (this.defenseLog.length > 40) this.defenseLog.shift();
+      if (m !== 1) dmg = Math.max(1, Math.round(dmg * m));
+    }
     if (this.initData.companion === "ice_fox") {
       const fx = foxResolve(this.companionState, action.kind, dmg);
       this.companionState = fx.state;
@@ -4275,7 +4314,7 @@ export class BattleScene extends Phaser.Scene {
         });
         this.heroSprite.setTint(0xffb37a);
         this.setDragonFormVisual(true);
-        this.heroShield += Math.round(this.heroMaxHp * 0.3);
+        this.heroShield += this.boostShield(Math.round(this.heroMaxHp * 0.3));
         this.enemyBurnTurns = 2;
         this.screenFlash(0xf97316, 0.5);
         this.spawnFloatingText(
@@ -4297,7 +4336,7 @@ export class BattleScene extends Phaser.Scene {
       }
       if (this.initData.hero.classId === "bigfoot") {
         const sh = bigfootUltShield(this.heroMaxHp);
-        this.heroShield += sh;
+        this.heroShield += this.boostShield(sh);
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 52,
@@ -4310,7 +4349,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.initData.hero.classId === "paladin") {
         const heal = Math.round(this.heroMaxHp * 0.35);
         this.heroHp = Math.min(this.heroMaxHp, this.heroHp + heal);
-        this.heroShield += Math.round(this.heroMaxHp * 0.25);
+        this.heroShield += this.boostShield(Math.round(this.heroMaxHp * 0.25));
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 52,
@@ -4379,7 +4418,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (skill.effectType === "rock_bulwark") {
       this.spawnBannerText("KAYA SİPERİ!", "#86efac");
       const rb = bigfootSkillShield(this.heroMaxHp);
-      this.heroShield += rb;
+      this.heroShield += this.boostShield(rb);
       this.drawShockwave(
         this.heroContainer.x,
         this.heroContainer.y,
@@ -4464,7 +4503,7 @@ export class BattleScene extends Phaser.Scene {
       const heal = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const shield = Math.round(this.heroMaxHp * 0.22);
       this.heroHp = Math.min(this.heroMaxHp, this.heroHp + heal);
-      this.heroShield += shield;
+      this.heroShield += this.boostShield(shield);
       this.drawShockwave(
         this.heroContainer.x,
         this.heroContainer.y,
@@ -4540,7 +4579,7 @@ export class BattleScene extends Phaser.Scene {
     } else if (skill.effectType === "stone_bulwark") {
       this.spawnBannerText("TAŞ SİPERİ!", "#86efac");
       const stoneShield = Math.round(this.heroMaxHp * skill.powerMultiplier);
-      this.heroShield += stoneShield;
+      this.heroShield += this.boostShield(stoneShield);
       this.drawShockwave(
         this.heroContainer.x,
         this.heroContainer.y,
@@ -4663,7 +4702,7 @@ export class BattleScene extends Phaser.Scene {
       );
       this.heroMana = Math.min(this.heroMaxMana, this.heroMana + 30);
       const goldShield = Math.round(this.heroMaxHp * 0.2);
-      this.heroShield += goldShield;
+      this.heroShield += this.boostShield(goldShield);
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 56,
@@ -4853,7 +4892,7 @@ export class BattleScene extends Phaser.Scene {
       this.spawnBannerText("KUTSAL KALKAN!", "#fde68a");
       const hsShield = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const hsHeal = Math.round(this.heroMaxHp * 0.12);
-      this.heroShield += hsShield;
+      this.heroShield += this.boostShield(hsShield);
       this.heroHp = Math.min(this.heroMaxHp, this.heroHp + hsHeal);
       this.drawShockwave(
         this.heroContainer.x,
@@ -4873,7 +4912,7 @@ export class BattleScene extends Phaser.Scene {
       const dhHeal = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const dhShield = Math.round(this.heroMaxHp * 0.3);
       this.heroHp = Math.min(this.heroMaxHp, this.heroHp + dhHeal);
-      this.heroShield += dhShield;
+      this.heroShield += this.boostShield(dhShield);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 25);
       this.drawShockwave(
         this.heroContainer.x,
@@ -5066,7 +5105,7 @@ export class BattleScene extends Phaser.Scene {
       this.dragonFormTurns =
         3 + Math.floor(this.initData.build.passives.dragonScalePct / 40);
       const dShield = Math.round(this.heroMaxHp * 0.25);
-      this.heroShield += dShield;
+      this.heroShield += this.boostShield(dShield);
       // Form zaten aktifse temel ölçeği yeniden yazma (büyüme birikmesin)
       if (!wasInForm) this.heroBaseScale = this.heroContainer.scaleX;
       this.cameras.main.zoomTo(1.08, this.d(280), "Cubic.easeOut");
@@ -5223,7 +5262,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (fx.shieldPct) {
       const sh = Math.round(this.heroMaxHp * fx.shieldPct);
-      this.heroShield += sh;
+      this.heroShield += this.boostShield(sh);
       heroNotes.push(`+${sh} Kalkan`);
     }
     if (fx.manaPct) {
@@ -6181,6 +6220,11 @@ export class BattleScene extends Phaser.Scene {
       this.showHeroIdle();
     });
     return true;
+  }
+
+  /** Sağlam Bariyer: kahramanda oluşturulan her kalkan bu oranla artar. */
+  private boostShield(amount: number): number {
+    return boostedShield(amount, this.initData.build.passives.shieldBoostPct ?? 0);
   }
 
   /** Klip karesindeki kaynak piksel konumunun dünya koordinatı (mermi çıkışı için). */

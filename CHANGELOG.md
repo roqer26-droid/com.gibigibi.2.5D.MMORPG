@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.87.0 — Pasif ağacı: 10 seviye + ortak Ustalık pasifleri
+- Tüm pasiflerin en yüksek seviyesi 10; her yükseltme 1 puan. Her kahramanın kendi pasifleri eski tam seviyede (3/3 ya da 2/2) verdiği toplam bonusu 10/10'da birebir verir; her seviye bunun onda biri (`src/data/passiveTree.ts`). Ara değerler yuvarlanmaz; yuvarlama nihai yapı değerlerinde tek kez yapılır.
+- Yeni ortak Ustalık pasifleri (her kahramanda aynı, 10/10): Kare Ustalığı %12 (2×2 karede eşleşen taşların hasarı; örtüşme/çizgi kesişiminde taş tek sayılır), Zincir Gücü %10 (2. ve sonraki zincir adımları), Mana Akışı %10 ve Ulti Odağı %10 (taş eşleşmeleri; mevcut sınırlar geçerli), Sağlam Bariyer %12 (oluşturulan tüm kalkanlar), Ağır Darbe Savunması %10 (planlanan ağır saldırı gerçekleşince). Oyunda birebir karşılığı olan iki öneri değiştirildi: Boss Avcısı → Elit Avcısı %8 (elit düşmanlara hasar), Yaşam Bağı → Son Direniş %12 (can %35 ve altındayken alınan hasar azalır).
+- Puan kazanımı: seviye başına 1 → 3 puan (50. seviyede 148; tüm pasifler 200 puan — 10/10'a ulaşılır, odaklanma seçimi anlamlı kalır).
+- Kayıt v13 (bir kez): eski yatırım eski bonusu karşılayan en düşük yeni seviyeye taşınır (3'lük 1→4, 2→7, 3→10; 2'lik 1→5, 2→10); harcanmamış puanlar korunur, yeni kazanım hızına göre eksik bütçe harcanmamış puan olarak eklenir; yeni pasifler 0/10.
+- Pasif ekranı: kartlar Hasar / Savunma / Kaynaklar başlıkları altında; "3/10 · Şu an … · Sonraki …" ve 10/10 toplamı; puan yokken düğme pasif, 10/10'da "Maksimum". Seviye atlama penceresi kazanılan puanı (seviye × 3) gösterir.
+
 ## v1.86.0 — Hızlı Tekrar ve Ustalık Hedefleri
 - Dünya Haritası aşama zaferinde alt bölüm: yan yana "Tekrar Oyna" ve "Sonraki Aşama"; harita ve ana menü dönüşü erişilebilir. Düğmelerin üstünde aşamanın yıldız durumu ("1/3 yıldız" / "3/3 yıldız · Ustalık tamamlandı") ve "Eksik ustalık hedefi" başlığı altında eksik hedeflerin mevcut açıklamaları. Yıldızlar zafer kaydı yazıldıktan sonraki güncel kayıttan okunur (bu savaşta kazanılan yıldız eksik görünmez). Ödül/hedef alanı kayarken düğme alanı panelin altında sabit kalır; 360×640'ta yatay kaydırma yok, uzun hedef metinleri sarar.
 - Sıradaki aşama dünya rotasının gerçek sırasına ve mevcut açılma kuralına göre seçilir (`src/game/quickReplay.ts`, `nextRouteStage`): bölge bossundan sonra sıradaki bölgenin ilk aşaması; kilitliyse düğme pasif; rotanın son (500.) aşamasında düğmenin yerinde "Haritaya Dön".

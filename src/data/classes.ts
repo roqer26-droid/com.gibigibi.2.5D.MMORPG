@@ -1,3 +1,4 @@
+import { buildPassiveTree } from './passiveTree';
 import { CoreHeroClassId, HeroClassDef, HeroClassId } from '../types/game';
 import { CREATURE_CLASSES } from './creatureClasses';
 import { IMAGE_HERO_CLASSES } from './imageHeroes';
@@ -1395,9 +1396,14 @@ const TIER4_NODES: Record<CoreHeroClassId, HeroClassDef['skillTree']> = {
 });
 
 /** 8 çekirdek sınıf + 12 fantastik yaratık + 2 yeni görsel kahraman (Kurt Adam ve Vampir yaratık kimlikleriyle yenilendi) = 22 kahraman */
-export const HERO_CLASSES = { ...CORE_CLASSES, ...CREATURE_CLASSES, ...IMAGE_HERO_CLASSES } as Record<
-  HeroClassId,
-  HeroClassDef
->;
+const RAW_HERO_CLASSES = { ...CORE_CLASSES, ...CREATURE_CLASSES, ...IMAGE_HERO_CLASSES } as Record<HeroClassId, HeroClassDef>;
+
+/**
+ * Pasif ağacı: her kahramanın kendi pasifleri 10 seviyeye ölçeklenir (eski tam seviye = 10/10) ve tüm kahramanlarda aynı
+ * ortak Ustalık pasifleri eklenir (`passiveTree.ts`).
+ */
+export const HERO_CLASSES = Object.fromEntries(
+  Object.entries(RAW_HERO_CLASSES).map(([id, c]) => [id, { ...c, skillTree: buildPassiveTree(c.skillTree) }])
+) as Record<HeroClassId, HeroClassDef>;
 
 export const HERO_CLASS_LIST: HeroClassDef[] = Object.values(HERO_CLASSES);

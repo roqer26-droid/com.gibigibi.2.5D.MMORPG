@@ -1,3 +1,4 @@
+import { SKILL_POINTS_PER_LEVEL } from '../src/data/passiveTree';
 import { describe, expect, it } from 'vitest';
 import { POTION_DROP, POTION_META, addPotions, emptyPotions, potionXp, previewPotion, rollPotionDrop, sanitizePotions, usePotion } from '../src/data/potions';
 import { xpRequiredForLevel } from '../src/utils/rpgLogic';
@@ -88,7 +89,7 @@ describe('seviye iksirleri (sabit XP)', () => {
     expect(r.ok).toBe(true);
     expect(r.levelsGained).toBe(pv.toLevel - 1);
     expect(r.save.heroes[s.activeHeroClass].level).toBe(pv.toLevel);
-    expect(r.save.heroes[s.activeHeroClass].skillPoints).toBe(h.skillPoints + (pv.toLevel - 1));
+    expect(r.save.heroes[s.activeHeroClass].skillPoints).toBe(h.skillPoints + (pv.toLevel - 1) * SKILL_POINTS_PER_LEVEL);
     expect(r.save.potions.large).toBe(0);
   });
   it('seviye 50: iksir tüketilmez, önizleme engelli; boş stok reddedilir', () => {

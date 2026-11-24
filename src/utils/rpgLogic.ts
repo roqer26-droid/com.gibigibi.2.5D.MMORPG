@@ -1,3 +1,4 @@
+import { scaledValue, SKILL_POINTS_PER_LEVEL, type PassiveType } from '../data/passiveTree';
 import { HERO_CLASSES } from '../data/classes';
 import { RARITY_META } from '../data/skills';
 import type { RelicEffects } from '../data/dungeons';
@@ -72,6 +73,23 @@ export interface ComputedHeroBuild {
     dragonScalePct: number;
     /** Set bonusu: doğa taşlarından gelen İYİLEŞTİRME artışı (kalkana uygulanmaz) */
     natureHealOnlyPct: number;
+    // Ortak Ustalık pasifleri (tüm kahramanlar)
+    /** 2×2 karede eşleşen taşların hasarı */
+    squareDmgPct: number;
+    /** Hamlenin 2. ve sonraki zincir adımlarındaki hasar */
+    chainDmgPct: number;
+    /** Taş eşleşmelerinden kazanılan mana */
+    manaFlowPct: number;
+    /** Taş eşleşmelerinden kazanılan ulti enerjisi */
+    ultiFocusPct: number;
+    /** Can %35 ya da altındayken alınan hasarda azalma */
+    lastStandPct: number;
+    /** Oluşturulan kalkan miktarı */
+    shieldBoostPct: number;
+    /** Planlanan ağır saldırıdan alınan hasarda azalma */
+    heavyGuardPct: number;
+    /** Elit düşmanlara verilen hasar */
+    eliteDmgPct: number;
     gemBonuses: Record<GemType, number>;
   };
   /** Kuşanılmış setlerden açılan toplam etkiler (savaşta turun ilk eşleşmesi bonusları dahil) */
@@ -82,6 +100,38 @@ export interface ComputedHeroBuild {
   relicEffects?: RelicEffects;
   powerRating: number;
 }
+
+/** Pasif türü → yapıdaki alan */
+const PASSIVE_FIELD: Record<PassiveType, keyof Omit<ComputedHeroBuild['passives'], 'gemBonuses'>> = {
+  fire_dmg: 'fireDmgPct',
+  frost_mana: 'frostManaPct',
+  nature_heal: 'natureHealPct',
+  lightning_crit: 'lightningCritPct',
+  arcane_ulti: 'arcaneUltiPct',
+  shield_start: 'startShield',
+  combo_boost: 'comboBoostPct',
+  lifesteal: 'lifestealPct',
+  boss_dmg: 'bossDmgPct',
+  skill_power: 'skillPowerPct',
+  golden_luck: 'goldenLuckPct',
+  start_mana: 'startManaPct',
+  start_ulti: 'startUltiPct',
+  thorns: 'thornsPct',
+  weakness_exploit: 'weaknessBonusPct',
+  summon_power: 'summonPowerPct',
+  bleed_power: 'bleedPowerPct',
+  dodge_counter: 'dodgeCounterPct',
+  storm_overload: 'stormOverloadPct',
+  dragon_scale: 'dragonScalePct',
+  square_dmg: 'squareDmgPct',
+  chain_dmg: 'chainDmgPct',
+  mana_flow: 'manaFlowPct',
+  ulti_focus: 'ultiFocusPct',
+  last_stand: 'lastStandPct',
+  shield_boost: 'shieldBoostPct',
+  heavy_guard: 'heavyGuardPct',
+  elite_dmg: 'eliteDmgPct',
+};
 
 export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
   const cls = HERO_CLASSES[hero.classId];
@@ -124,6 +174,14 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
     stormOverloadPct: 0,
     dragonScalePct: 0,
     natureHealOnlyPct: 0,
+    squareDmgPct: 0,
+    chainDmgPct: 0,
+    manaFlowPct: 0,
+    ultiFocusPct: 0,
+    lastStandPct: 0,
+    shieldBoostPct: 0,
+    heavyGuardPct: 0,
+    eliteDmgPct: 0,
     gemBonuses: {
       fire: 0,
       frost: 0,
@@ -147,90 +205,33 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
     });
   }
 
-  // Skill tree contributions
+  // Pasif ağacı: değer = 10/10 toplamı × seviye / 10 (ara değer yuvarlanmaz; istatistikler aşağıda bir kez yuvarlanır)
   for (const node of cls.skillTree) {
-    const rank = hero.skillRanks[node.id] ?? 0;
+    const rank = Math.min(node.maxRank, hero.skillRanks[node.id] ?? 0);
     if (rank <= 0) continue;
 
-    if (node.statPerRank) {
-      stats.health += (node.statPerRank.health ?? 0) * rank;
-      stats.attack += (node.statPerRank.attack ?? 0) * rank;
-      stats.defense += (node.statPerRank.defense ?? 0) * rank;
-      stats.critChance = Number(
-        (stats.critChance + (node.statPerRank.critChance ?? 0) * rank).toFixed(1)
-      );
-      stats.critDamage += (node.statPerRank.critDamage ?? 0) * rank;
-      stats.mana += (node.statPerRank.mana ?? 0) * rank;
-      stats.dodge = Number((stats.dodge + (node.statPerRank.dodge ?? 0) * rank).toFixed(1));
-      stats.elementalDamage += (node.statPerRank.elementalDamage ?? 0) * rank;
+    const statAtMax = node.statAtMax;
+    if (statAtMax) {
+      (Object.keys(statAtMax) as (keyof StatBlock)[]).forEach((k) => {
+        stats[k] += scaledValue(statAtMax[k] ?? 0, rank, node.maxRank);
+      });
     }
 
     if (node.passiveEffect) {
-      const val = node.passiveEffect.valuePerRank * rank;
-      switch (node.passiveEffect.type) {
-        case 'fire_dmg':
-          passives.fireDmgPct += val;
-          break;
-        case 'frost_mana':
-          passives.frostManaPct += val;
-          break;
-        case 'nature_heal':
-          passives.natureHealPct += val;
-          break;
-        case 'lightning_crit':
-          passives.lightningCritPct += val;
-          break;
-        case 'arcane_ulti':
-          passives.arcaneUltiPct += val;
-          break;
-        case 'shield_start':
-          passives.startShield += val;
-          break;
-        case 'combo_boost':
-          passives.comboBoostPct += val;
-          break;
-        case 'lifesteal':
-          passives.lifestealPct += val;
-          break;
-        case 'boss_dmg':
-          passives.bossDmgPct += val;
-          break;
-        case 'skill_power':
-          passives.skillPowerPct += val;
-          break;
-        case 'golden_luck':
-          passives.goldenLuckPct += val;
-          break;
-        case 'start_mana':
-          passives.startManaPct += val;
-          break;
-        case 'start_ulti':
-          passives.startUltiPct += val;
-          break;
-        case 'thorns':
-          passives.thornsPct += val;
-          break;
-        case 'weakness_exploit':
-          passives.weaknessBonusPct += val;
-          break;
-        case 'summon_power':
-          passives.summonPowerPct += val;
-          break;
-        case 'bleed_power':
-          passives.bleedPowerPct += val;
-          break;
-        case 'dodge_counter':
-          passives.dodgeCounterPct += val;
-          break;
-        case 'storm_overload':
-          passives.stormOverloadPct += val;
-          break;
-        case 'dragon_scale':
-          passives.dragonScalePct += val;
-          break;
-      }
+      const val = scaledValue(node.passiveEffect.valueAtMax ?? node.passiveEffect.valuePerRank * node.maxRank, rank, node.maxRank);
+      const key = PASSIVE_FIELD[node.passiveEffect.type];
+      (passives as unknown as Record<string, number>)[key] += val;
     }
   }
+  // Nihai yapı değerleri (savaş bunları kullanır): tam sayı istatistikler yuvarlanır, yüzdeler tek ondalık
+  stats.health = Math.round(stats.health);
+  stats.attack = Math.round(stats.attack);
+  stats.defense = Math.round(stats.defense);
+  stats.critDamage = Math.round(stats.critDamage);
+  stats.mana = Math.round(stats.mana);
+  stats.elementalDamage = Math.round(stats.elementalDamage);
+  stats.critChance = Number(stats.critChance.toFixed(1));
+  stats.dodge = Number(stats.dodge.toFixed(1));
 
   // Equipment contributions (all 10 slots)
   Object.values(hero.equipped).forEach((item) => {
@@ -305,7 +306,7 @@ export function applyXpToHero(
   while (xp >= xpRequiredForLevel(level) && level < 50) {
     xp -= xpRequiredForLevel(level);
     level += 1;
-    skillPoints += 1;
+    skillPoints += SKILL_POINTS_PER_LEVEL;
     levelsGained += 1;
   }
 

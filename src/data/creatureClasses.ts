@@ -17,7 +17,7 @@ export type Pick = [PassiveType, number];
 /*  Yetenek ağacı üreticisi — açıklamalar etkilerden otomatik yazılır   */
 /* ------------------------------------------------------------------ */
 
-const PASSIVE_TEXT: Record<PassiveType, (v: number) => string> = {
+const PASSIVE_TEXT: Partial<Record<PassiveType, (v: number) => string>> = {
   fire_dmg: (v) => `Alev taşı hasarını +%${v} artırır`,
   frost_mana: (v) => `Buz taşlarından Mana kazanımını +%${v} artırır`,
   nature_heal: (v) => `Doğa taşı iyileştirme ve kalkanını +%${v} artırır`,
@@ -65,7 +65,7 @@ function node(
   if (stat) {
     (Object.keys(stat) as (keyof StatBlock)[]).forEach((k) => parts.push(STAT_TEXT[k](stat[k] ?? 0)));
   }
-  if (passive) parts.push(PASSIVE_TEXT[passive[0]](passive[1]));
+  if (passive) parts.push(PASSIVE_TEXT[passive[0]]?.(passive[1]) ?? "");
   return {
     id,
     name,
