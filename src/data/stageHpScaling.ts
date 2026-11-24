@@ -21,40 +21,47 @@ export const WORLD_HP_BONUS_TABLE: ReadonlyArray<{ from: number; to: number; sta
 export const WORLD_HP_STAGE_ADJUST: Readonly<Record<string, number>> = {};
 
 /**
- * Güç tabanı (v1.89.0). Referans kahraman: aşamanın önerilen seviyesinde, seviyeye uygun tam set (36. seviyeden itibaren
- * tam efsanevi), pasif puanları dağıtılmış, iyi hamle seçen oyuncu (en büyük eşleşme, 4-5'li ve özel taş öncelikli, Ulti dolunca Ulti).
- * Hamle başına ortalama hasar gerçek oyunda (BattleScene) Savaşçı/Büyücü/Korucu ile 8–130. seviyelerde ölçüldü ve
- * REF_DPM_COEF × seviye^REF_DPM_EXP ile uyumlu çıktı (36 → ~58.000, 64 → ~150.000, 100 → ~310.000; bkz. CHANGELOG v1.89.0).
- * Dünya Haritası düşmanının canı, bu hasarla aşama türünün hedef hamle sayısında bitmeyecek değerin altına inmez.
+ * Güç tabanı (v1.89.0, v1.90.0'da hedefler yükseltildi). Referans kahraman: aşamanın önerilen seviyesinde, seviyeye uygun tam set
+ * (36. seviyeden itibaren tam efsanevi), pasif puanları dağıtılmış, iyi hamle seçen oyuncu (en büyük eşleşme, 4-5'li ve özel taş
+ * öncelikli, Ulti dolunca Ulti). Hamle başına ortalama hasar gerçek oyunda (BattleScene) Savaşçı/Büyücü/Korucu ile 1–130.
+ * seviyelerde ölçüldü (sınıf ortalaması). 16. seviyeye kadar ölçüm tablosu (log-log ara değer), sonrasında
+ * REF_DPM_COEF × seviye^REF_DPM_EXP (36 → ~58.000, 64 → ~150.000, 100 → ~310.000; bkz. CHANGELOG v1.89.0 / v1.90.0).
  */
+export const REF_DPM_LOW: ReadonlyArray<readonly [number, number]> = [
+  [1, 950], [3, 1450], [5, 2100], [7, 2850], [10, 4400], [12, 6200], [16, 15400],
+];
 export const REF_DPM_COEF = 163;
 export const REF_DPM_EXP = 1.64;
+
+/** Tek ayar tablosu: referans kahramanın aşamayı bitirmesi hedeflenen ortalama hamle sayısı. */
+export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 10, treasure: 10, elite: 20, boss: 25 };
+
 /**
- * Referans hasarla hedeflenen ortalama hamle (zayıf hamle seçen ya da daha düşük ekipmanlı oyuncu için daha uzun).
- * Boss ve elitte daha yüksek: boss/elit hasar pasifleri ve Ulti (altın = her zaman zayıflık) bu savaşlarda hasarı belirgin artırır;
- * ölçümde 9 hamlelik boss hedefi 36. seviyede 3–5 hamlede bitiyordu.
+ * Bu tür savaşlarda hamle başına hasarın normal düşmana göre oranı (ölçüm): boss/elit hasar pasifleri ve Ulti
+ * (altın = her zaman zayıflık) bosslarda hasarı belirgin artırır. Taban bununla çarpılır ki hedef hamle tutsun.
  */
-export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 5, treasure: 5, elite: 8, boss: 12 };
+export const TYPE_DAMAGE_FACTOR: Readonly<Record<StageType, number>> = { normal: 1, treasure: 1, elite: 1.05, boss: 1.5 };
 
 /** Referans kahramanın hamle başına ortalama hasarı (önerilen seviyede). */
-export const referenceDamagePerMove = (level: number): number => REF_DPM_COEF * Math.pow(Math.max(1, level), REF_DPM_EXP);
+export function referenceDamagePerMove(level: number): number {
+  const L = Math.max(1, level);
+  const t = REF_DPM_LOW;
+  const last = t[t.length - 1];
+  if (L >= last[0]) return REF_DPM_COEF * Math.pow(L, REF_DPM_EXP);
+  for (let i = 1; i < t.length; i++) {
+    if (L <= t[i][0]) {
+      const [x0, y0] = t[i - 1];
+      const [x1, y1] = t[i];
+      const k = (Math.log(L) - Math.log(x0)) / (Math.log(x1) - Math.log(x0));
+      return Math.exp(Math.log(y0) + k * (Math.log(y1) - Math.log(y0)));
+    }
+  }
+  return t[0][1];
+}
 
-/**
- * Taban kademeli devreye girer: önerilen seviye 12 ve altında etkisiz (erken oyun mevcut ayarıyla kalır), 24 ve üstünde tam.
- * Ölçümler 8. seviyeden başlar; erken aşamalarda sorun gözlenmedi.
- */
-export const POWER_FLOOR_BLEND = { fromLevel: 12, fullLevel: 24 } as const;
-
-const smoothStep = (t: number) => {
-  const c = Math.min(1, Math.max(0, t));
-  return c * c * (3 - 2 * c);
-};
-
-/** Güç tabanı: referans hasar × hedef hamle × kademeli geçiş (yüzlere yuvarlanır). */
+/** Güç tabanı: referans hasar × tür çarpanı × hedef hamle (yüzlere yuvarlanır). */
 export function worldPowerFloorHp(type: StageType, recommendedLevel: number): number {
-  const { fromLevel, fullLevel } = POWER_FLOOR_BLEND;
-  const blend = smoothStep((recommendedLevel - fromLevel) / (fullLevel - fromLevel));
-  return Math.round((referenceDamagePerMove(recommendedLevel) * WORLD_TARGET_MOVES[type] * blend) / 100) * 100;
+  return Math.round((referenceDamagePerMove(recommendedLevel) * TYPE_DAMAGE_FACTOR[type] * WORLD_TARGET_MOVES[type]) / 100) * 100;
 }
 
 const ROUTE: StageDef[] = WORLD_REGIONS.flatMap((r) => r.stages);
