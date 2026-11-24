@@ -5,10 +5,10 @@ import { IDLE_ORIGIN } from '../src/data/heroIdle';
 
 describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
   it('manifest: dört kahramanın varsayılan görünümü, saldırı 4×2 / 520 ms, hasar 4×1 / 260 ms; idle ile aynı ayak noktası', () => {
-    expect(allCombatClips()).toHaveLength(16);
+    expect(allCombatClips()).toHaveLength(24);
     expect(COMBAT_SOURCE_FRAME).toEqual({ w: 480, h: 384 });
     expect(COMBAT_ORIGIN).toEqual(IDLE_ORIGIN);
-    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher']) {
+    for (const hero of ['warrior', 'paladin', 'ranger', 'mage', 'werewolf', 'vampire', 'bigfoot', 'night_screecher', 'necromancer', 'assassin', 'stormcaller', 'dragonheart']) {
       const a = combatClip(hero, 'attack')!;
       const h = combatClip(hero, 'hurt')!;
       expect([a.columns, a.rows, a.frameCount, a.durationMs], hero).toEqual([4, 2, 8, 520]);
@@ -22,7 +22,7 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
 
   it('kostüm ya da klibi olmayan görünüm eski statik poza düşer', () => {
     expect(combatClip('warrior_koz_muhafizi', 'attack')).toBeNull();
-    expect(combatClip('assassin', 'attack')).toBeNull();
+    expect(combatClip('phoenix', 'attack')).toBeNull();
     expect(combatClip(null, 'hurt')).toBeNull();
   });
 
@@ -66,5 +66,17 @@ describe('v1.73.0: çizilmiş saldırı ve hasar alma klipleri', () => {
     // Paket 1 kayıtları korunur
     expect(clipContactMs(combatClip('ranger', 'attack')!)).toBe(360);
     expect(combatClip('night_screecher_firtina_cigligi', 'attack')).toBeNull();
+  });
+
+  it('Paket 3: Suikastçı/Ejderkalp impact 240 ms; Ölüm Çağıran ruh büyüsü, Fırtına Çağıran yıldırım (originPx, 120 ms)', () => {
+    for (const h of ['assassin', 'dragonheart']) expect(combatClip(h, 'attack')!.events.map((e) => [e.type, e.atMs]), h).toEqual([['impact', 240]]);
+    expect(combatClip('necromancer', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'spiritBolt', atMs: 240, suggestedTravelMs: 120, originPx: { x: 380, y: 162 } });
+    expect(combatClip('stormcaller', 'attack')!.events[0]).toMatchObject({ type: 'projectileRelease', projectile: 'lightningBolt', atMs: 240, suggestedTravelMs: 120, originPx: { x: 421, y: 95 } });
+    expect(clipContactMs(combatClip('necromancer', 'attack')!)).toBe(360);
+    expect(clipContactMs(combatClip('dragonheart', 'attack')!)).toBe(240);
+    // önceki paketler korunur; alternatif kostüm eski akışta
+    expect(combatClip('night_screecher', 'attack')!.events[0].projectile).toBe('sonicPulse');
+    expect(combatClip('warrior', 'hurt')).not.toBeNull();
+    expect(combatClip('assassin_mor_sis', 'attack')).toBeNull();
   });
 });

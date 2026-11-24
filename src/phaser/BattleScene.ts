@@ -1951,6 +1951,8 @@ export class BattleScene extends Phaser.Scene {
         const travel = e.suggestedTravelMs ?? 120;
         if (e.projectile === 'spell') this.launchSmallBolt(o.x, o.y, tx, ty, col, travel);
         else if (e.projectile === 'sonicPulse') this.launchSonicPulse(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'spiritBolt') this.launchSpiritBolt(o.x, o.y, tx, ty, travel);
+        else if (e.projectile === 'lightningBolt') this.launchLightningBolt(o.x, o.y, tx, ty, travel);
         else this.launchArrow(o.x, o.y, tx, ty, col, travel);
       });
       if (played) {
@@ -2199,6 +2201,89 @@ export class BattleScene extends Phaser.Scene {
       onComplete: () => {
         this.drawShockwave(tx, ty, 0xc084fc, 30);
         g.destroy();
+      },
+    });
+  }
+
+  /** Ruh büyüsü (Ölüm Çağıran): hafif dalgalanarak ilerleyen küçük yeşil ruh küresi ve sönen iz; varışta yeşil halka. */
+  private launchSpiritBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+    const halo = this.add.circle(sx, sy, 9, 0x22c55e, 0.35);
+    const core = this.add.circle(sx, sy, 4.5, 0xdcfce7, 0.95);
+    this.vfxContainer.add(halo);
+    this.vfxContainer.add(core);
+    const nx = -(ty - sy);
+    const ny = tx - sx;
+    const nl = Math.hypot(nx, ny) || 1;
+    const st = { p: 0 };
+    let lastTrail = 0;
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, flightMs),
+      ease: 'Linear',
+      onUpdate: () => {
+        const w = Math.sin(st.p * Math.PI * 2) * 6 * (1 - st.p);
+        const x = sx + (tx - sx) * st.p + (nx / nl) * w;
+        const y = sy + (ty - sy) * st.p + (ny / nl) * w;
+        halo.setPosition(x, y);
+        core.setPosition(x, y);
+        if (st.p - lastTrail > 0.18) {
+          lastTrail = st.p;
+          const t = this.add.circle(x, y, 4, 0x4ade80, 0.5);
+          this.vfxContainer.add(t);
+          this.tweens.add({ targets: t, alpha: 0, scale: 0.3, duration: 160, onComplete: () => t.destroy() });
+        }
+      },
+      onComplete: () => {
+        this.drawShockwave(tx, ty, 0x4ade80, 32);
+        halo.destroy();
+        core.destroy();
+      },
+    });
+  }
+
+  /** Yıldırım (Fırtına Çağıran): çıkış noktasından hedefe uzanan kısa, kırık mavi şimşek; varışta parlama, ardından söner. */
+  private launchLightningBolt(sx: number, sy: number, tx: number, ty: number, flightMs: number) {
+    const g = this.add.graphics();
+    this.vfxContainer.add(g);
+    const n = 7;
+    const jag = Array.from({ length: n + 1 }, (_, i) => (i === 0 || i === n ? 0 : (Math.random() - 0.5) * 18));
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const len = Math.hypot(dx, dy) || 1;
+    const px = -dy / len;
+    const py = dx / len;
+    const draw = (p: number, alpha: number) => {
+      g.clear();
+      const pts: Array<[number, number]> = [];
+      for (let i = 0; i <= n; i++) {
+        const t = (i / n) * p;
+        pts.push([sx + dx * t + px * jag[i] * p, sy + dy * t + py * jag[i] * p]);
+      }
+      for (const [w, c, a] of [
+        [6, 0x3b82f6, 0.35],
+        [2.6, 0x93c5fd, 0.9],
+        [1.2, 0xffffff, 1],
+      ] as const) {
+        g.lineStyle(w, c, a * alpha);
+        g.beginPath();
+        g.moveTo(pts[0][0], pts[0][1]);
+        for (const [x, y] of pts.slice(1)) g.lineTo(x, y);
+        g.strokePath();
+      }
+    };
+    const st = { p: 0.05 };
+    draw(st.p, 1);
+    this.tweens.add({
+      targets: st,
+      p: 1,
+      duration: Math.max(40, flightMs),
+      ease: 'Quad.easeIn',
+      onUpdate: () => draw(st.p, 1),
+      onComplete: () => {
+        this.drawShockwave(tx, ty, 0x60a5fa, 30);
+        const fade = { a: 1 };
+        this.tweens.add({ targets: fade, a: 0, duration: 110, onUpdate: () => draw(1, fade.a), onComplete: () => g.destroy() });
       },
     });
   }
@@ -4123,7 +4208,8 @@ export class BattleScene extends Phaser.Scene {
     const sp = this.heroSprite;
     if (!c || !sp) return { x: this.heroContainer.x, y: this.heroContainer.y };
     const per = (c.scale * Math.floor(this.textures.get(c.texKey).getSourceImage().height / c.clip.rows)) / COMBAT_SOURCE_FRAME.h;
-    const lx = sp.x + (px.x - COMBAT_ORIGIN.x * COMBAT_SOURCE_FRAME.w) * per;
+    // Sprite yatay aynalanmışsa çıkış noktası da aynalanır (kap aynalaması dünya dönüşümüyle zaten uygulanır)
+    const lx = sp.x + (px.x - COMBAT_ORIGIN.x * COMBAT_SOURCE_FRAME.w) * per * (sp.flipX ? -1 : 1);
     const ly = sp.y + (px.y - COMBAT_ORIGIN.y * COMBAT_SOURCE_FRAME.h) * per;
     const p = this.heroContainer.getWorldTransformMatrix().transformPoint(lx, ly);
     return { x: p.x, y: p.y };

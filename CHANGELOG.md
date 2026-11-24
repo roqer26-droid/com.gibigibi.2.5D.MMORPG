@@ -4,6 +4,12 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.75.0 — Saldırı ve hasar alma animasyonları, paket 3 (Ölüm Çağıran, Suikastçı, Fırtına Çağıran, Ejderkalp)
+- Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; ilk iki paket korundu (toplam 12 kahraman). Idle ile aynı ölçek ve çapa; bitince idle'a dönülür. Alternatif kostümler eski akışı kullanır.
+- Suikastçı ve Ejderkalp: hasar göstergesi, ses ve hedef tepkisi `impact` anında (240 ms).
+- Ölüm Çağıran: `spiritBolt` — 240 ms'de `originPx` noktasından küçük yeşil ruh büyüsü (`launchSpiritBolt`). Fırtına Çağıran: `lightningBolt` — kısa mavi yıldırım (`launchLightningBolt`). Efekt 120 ms sonra hedefe varınca hasar ve tepki gösterilir.
+- Kahraman sprite'ı yatay aynalanırsa mermi çıkış noktası da aynalanır (kap aynalaması zaten dünya dönüşümüyle uygulanıyordu).
+
 ## v1.74.0 — Saldırı ve hasar alma animasyonları, paket 2 (Kurt Adam, Vampir, Koca Ayak, Gecenin Çığırtkanı)
 - Dört kahramanın varsayılan görünümü için saldırı (4×2, 520 ms) ve hasar alma (4×1, 260 ms) klipleri; Paket 1 kayıtları korundu (toplam 8 kahraman). Kareler idle ile aynı dikey ölçek ve ayak noktasında; bitince idle'a dönülür.
 - Kurt Adam, Vampir, Koca Ayak: hasar göstergesi, ses ve düşman tepkisi `impact` anında (240 ms).

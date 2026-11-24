@@ -14,7 +14,7 @@ export interface CombatEvent {
   type: 'impact' | 'projectileRelease';
   frame: number;
   atMs: number;
-  projectile?: 'arrow' | 'spell' | 'sonicPulse';
+  projectile?: 'arrow' | 'spell' | 'sonicPulse' | 'spiritBolt' | 'lightningBolt';
   suggestedTravelMs?: number;
   /** Mermi çıkış noktası, kaynak kare pikselinde (kare: `sourceFrame` boyutu) */
   originPx?: { x: number; y: number };

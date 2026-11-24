@@ -401,7 +401,207 @@
     }
    },
    "key": "night_screecher"
+  },
+  {
+   "hero": "necromancer",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "necromancer_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "spiritBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 380,
+        "y": 162
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "necromancer_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "necromancer"
+  },
+  {
+   "hero": "assassin",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "assassin_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "assassin_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "assassin"
+  },
+  {
+   "hero": "stormcaller",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "stormcaller_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "projectileRelease",
+       "frame": 4,
+       "projectile": "lightningBolt",
+       "suggestedTravelMs": 120,
+       "originPx": {
+        "x": 421,
+        "y": 95
+       },
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "stormcaller_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "stormcaller"
+  },
+  {
+   "hero": "dragonheart",
+   "costume": "default",
+   "actions": {
+    "attack": {
+     "file": "dragonheart_default_attack.webp",
+     "columns": 4,
+     "rows": 2,
+     "frameCount": 8,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      80,
+      80
+     ],
+     "durationMs": 520,
+     "loop": false,
+     "events": [
+      {
+       "type": "impact",
+       "frame": 4,
+       "atMs": 240
+      }
+     ]
+    },
+    "hurt": {
+     "file": "dragonheart_default_hurt.webp",
+     "columns": 4,
+     "rows": 1,
+     "frameCount": 4,
+     "frameDurationsMs": [
+      60,
+      60,
+      60,
+      80
+     ],
+     "durationMs": 260,
+     "loop": false,
+     "events": []
+    }
+   },
+   "key": "dragonheart"
   }
  ],
- "batch": 2
+ "batch": 3
 }
