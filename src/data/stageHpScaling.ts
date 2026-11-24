@@ -37,10 +37,31 @@ export const REF_DPM_EXP = 1.64;
 export const WORLD_TARGET_MOVES: Readonly<Record<StageType, number>> = { normal: 10, treasure: 10, elite: 20, boss: 25 };
 
 /**
- * Bu tür savaşlarda hamle başına hasarın normal düşmana göre oranı (ölçüm): boss/elit hasar pasifleri ve Ulti
- * (altın = her zaman zayıflık) bosslarda hasarı belirgin artırır. Taban bununla çarpılır ki hedef hamle tutsun.
+ * Bu tür savaşlarda hamle başına hasarın normal düşmana göre oranı, önerilen seviyeye göre (gerçek savaş ölçümü, v1.90.0).
+ * Erken bosslar can/kalkan fazları yüzünden yavaş biter (çarpan < 1); boss/elit hasar pasifleri ve Ulti açıldıkça
+ * (yaklaşık 16. seviyeden sonra) bu savaşlarda hamle başına hasar normalden belirgin yüksektir. Taban bununla çarpılır ki
+ * hedef hamle tutsun. Ara seviyelerde doğrusal ara değer; tablonun dışında uç değer.
  */
-export const TYPE_DAMAGE_FACTOR: Readonly<Record<StageType, number>> = { normal: 1, treasure: 1, elite: 1.05, boss: 1.5 };
+export const TYPE_DAMAGE_FACTOR: Readonly<Record<StageType, ReadonlyArray<readonly [number, number]>>> = {
+  normal: [[1, 1], [24, 1], [36, 1.3], [52, 1.1], [64, 1]],
+  treasure: [[1, 1], [24, 1], [36, 1.3], [52, 1.1], [64, 1]],
+  elite: [[1, 1.05], [8, 1.05], [16, 1.25], [36, 1.45], [64, 1.1]],
+  boss: [[1, 0.75], [5, 0.75], [8, 1], [16, 1.9], [36, 1.5], [100, 1.2]],
+};
+
+/** Türün önerilen seviyedeki hasar çarpanı. */
+export function typeDamageFactor(type: StageType, level: number): number {
+  const t = TYPE_DAMAGE_FACTOR[type];
+  if (level <= t[0][0]) return t[0][1];
+  for (let i = 1; i < t.length; i++) {
+    if (level <= t[i][0]) {
+      const [x0, y0] = t[i - 1];
+      const [x1, y1] = t[i];
+      return y0 + ((y1 - y0) * (level - x0)) / (x1 - x0);
+    }
+  }
+  return t[t.length - 1][1];
+}
 
 /** Referans kahramanın hamle başına ortalama hasarı (önerilen seviyede). */
 export function referenceDamagePerMove(level: number): number {
@@ -61,7 +82,7 @@ export function referenceDamagePerMove(level: number): number {
 
 /** Güç tabanı: referans hasar × tür çarpanı × hedef hamle (yüzlere yuvarlanır). */
 export function worldPowerFloorHp(type: StageType, recommendedLevel: number): number {
-  return Math.round((referenceDamagePerMove(recommendedLevel) * TYPE_DAMAGE_FACTOR[type] * WORLD_TARGET_MOVES[type]) / 100) * 100;
+  return Math.round((referenceDamagePerMove(recommendedLevel) * typeDamageFactor(type, recommendedLevel) * WORLD_TARGET_MOVES[type]) / 100) * 100;
 }
 
 const ROUTE: StageDef[] = WORLD_REGIONS.flatMap((r) => r.stages);

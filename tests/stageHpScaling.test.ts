@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WORLD_REGIONS } from '../src/data/world';
-import { WORLD_HP_BONUS_TABLE, TYPE_DAMAGE_FACTOR, WORLD_TARGET_MOVES, applyWorldHpBonus, referenceDamagePerMove, worldBattleStage, worldEnemyMaxHp, worldHpBonusPct, worldPowerFloorHp, worldStageOrder } from '../src/data/stageHpScaling';
+import { WORLD_HP_BONUS_TABLE, typeDamageFactor, WORLD_TARGET_MOVES, applyWorldHpBonus, referenceDamagePerMove, worldBattleStage, worldEnemyMaxHp, worldHpBonusPct, worldPowerFloorHp, worldStageOrder } from '../src/data/stageHpScaling';
 import { HUNTS } from '../src/data/hunts';
 import { findStageById } from '../src/data/world';
 import { boardBossPhase, barrierDamage } from '../src/game/boardBossPhase';
@@ -76,7 +76,7 @@ describe('Dünya Haritası düşman canı artışı', () => {
       expect(hp).toBe(Math.max(applyWorldHpBonus(i + 1, st.enemy.maxHp), worldPowerFloorHp(st.type, st.recommendedLevel)));
       expect(hp).toBeGreaterThanOrEqual(applyWorldHpBonus(i + 1, st.enemy.maxHp));
       // referans hasarla en az hedef hamle
-      expect(hp / (referenceDamagePerMove(st.recommendedLevel) * TYPE_DAMAGE_FACTOR[st.type])).toBeGreaterThanOrEqual(WORLD_TARGET_MOVES[st.type] * 0.995) // yüzlere yuvarlama payı;
+      expect(hp / (referenceDamagePerMove(st.recommendedLevel) * typeDamageFactor(st.type, st.recommendedLevel))).toBeGreaterThanOrEqual(WORLD_TARGET_MOVES[st.type] * 0.995) // yüzlere yuvarlama payı;
     }
     expect(worldBattleStage(ROUTE[0]).enemy.maxHp).toBe(9500);
   });
