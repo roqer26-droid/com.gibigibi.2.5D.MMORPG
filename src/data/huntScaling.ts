@@ -6,8 +6,9 @@
  * Güç → hamle başına hasar tablosu gerçek savaş ölçümlerinden (Savaşçı / Büyücü / Korucu, iyi oyuncu politikası; v1.89 ve
  * v1.98 ölçümleri) çıkarıldı.
  */
+
 import type { EquipmentItem, GameSaveState, HeroProgress, HuntDifficulty, HuntId, Rarity, StageDef } from '../types/game';
-import { computeHeroBuild } from '../utils/rpgLogic';
+import { computeHeroBuild, type HeroAccountBonus } from '../utils/rpgLogic';
 import { findStageById } from './world';
 import { getHunt } from './hunts';
 import { AWAKEN_DROPS } from './awakening';
@@ -80,10 +81,10 @@ export interface HuntBossStats {
 }
 
 /** Ava giren kahramana göre boss değerleri (savaş başında bir kez hesaplanır, savaş içinde değişmez). */
-export function huntBossStats(huntId: HuntId, difficulty: HuntDifficulty, hero: HeroProgress): HuntBossStats {
+export function huntBossStats(huntId: HuntId, difficulty: HuntDifficulty, hero: HeroProgress, account?: HeroAccountBonus | null): HuntBossStats {
   const base = findStageById(getHunt(huntId).storyStageId)!.stage;
   const d = HUNT_DIFFICULTIES[difficulty];
-  const build = computeHeroBuild(hero);
+  const build = computeHeroBuild(hero, account);
   const power = build.powerRating;
   const maxHp = Math.max(base.enemy.maxHp, Math.round((huntDamagePerMove(power) * d.targetMoves * HUNT_BOSS_HP_ADJUST) / 100) * 100);
   const attack = Math.max(base.enemy.attack, Math.round(d.hitPct * build.stats.health * ((100 + build.stats.defense * 1.45) / 100)));
@@ -91,9 +92,9 @@ export function huntBossStats(huntId: HuntId, difficulty: HuntDifficulty, hero: 
 }
 
 /** Av savaşı aşaması: hikâye bossu (görsel, fazlar, zayıflık) + ölçeklenmiş can / saldırı. */
-export function huntBattleStage(huntId: HuntId, difficulty: HuntDifficulty, hero: HeroProgress): StageDef {
+export function huntBattleStage(huntId: HuntId, difficulty: HuntDifficulty, hero: HeroProgress, account?: HeroAccountBonus | null): StageDef {
   const base = findStageById(getHunt(huntId).storyStageId)!.stage;
-  const s = huntBossStats(huntId, difficulty, hero);
+  const s = huntBossStats(huntId, difficulty, hero, account);
   return {
     ...base,
     recommendedLevel: s.level,

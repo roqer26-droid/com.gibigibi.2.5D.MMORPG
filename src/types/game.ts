@@ -722,6 +722,8 @@ export interface GameSaveState {
   materials: { awakenShard: number; soulCrystal: number; divineEssence: number };
   /** Sonsuzluk Kulesi (hesap geneli) */
   tower: import('../data/tower').TowerSave;
+  /** Unvan Sistemi (hesap geneli): kazanılanlar, aktif unvan, görülmemişler, unvan sayaçları */
+  titles: import('../data/titles').TitleSave;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;

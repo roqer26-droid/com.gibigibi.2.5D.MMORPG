@@ -1,3 +1,5 @@
+import { accountBonusOf } from '../data/titles';
+import { TitleName } from './TitleUi';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
@@ -78,7 +80,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
     // Çekmece açıkken detaydaki önizleme seçilen kostümü gösterir (kayıt yalnızca Kullan ile değişir)
     const hero = costumeFor?.id === id ? { ...savedHero, costumeId: costumeFor.preview ?? undefined } : savedHero;
     const cls = HERO_CLASSES[id];
-    const build = computeHeroBuild(hero);
+    const build = computeHeroBuild(hero, accountBonusOf(save));
     const aura = computeEnchantAura(hero);
     const xpNeeded = xpRequiredForLevel(hero.level);
     const isActive = save.activeHeroClass === id;
@@ -180,6 +182,11 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
             </div>
 
             <h2 className="mt-1.5 font-display text-2xl font-extrabold text-white">{cls.title}</h2>
+            {save.titles?.active && (
+              <p className="mt-0.5 text-[13px] font-extrabold" data-testid={`hero-detail-title-${id}`}>
+                « <TitleName id={save.titles.active} /> »
+              </p>
+            )}
             <p className="mt-1 text-xs leading-relaxed text-slate-300">{cls.roleDesc}</p>
 
             {/* Büyü Aurası */}
@@ -395,6 +402,11 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
               {HERO_CLASS_LIST.length} kahraman • {save.heroUnlocks.length} açık • karta dokunup
               detayları incele
             </p>
+            {save.titles?.active && (
+              <p className="text-[12px] font-extrabold" data-testid="heroes-active-title">
+                Unvan: <TitleName id={save.titles.active} />
+              </p>
+            )}
           </div>
         </div>
         <div className="hidden items-center gap-2 text-xs font-bold sm:flex">
@@ -454,7 +466,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
           <div className="grid grid-cols-2 gap-2.5 lg:col-span-5">
             {HERO_CLASS_LIST.map((c) => {
               const prog = save.heroes[c.id];
-              const cBuild = computeHeroBuild(prog);
+              const cBuild = computeHeroBuild(prog, accountBonusOf(save));
               const cAura = computeEnchantAura(prog);
               const selected = inspectId === c.id;
               const active = save.activeHeroClass === c.id;

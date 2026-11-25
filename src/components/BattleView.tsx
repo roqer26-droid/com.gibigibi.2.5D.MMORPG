@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import {
@@ -39,6 +40,8 @@ import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
 import { MATERIAL_IDS, MATERIAL_META } from '../data/awakening';
 import { TOWER_RULES, type TowerRuleId, type TowerVictoryOutcome } from '../data/tower';
+import { TITLE_RARITIES, titleById, type BattleTitleReport } from '../data/titles';
+import { TitleName } from './TitleUi';
 import { HUNT_DIFFICULTIES } from '../data/huntScaling';
 import { MaterialIcon } from './MaterialIcon';
 import { applyRelicsToBuild, getRelic } from '../data/dungeons';
@@ -96,6 +99,8 @@ interface BattleViewProps {
   onDungeonBattleEnd?: (victory: boolean, turns: number, heroHp: number) => { completed: boolean; healed: number };
   /** Sonsuzluk Kulesi katı: kural, zafer kaydı ve sonuç ekranı düğmeleri */
   tower?: { floor: number; total: number; rule: TowerRuleId | null };
+  /** Savaş sonu unvan raporu (kare, zayıflık, yoldaş, alınan hasar…); her savaş sonucu bir kez */
+  onBattleReport?: (report: BattleTitleReport) => void;
   onTowerVictory?: (floor: number) => TowerVictoryOutcome | null;
   onTowerNextFloor?: () => void;
   onTowerImproveHero?: () => void;
@@ -128,6 +133,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
   dungeon,
   onDungeonBattleEnd,
   tower,
+  onBattleReport,
   onTowerVictory,
   onTowerNextFloor,
   onTowerImproveHero,
@@ -149,10 +155,11 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
+  const activeTitleDef = titleById(save.titles?.active);
   const build = useMemo(() => {
-    const b = computeHeroBuild(hero);
+    const b = computeHeroBuild(hero, accountBonusOf(save));
     return dungeon ? applyRelicsToBuild(b, dungeon.relics) : b;
-  }, [hero, dungeon]);
+  }, [hero, dungeon, save.titles]); // eslint-disable-line react-hooks/exhaustive-deps
   /** Sınıf + seviyeye göre açılan yetenek yükü */
   const loadout = useMemo(
     () => getSkillLoadout(save.activeHeroClass, hero.level),
@@ -282,8 +289,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const exitLabel = tower ? 'Kuleye Dön' : dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
 
   // Latest callbacks in refs so Phaser never holds stale closures
-  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory });
-  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory };
+  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory, onBattleReport });
+  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory, onBattleReport };
 
   // Switch music mode
   useEffect(() => {
@@ -323,6 +330,24 @@ export const BattleView: React.FC<BattleViewProps> = ({
       onBattleEnd: (victory, turns, heroHp) => {
         if (resolved) return;
         resolved = true;
+        // Unvan sayaçları: savaş sonucu bir kez raporlanır (Dünya Haritası ve lig zaferleri kendi akışında sayılır)
+        const snap = battleScene.getTitleSnapshot();
+        callbacksRef.current.onBattleReport?.({
+          victory,
+          squares: snap.squares,
+          weakHits: snap.weakHits,
+          companionTriggers: snap.companionTriggers,
+          damageTaken: snap.damageTaken,
+          hpRatio: victory ? Math.max(snap.hpRatio, 0) : 0,
+          ultiKill: snap.ultiKill,
+          barrierBroken: snap.barrierBroken,
+          isBoss: stage.enemy.isBoss,
+          isElite: stage.type === 'elite',
+          bossId: stage.enemy.bossId,
+          recommendedLevel: stage.recommendedLevel,
+          heroLevel: hero.level,
+          countWin: !!(hunt || dungeon || tower),
+        });
         if (tower) {
           // Kule: ödül ve ilerleme App'te tek kayıt işlemiyle yazılır (tamamlanmış katta antrenman, ödül yok)
           const res = victory ? callbacksRef.current.onTowerVictory?.(tower.floor) ?? null : null;
@@ -788,6 +813,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
             {Array.from({ length: snapshot.kit.max }, (_, i) => (
               <span key={i} className={`h-2.5 w-2.5 rounded-full border ${i < snapshot.kit!.value ? 'border-amber-300 bg-amber-300' : 'border-slate-600 bg-slate-800'}`} />
             ))}
+          </div>
+        )}
+        {activeTitleDef && (
+          <div
+            className="pointer-events-none absolute left-1.5 z-10 max-w-[150px] truncate rounded-full border bg-slate-950/80 px-2 py-0.5 text-[10px] font-extrabold"
+            style={{ top: 6 + (snapshot.companion ? 38 : 0) + (snapshot.kit ? 34 : 0), borderColor: `${TITLE_RARITIES[activeTitleDef.rarity].color}66` }}
+            data-testid="battle-title"
+          >
+            « <TitleName id={activeTitleDef.id} /> »
           </div>
         )}
         {snapshot.companion && (

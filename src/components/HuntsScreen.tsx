@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import { ArrowLeft, Check, Coins, Flame, Gem, Heart, Lock, Snowflake, Swords, Trophy, Wind } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
@@ -148,7 +149,7 @@ function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveStat
   const lines = getHuntRuleLines(hunt, stage.enemy.attackInterval);
   const [diff, setDiff] = useState<HuntDifficulty>(() => defaultDifficulty(save, hunt.id));
   const hero = save.heroes[save.activeHeroClass];
-  const boss = useMemo(() => huntBossStats(hunt.id, diff, hero), [hunt.id, diff, hero]);
+  const boss = useMemo(() => huntBossStats(hunt.id, diff, hero, accountBonusOf(save)), [hunt.id, diff, hero, save.titles]);
   const reward = huntRewardPreview(diff, hero.level);
   const D = HUNT_DIFFICULTIES[diff];
   const fmt = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(2).replace('.', ',')} Mn` : n >= 1e4 ? `${Math.round(n / 1e3)} B` : n.toLocaleString('tr-TR'));

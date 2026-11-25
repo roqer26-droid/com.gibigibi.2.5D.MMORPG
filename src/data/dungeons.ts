@@ -1,3 +1,4 @@
+import { accountBonusOf } from './titles';
 import { HERO_CLASSES } from './classes';
 import { WORLD_REGIONS } from './world';
 import type {
@@ -454,7 +455,7 @@ export interface DungeonActionResult {
 
 const refuse = (save: GameSaveState, toast: string): DungeonActionResult => ({ save, ok: false, toast });
 
-const heroMaxHp = (save: GameSaveState): number => computeHeroBuild(save.heroes[save.activeHeroClass]).stats.health;
+const heroMaxHp = (save: GameSaveState): number => computeHeroBuild(save.heroes[save.activeHeroClass], accountBonusOf(save)).stats.health;
 
 function withDungeon(save: GameSaveState, id: DungeonId, next: DungeonSave): GameSaveState {
   return { ...save, dungeons: { ...save.dungeons, [id]: next } };

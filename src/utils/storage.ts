@@ -6,6 +6,7 @@ import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
 import { emptyPotions, sanitizePotions } from '../data/potions';
 import { emptyMaterials, sanitizeAwakening, sanitizeMaterials } from '../data/awakening';
 import { emptyTowerSave, sanitizeTower } from '../data/tower';
+import { emptyTitleSave, sanitizeTitles } from '../data/titles';
 import { emptyTutorialSave, sanitizeTutorials, tutorialsForExistingProgress } from '../game/tutorial';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
@@ -26,7 +27,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 type RawSave = Record<string, unknown>;
 
@@ -98,6 +99,9 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   // v16 -> v17: Boss Avları güce göre ölçeklenir ve kademeli. Eski av rekorları (eski, kolay bossa karşı) `bestTurns`'te
   // kalır; kademe rekorları ve açılan kademeler boş başlar (Normal açık).
   16: (raw) => raw,
+  // v17 -> v18: Unvan Sistemi. Unvan sayaçları 0'dan başlar; mevcut kayıttan kesin doğrulanabilen unvanlar oyun
+  // açılışında `syncTitles` ile (bildirimsiz) açılır.
+  17: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -207,6 +211,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     tutorials: sanitizeTutorials(save.tutorials),
     materials: sanitizeMaterials(save.materials),
     tower: sanitizeTower(save.tower),
+    titles: sanitizeTitles(save.titles),
   };
   // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
   const reconciled = reconcileCompanionParts(sanitized);
@@ -263,6 +268,7 @@ export function createInitialSaveState(): GameSaveState {
     tutorials: emptyTutorialSave(),
     materials: emptyMaterials(),
     tower: emptyTowerSave(),
+    titles: emptyTitleSave(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

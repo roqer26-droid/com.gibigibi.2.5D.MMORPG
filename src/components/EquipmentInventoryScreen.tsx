@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import { MaterialsPanel } from './MaterialsPanel';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -64,7 +65,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
 }) => {
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
-  const build = useMemo(() => computeHeroBuild(hero), [hero]);
+  const build = useMemo(() => computeHeroBuild(hero, accountBonusOf(save)), [hero, save.titles]);
   const aura = useMemo(() => computeEnchantAura(hero), [hero]);
   const equippedSets = useMemo(() => getEquippedSetProgress(hero.equipped), [hero.equipped]);
   const [showSets, setShowSets] = useState(false);

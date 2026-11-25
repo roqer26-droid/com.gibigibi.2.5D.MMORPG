@@ -1,3 +1,5 @@
+import { accountBonusOf, applyBattleReport, markTitlesSeen, setActiveTitle, syncTitles } from './data/titles';
+import { TitleToast } from './components/TitleUi';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type SetStateAction } from 'react';
 import { SoundEngine } from './audio/SoundEngine';
 import { worldBattleStage } from './data/stageHpScaling';
@@ -75,12 +77,13 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade' | 'awakening' | 'tower';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade' | 'awakening' | 'tower' | 'titles';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
   import('./components/BattleView').then((m) => ({ default: m.BattleView }))
 );
+const TitlesScreen = lazy(() => import('./components/TitlesScreen').then((m) => ({ default: m.TitlesScreen })));
 const TowerScreen = lazy(() => import('./components/TowerScreen').then((m) => ({ default: m.TowerScreen })));
 const AwakeningScreen = lazy(() => import('./components/AwakeningScreen').then((m) => ({ default: m.AwakeningScreen })));
 const WorldMapScreen = lazy(() =>
@@ -115,13 +118,26 @@ const SOUND_CUES: Record<SoundCue, () => void> = {
 
 export function App() {
   // Kayıt yalnızca ilk açılışta okunur (20 kahramanlı kayıt her karede ayrıştırılmasın)
-  const [initial] = useState(loadGameState);
+  // Eski kayıtta kesin doğrulanabilen unvanlar açılışta bildirimsiz açılır (menüde "yeni" noktası görünür)
+  const [initial] = useState(() => {
+    const loaded = loadGameState();
+    return { ...loaded, save: syncTitles(loaded.save).save };
+  });
   const [save, setSaveState] = useState<GameSaveState>(initial.save);
   const saveRef = useRef(save);
+  /** Sırayla gösterilecek "Unvan Kazanıldı!" bildirimleri */
+  const [titleQueue, setTitleQueue] = useState<string[]>([]);
   // Phaser may emit several match and victory events before React renders again.
+  // Her kayıt güncellemesi unvanlarla aynı işlemde eşitlenir: kazanılan unvan tekrar verilmez, bildirim bir kez kuyruğa girer.
   const setSave = useCallback((update: SetStateAction<GameSaveState>) => {
-    const next = typeof update === 'function' ? update(saveRef.current) : update;
+    let next = typeof update === 'function' ? update(saveRef.current) : update;
     if (next !== saveRef.current) {
+      const synced = syncTitles(next);
+      if (synced.newly.length) {
+        next = synced.save;
+        const ids = synced.newly;
+        setTitleQueue((q) => [...q, ...ids]);
+      }
       saveRef.current = next;
       setSaveState(next);
     }
@@ -166,6 +182,8 @@ export function App() {
   const [lootPopup, setLootPopup] = useState<{ item: EquipmentItem; title: string } | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
+  const dropTitleToast = useCallback(() => setTitleQueue((q) => q.slice(1)), []);
+
   const pushToast = useCallback((msg: string) => {
     setToastMsg(msg);
     window.setTimeout(() => {
@@ -181,7 +199,7 @@ export function App() {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return;
     }
-    if (route === 'dungeons' || route === 'companions' || route === 'tower') return setRoute('menu');
+    if (route === 'dungeons' || route === 'companions' || route === 'tower' || route === 'titles') return setRoute('menu');
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route === 'upgrade') return setRoute(upgradeOrigin);
     if (route === 'hunts') {
@@ -598,7 +616,7 @@ export function App() {
     setActiveHunt(hunt);
     setTowerBattle(null);
     // Boss canı / saldırısı ava giren kahramanın gücüne göre (savaş başında bir kez)
-    setActiveStage(huntBattleStage(hunt.id, difficulty, cur.heroes[cur.activeHeroClass]));
+    setActiveStage(huntBattleStage(hunt.id, difficulty, cur.heroes[cur.activeHeroClass], accountBonusOf(cur)));
     setRoute('battle');
   };
 
@@ -797,6 +815,15 @@ export function App() {
         />
       )}
 
+      {route === 'titles' && (
+        <TitlesScreen
+          save={save}
+          onBack={() => setRoute('menu')}
+          onSetActive={(id) => setSave((cur) => setActiveTitle(cur, id).save)}
+          onSeen={() => setSave((cur) => markTitlesSeen(cur))}
+        />
+      )}
+
       {route === 'tower' && (
         <TowerScreen save={save} focusFloor={towerFocus} onBack={() => setRoute('menu')} onEnterFloor={handleEnterTowerFloor} />
       )}
@@ -942,6 +969,7 @@ export function App() {
           onDungeonBattleEnd={handleDungeonBattleEnd}
           tower={towerBattle ? { floor: towerBattle.floor, total: TOWER_CONFIG.floors, rule: towerRuleFor(towerBattle.floor) } : undefined}
           onTowerVictory={handleTowerVictory}
+          onBattleReport={(r) => setSave((cur) => applyBattleReport(cur, r))}
           onTowerNextFloor={() => towerBattle && handleEnterTowerFloor(towerBattle.floor + 1)}
           onTowerImproveHero={() => { setTowerBattle(null); setRoute('heroes'); }}
           hunt={activeHunt ?? undefined}
@@ -1023,6 +1051,8 @@ export function App() {
       )}
 
       {/* Floating Notification Toast */}
+      <TitleToast queue={titleQueue} onDone={dropTitleToast} />
+
       {toastMsg && (
         <div className="pointer-events-none fixed bottom-4 left-1/2 z-[60] -translate-x-1/2 animate-pop-scale rounded-full border border-amber-400/60 bg-slate-950/95 px-5 py-2 text-xs font-bold text-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.75)]">
           ✨ {toastMsg}

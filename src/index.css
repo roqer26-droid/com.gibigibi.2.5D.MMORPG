@@ -240,3 +240,32 @@
 @media (prefers-reduced-motion: reduce) {
   .awk-glow, .awk-ring, .awk-mote { animation: none; }
 }
+/* Unvan Sistemi */
+@keyframes titleShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.title-mythic {
+  background: linear-gradient(90deg, #fbbf24, #ef4444, #fde68a, #ef4444, #fbbf24);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: titleShimmer 3s linear infinite;
+}
+@keyframes titleToast {
+  0% { transform: translate(-50%, -24px) scale(0.92); opacity: 0; }
+  12% { transform: translate(-50%, 0) scale(1.02); opacity: 1; }
+  18% { transform: translate(-50%, 0) scale(1); }
+  85% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -16px) scale(0.96); opacity: 0; }
+}
+.title-toast { animation: titleToast 2.2s ease-out forwards; }
+@keyframes titleGlowPulse {
+  0%, 100% { box-shadow: 0 0 14px var(--tg, #fff3), inset 0 0 8px var(--tg, #fff2); }
+  50% { box-shadow: 0 0 30px var(--tg, #fff6), inset 0 0 14px var(--tg, #fff4); }
+}
+.title-toast-grand { animation: titleToast 2.6s ease-out forwards, titleGlowPulse 0.9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .title-mythic { animation: none; }
+}

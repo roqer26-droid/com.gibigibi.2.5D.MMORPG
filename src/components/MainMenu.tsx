@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import React, { useMemo } from 'react';
 import {
   Play,
@@ -18,6 +19,7 @@ import {
   Skull,
   PawPrint,
   TowerControl,
+  Medal,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
@@ -27,6 +29,8 @@ import { HUNTS, isHuntUnlocked } from '../data/hunts';
 import { COMPANIONS, companionStatus } from '../data/companions';
 import { DUNGEONS, isDungeonUnlocked, dungeonUnlockText } from '../data/dungeons';
 import { tierFor } from '../data/league';
+import { TITLES, titleById } from '../data/titles';
+import { TitleName } from './TitleUi';
 import { TOWER_CONFIG, isTowerUnlocked, towerCurrentFloor, towerUnlockText } from '../data/tower';
 import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
@@ -47,6 +51,7 @@ export type MenuDest =
   | 'dungeons'
   | 'companions'
   | 'tower'
+  | 'titles'
   | 'league';
 
 const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
@@ -79,9 +84,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 }) => {
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
-  const build = useMemo(() => computeHeroBuild(hero), [hero]);
+  const build = useMemo(() => computeHeroBuild(hero, accountBonusOf(save)), [hero, save.titles]);
   const aura = useMemo(() => computeEnchantAura(hero), [hero]);
   const xpNeed = xpRequiredForLevel(hero.level);
+  const activeTitle = titleById(save.titles?.active);
 
   const allStages = useMemo(() => WORLD_REGIONS.flatMap((r) => r.stages), []);
   const nextStage = useMemo(() => {
@@ -197,6 +203,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         wide: !open,
       };
     }),
+    {
+      id: 'titles',
+      label: 'Unvanlar',
+      sub: `${save.titles?.earned?.length ?? 0}/${TITLES.length} unvan`,
+      Icon: Medal,
+      border: 'border-amber-300/50',
+      iconWrap: 'bg-amber-400/15 text-amber-200',
+      badge: (save.titles?.unseen?.length ?? 0) > 0 ? { text: `${save.titles.unseen.length} yeni`, cls: 'bg-rose-500 text-white' } : undefined,
+    },
     (() => {
       const open = isTowerUnlocked(save);
       const best = save.tower?.highest ?? 0;
@@ -292,6 +307,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             </div>
 
             <h1 className="font-display text-xl font-black text-white sm:text-2xl">{cls.title}</h1>
+            <button
+              type="button"
+              onClick={() => onNavigate('titles')}
+              data-testid="menu-active-title"
+              className="mt-0.5 flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-extrabold transition hover:bg-slate-800/60"
+              title="Unvanlar"
+            >
+              {activeTitle ? (
+                <span className="truncate">« <TitleName id={activeTitle.id} /> »</span>
+              ) : (
+                <span className="text-[11px] font-semibold text-slate-500">Unvan seç</span>
+              )}
+            </button>
             <p className="mt-0.5 text-xs font-bold text-amber-300">
               Savaş Gücü: {build.powerRating.toLocaleString('tr-TR')}
             </p>

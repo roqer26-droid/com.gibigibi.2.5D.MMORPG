@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, Crown, Lock, Shield, Skull, Sparkles, Swords, Heart } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -94,7 +95,7 @@ export function TowerScreen({ save, focusFloor, onBack, onEnterFloor }: TowerScr
   }, [selected]);
 
   const hero = save.heroes[save.activeHeroClass];
-  const power = useMemo(() => computeHeroBuild(hero).powerRating, [hero]);
+  const power = useMemo(() => computeHeroBuild(hero, accountBonusOf(save)).powerRating, [hero, save.titles]);
   const stage = useMemo(() => towerFloorStage(selected, total), [selected, total]);
   const rule = towerRuleFor(selected, total);
   const kind = floorKind(selected, total);

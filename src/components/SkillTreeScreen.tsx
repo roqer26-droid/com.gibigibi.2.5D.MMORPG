@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import React from 'react';
 import { ArrowLeft, Flame, Shield, Sparkles, RotateCcw, Lock, Plus } from 'lucide-react';
 import { HERO_CLASSES } from '../data/classes';
@@ -28,7 +29,7 @@ export const SkillTreeScreen: React.FC<SkillTreeScreenProps> = ({
 }) => {
   const hero = save.heroes[save.activeHeroClass];
   const cls = HERO_CLASSES[hero.classId];
-  const build = computeHeroBuild(hero);
+  const build = computeHeroBuild(hero, accountBonusOf(save));
 
   const totalSpent = Object.values(hero.skillRanks).reduce((a, b) => a + b, 0);
 

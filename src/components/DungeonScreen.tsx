@@ -1,3 +1,4 @@
+import { accountBonusOf } from '../data/titles';
 import { ArrowLeft, Coins, Flame, Gem, Heart, Leaf, Lock, Shield, Snowflake, Sparkles, Square, Swords, Trophy, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
@@ -98,7 +99,7 @@ export function DungeonScreen({ save, dungeonId, justCompleted, onBack, onStart,
   const [picked, setPicked] = useState<RelicId | null>(null);
   const [confirmAbandon, setConfirmAbandon] = useState(false);
   const total = def.battles.length;
-  const maxHp = computeHeroBuild(save.heroes[save.activeHeroClass]).stats.health;
+  const maxHp = computeHeroBuild(save.heroes[save.activeHeroClass], accountBonusOf(save)).stats.health;
 
   // Yeni teklif (veya yeniden açılış): seçim sıfırlanır
   const offerKey = run?.phase === 'choice' ? `${run.runId}:${run.battle}` : '';

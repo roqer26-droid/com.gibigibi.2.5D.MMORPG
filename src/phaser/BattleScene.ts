@@ -628,6 +628,8 @@ export class BattleScene extends Phaser.Scene {
     this.mastery = createMasteryState();
     this.huntCharges = 0;
     this.huntSquareGiven = false;
+    this.battleStats = { squares: 0, weakHits: 0, companionTriggers: 0, damageTaken: 0, barrierBroken: false, ultiKill: false };
+    this.lastActionUlti = false;
     this.bloodBondUsed = false;
     this.echoUsed = false;
     this.delaysByPlan = new WeakMap();
@@ -1564,6 +1566,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.comboCount = 0;
+    this.lastActionUlti = false;
     await this.cascadeAndResolve(a, b);
     this.tutorialEmit({ type: "swapResolved", combo: this.comboCount, guided });
     this.endPlayerTurn();
@@ -1860,6 +1863,7 @@ export class BattleScene extends Phaser.Scene {
         const next = crackBarrier(this.boardBarrier, this.turnNumber);
         if (next !== this.boardBarrier) {
           this.boardBarrier = next;
+          if (next.remaining <= 0) this.battleStats.barrierBroken = true;
           this.spawnBannerText(next.remaining > 0 ? "BUZ BARİYERİ ÇATLADI!" : "BUZ BARİYERİ KIRILDI!", "#7dd3fc");
           this.emitSnapshot();
         }
@@ -2094,6 +2098,7 @@ export class BattleScene extends Phaser.Scene {
 
     // Kare Ustalığı: karelerin kapsadığı ve bu adımda yok edilen taşlar (örtüşme/çizgi kesişimi tek kez sayılır)
     const squareKeys = squareCellKeys(squares);
+    this.battleStats.squares += squares.length;
     const squareCounts: Record<GemType, number> = { fire: 0, frost: 0, nature: 0, lightning: 0, arcane: 0, golden: 0 };
     for (const k of allDestroyed) {
       const [r, c] = k.split(",").map(Number);
@@ -2490,6 +2495,7 @@ export class BattleScene extends Phaser.Scene {
     // Weakness & Resistance & Boss bonus
     const isWeak = element === this.enemyWeakness || element === "golden";
     const isRes = this.enemy.resistance === element;
+    if (element === this.enemyWeakness) this.battleStats.weakHits += 1;
     if (isWeak)
       dmg = Math.round(
         dmg *
@@ -3972,6 +3978,7 @@ export class BattleScene extends Phaser.Scene {
     });
 
     this.turnPhase = "enemy";
+    this.lastActionUlti = false; // düşman turundaki (DoT) ölümler ultiye sayılmaz
     this.emitSnapshot();
     await this.waitMs(240);
 
@@ -4210,6 +4217,7 @@ export class BattleScene extends Phaser.Scene {
     });
 
     if (dmg > 0) {
+      this.battleStats.damageTaken += Math.min(dmg, this.heroHp);
       this.heroHp = Math.max(0, this.heroHp - dmg);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 8);
       this.checkCompanionLowHp();
@@ -4280,6 +4288,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inputLocked = true;
+    this.lastActionUlti = isUlti;
     this.tutorialEmit({ type: "skillCast", id: skill.id, ulti: isUlti });
     this.holdHeroBreath(isUlti ? 2600 : 900);
     this.beginSkillAnim(skill);
@@ -5572,6 +5581,7 @@ export class BattleScene extends Phaser.Scene {
 
   private handleVictory() {
     if (this.turnPhase === "victory" || this.turnPhase === "defeat") return;
+    this.battleStats.ultiKill = this.lastActionUlti;
     this.turnPhase = "victory";
     this.inputLocked = true;
     this.stopEnemyIdle();
@@ -6711,12 +6721,25 @@ export class BattleScene extends Phaser.Scene {
   private playCompanionAnim(action?: CompanionAnimAction) {
     const ca = this.companionAnim;
     const id = this.initData.companion;
+    if (id) this.battleStats.companionTriggers += 1;
     if (!ca || !id) return;
     ca.action = action ?? getCompanion(id).animAction;
     ca.clock = 0;
     this.companionAnimLog.push({ action: ca.action, at: Math.round(this.time.now) });
     if (this.companionAnimLog.length > 20) this.companionAnimLog.shift();
   }
+
+  /**
+   * Unvan sayaçları için savaş istatistikleri: savaş başında sıfırlanır, savaş sonunda bir kez rapor edilir.
+   * `damageTaken` kahramanın aldığı gerçek can hasarıdır (sonradan iyileştirme düşmez).
+   */
+  public battleStats = { squares: 0, weakHits: 0, companionTriggers: 0, damageTaken: 0, barrierBroken: false, ultiKill: false };
+  /** Savaş sonu unvan raporu için anlık değerler */
+  public getTitleSnapshot() {
+    return { ...this.battleStats, hpRatio: this.heroMaxHp > 0 ? Math.max(0, this.heroHp) / this.heroMaxHp : 0 };
+  }
+  /** Son oyuncu eylemi ulti miydi (bossu bitiren eylem için) */
+  private lastActionUlti = false;
 
   /** Test/denetim: oynatılan yoldaş hareketleri */
   public companionAnimLog: { action: CompanionAnimAction; at: number }[] = [];

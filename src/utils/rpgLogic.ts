@@ -134,7 +134,15 @@ const PASSIVE_FIELD: Record<PassiveType, keyof Omit<ComputedHeroBuild['passives'
   elite_dmg: 'eliteDmgPct',
 };
 
-export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
+/** Hesap geneli kalıcı bonuslar (Unvan koleksiyonu); kahramandan bağımsız, tüm kahramanlara uygulanır. */
+export interface HeroAccountBonus {
+  hpPct: number;
+  atkPct: number;
+  defPct: number;
+  manaPct: number;
+}
+
+export function computeHeroBuild(hero: HeroProgress, account?: HeroAccountBonus | null): ComputedHeroBuild {
   const cls = HERO_CLASSES[hero.classId];
   const lvlBonus = hero.level - 1;
 
@@ -268,6 +276,13 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
   }
   passives.manaFlowPct += aw.manaPct;
   passives.ultiFocusPct += aw.ultiPct;
+  // Unvan koleksiyon bonusu (uyanıştan sonra ayrı çarpan; mana kazanımı taş eşleşmelerine)
+  if (account) {
+    if (account.hpPct) stats.health = Math.round(stats.health * (1 + account.hpPct / 100));
+    if (account.atkPct) stats.attack = Math.round(stats.attack * (1 + account.atkPct / 100));
+    if (account.defPct) stats.defense = Math.round(stats.defense * (1 + account.defPct / 100));
+    passives.manaFlowPct += account.manaPct;
+  }
 
   const powerRating = Math.round(
     stats.attack * 3.5 +
