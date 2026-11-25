@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.96.0 — Etkileşimli öğretici (ilk 5 aşama)
+- Büyülü Orman'ın ilk 5 aşamasında gerçek savaş içinde öğretici (`src/game/tutorial.ts`, `src/components/BattleTutorial.tsx`):
+  1. Temel savaş: karşılama, yatay ve dikey 3'lü eşleşme (parlayan çerçeve + hareketli ok), düşman can çubuğu, tur / düşman niyeti; sonra serbest savaş.
+  2. Taş türleri: 6 taş simgeleriyle ve gerçek etkileriyle; buz eşleşmesiyle mana, düşman saldırısından sonra doğa eşleşmesiyle iyileşme; strateji özeti.
+  3. Kombolar ve özel taşlar: 2×2 kare, 4'lü (çizgi taşı), çizgi taşını tetikleme, 5'li (Prizma), Prizma takası, deterministik zincir (kombo).
+  4. Yetenekler ve ulti: seçili kahramanın gerçek yetenekleri, mana ve bekleme süreleri; gerekirse rehberli buz eşleşmeleriyle mana toplanır, en ucuz yetenek kullandırılır, bekleme açıklanır; ulti göstergesi; ulti dolunca kullanım çağrısı.
+  5. Strateji ve savunma: düşman niyeti ve tur sayısı, zayıflık (+%45) / direnç (−%28), zayıflık taşı eşleşmesi, kahramanın yükündeki savunma / iyileştirme / geciktirme yeteneği (yoksa doğa kalkanı); zaferden sonra 3 yıldızlı ustalık ve bölge sandıkları.
+- Rehberli adımlarda sahne, hazırlanmış bir tahtayı yalnızca oyuncu sırası başlayınca kurar ve yalnızca işaretli takasa izin verir (yetenekler o adımda geçici kilitli, ipucu kapalı); tahta kurulamazsa tahtadaki geçerli bir hamle rehber olur. Tüm hazır tahtaların başlangıçta eşleşmesiz olduğu ve rehberli takasın gerçek eşleşme verdiği testle doğrulanır. Mana adımı en fazla 4 rehberli hamle sonra, yetenek adımı bir serbest hamle sonra "Devam" ile ilerleyebilir (kilitlenmez).
+- Arayüz: yarı şeffaf açıklama kutusu sahne alanında (kahraman/düşman bölgesi), tahtanın üst kenarını ve yetenek şeridini kapatmaz; vurgulanan öğelerde altın animasyonlu çerçeve; ok üst göstergede kutunun üstündeki boşlukta, yetenek/ulti için tahta ile şerit arasındaki boşluğa sığacak boyutta. "Atla" düğmesi; adımlar tamamlanınca kendiliğinden ilerler.
+- Kayıt v14: `tutorials.done`. Her öğretici ilk karşılaşmada bir kez; tamamlanan / atlanan yeniden açılmaz; yarıda kapatılan baştan gösterilir. Mevcut kayıtlarda daha önce geçilen ilk 5 aşamanın öğreticisi tamamlanmış sayılır (bir kez). Ayarlar → "Öğreticileri Yeniden Göster". Savaş dengesi ve ödüller değişmedi.
+
 ## v1.95.0 — Kahraman kartları: aura yazısı kaldırıldı, "Seviye Atlat" düğmesi
 - Kahraman kartlarında görselin altındaki aura yazısı (✦ Efsanevi Nüve vb.) kaldırıldı; aura adı güç satırında yazmaya devam eder. Detay görünümündeki büyük görsel değişmedi (`HeroPaperdoll` `showAuraLabel`).
 - Açık her kahramanın kartında "Seviye Atlat": kahramanın bir sonraki seviyeye kalan XP'si dolana kadar stoktan rastgele seviye iksiri tüketir ve tam 1 seviye verir (+3 pasif puanı). Seçim, kalan ihtiyacı aşmayan iksirler arasından adetlerine göre rastgele; hepsi aşıyorsa eldeki en küçük iksir (israf azalır). Artan XP sonraki seviyeye taşınır ama ikinci seviyeyi atlatmaz. İksir yetmezse "Yeterli iksir yok" uyarısı verilir ve hiçbir şey değişmez; seviye 50'de düğme "Maks. Seviye" olarak pasiftir.

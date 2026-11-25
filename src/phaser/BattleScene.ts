@@ -176,6 +176,18 @@ const BESPOKE_PHASE_BOSSES = new Set([
 ]);
 
 const GRID_SIZE = 8;
+
+/** Öğretici: rehberli hamle (vurgulanan hücreler + kaydırılacak taş) */
+export interface TutorialGuide {
+  cells: [number, number][];
+  from: [number, number];
+  to: [number, number];
+}
+export type TutorialSceneEvent =
+  | { type: "playerTurn" }
+  | { type: "swapResolved"; combo: number; guided: boolean }
+  | { type: "enemyAction" }
+  | { type: "skillCast"; id: string; ulti: boolean };
 const BASE_GEMS: GemType[] = ["fire", "frost", "nature", "lightning", "arcane"];
 
 const GEM_COLOR_NUM: Record<GemType, number> = {
@@ -554,6 +566,13 @@ export class BattleScene extends Phaser.Scene {
   /** Yoldaş: savaş başına tek destek hakkı */
   private companionState: CompanionState = "ready";
   private companionBurn = { turns: 0, perTurn: 0 };
+  /** Öğretici bağlantısı (BattleTutorial yönetir). Rehber varken yalnızca işaretli takas yapılabilir. */
+  public tutorial: { guide: TutorialGuide | null; blockSkills: boolean; onEvent?: (e: TutorialSceneEvent) => void } = {
+    guide: null,
+    blockSkills: false,
+  };
+  private tutorialGfx?: Phaser.GameObjects.Graphics;
+  private tutorialArrow?: Phaser.GameObjects.Container;
   /** Aktif yoldaşın sahnedeki animasyonu (yalnızca aktif yoldaşın atlası yüklenir) */
   private companionAnim: {
     spec: CompanionAnimSpec;
@@ -634,6 +653,7 @@ export class BattleScene extends Phaser.Scene {
     this.skillCooldowns = {};
     this.turnNumber = 1;
     this.inputLocked = false;
+    this.tutorial = { guide: null, blockSkills: false, onEvent: this.tutorial.onEvent };
     this.selectedCell = null;
     this.enemyPoisonTurns = 0;
     this.enemyStaggerTurns = 0;
@@ -1067,7 +1087,7 @@ export class BattleScene extends Phaser.Scene {
     // Idle hint pulse after 5.5s
     if (this.turnPhase === "player" && !this.inputLocked) {
       this.idleTimer += dt;
-      if (this.idleTimer > 5.5 && !this.hintShown) {
+      if (this.idleTimer > 5.5 && !this.hintShown && !this.tutorial.guide) {
         this.hintShown = true;
         this.showHintMove();
       }
@@ -1085,6 +1105,7 @@ export class BattleScene extends Phaser.Scene {
     this.computeLayout();
     this.drawBackgroundAndFrame();
     this.repositionGridSprites();
+    this.drawTutorialGuide();
   }
 
   private computeLayout() {
@@ -1467,6 +1488,21 @@ export class BattleScene extends Phaser.Scene {
     const tvB = this.grid[b.row][b.col];
     if (!tvA || !tvB) return;
 
+    // Öğretici: rehberli adımda yalnızca işaretli takas
+    const guide = this.tutorial.guide;
+    const guided = !!guide;
+    if (guide) {
+      const same = (p: { row: number; col: number }, q: [number, number]) => p.row === q[0] && p.col === q[1];
+      const ok = (same(a, guide.from) && same(b, guide.to)) || (same(a, guide.to) && same(b, guide.from));
+      if (!ok) {
+        SoundEngine.playInvalidSwap();
+        const pos = this.cellToWorld(guide.from[0], guide.from[1]);
+        this.spawnFloatingText(pos.x, pos.y - 20, "İşaretli taşı kaydır", "#fcd34d", 13);
+        return;
+      }
+      this.tutorialSetGuide(null);
+    }
+
     // Frozen check
     if (tvA.tile.frozen > 0 || tvB.tile.frozen > 0) {
       SoundEngine.playInvalidSwap();
@@ -1498,6 +1534,7 @@ export class BattleScene extends Phaser.Scene {
       this.comboCount = 1;
       await this.resolveSpecialComboSwap(a, b);
       await this.cascadeAndResolve();
+      this.tutorialEmit({ type: "swapResolved", combo: this.comboCount, guided });
       this.endPlayerTurn();
       return;
     }
@@ -1515,6 +1552,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.comboCount = 0;
     await this.cascadeAndResolve(a, b);
+    this.tutorialEmit({ type: "swapResolved", combo: this.comboCount, guided });
     this.endPlayerTurn();
   }
 
@@ -3932,6 +3970,7 @@ export class BattleScene extends Phaser.Scene {
       this.enemyTurnCounter -= 1;
       if (this.enemyTurnCounter <= 0) {
         await this.executeEnemyAttack();
+        this.tutorialEmit({ type: "enemyAction" });
         this.enemyTurnCounter = this.effectiveAttackInterval();
         this.plannedAction = planEnemyAction(this.enemy, this.combatRng);
       }
@@ -3965,6 +4004,7 @@ export class BattleScene extends Phaser.Scene {
     this.turnPhase = "player";
     this.inputLocked = false;
     this.emitSnapshot();
+    this.tutorialEmit({ type: "playerTurn" });
   }
 
   private async executeEnemyAttack() {
@@ -4192,6 +4232,11 @@ export class BattleScene extends Phaser.Scene {
   public async castSkill(skillId: string) {
     if (this.inputLocked || this.turnPhase !== "player" || this.enemyHp <= 0)
       return;
+    if (this.tutorial.blockSkills) {
+      SoundEngine.playInvalidSwap();
+      this.spawnFloatingText(this.heroContainer.x, this.heroContainer.y - 100, "Önce işaretli hamleyi yap", "#fcd34d", 13);
+      return;
+    }
 
     const classId = this.initData.hero.classId;
     const classUlti = HERO_CLASSES[classId].ultimateSkill;
@@ -4209,6 +4254,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.inputLocked = true;
+    this.tutorialEmit({ type: "skillCast", id: skill.id, ulti: isUlti });
     this.holdHeroBreath(isUlti ? 2600 : 900);
     this.beginSkillAnim(skill);
     this.mastery = setMoveKind(this.mastery, false);
@@ -5190,6 +5236,7 @@ export class BattleScene extends Phaser.Scene {
       this.heroSkillLock = false;
       this.inputLocked = false;
       this.emitSnapshot();
+      this.tutorialEmit({ type: "playerTurn" });
       return;
     }
 
@@ -6715,6 +6762,104 @@ export class BattleScene extends Phaser.Scene {
       progressOf(this.mastery, o[0]).done,
       progressOf(this.mastery, o[1]).done,
     ];
+  }
+
+  // --- Öğretici ---------------------------------------------------------------
+
+  private tutorialEmit(e: TutorialSceneEvent) {
+    try {
+      this.tutorial.onEvent?.(e);
+    } catch {
+      /* öğretici hatası savaşı durdurmaz */
+    }
+  }
+
+  /** Oyuncu sırası ve tahta hazır (öğretici tahtası yalnızca bu durumda kurulur). */
+  public tutorialReady(): boolean {
+    return !!this.grid?.length && this.turnPhase === "player" && !this.inputLocked && this.enemyHp > 0 && this.heroHp > 0;
+  }
+
+  /** Öğretici tahtası: tüm hücrelerin türü/özel taşı ayarlanır, donmuş taşlar çözülür. Hazır değilse false. */
+  public tutorialSetBoard(board: { type: GemType; special: SpecialGemKind }[][]): boolean {
+    if (!this.tutorialReady() || board.length !== GRID_SIZE) return false;
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const tv = this.grid[r]?.[c];
+        const cell = board[r]?.[c];
+        if (!tv || !cell) return false;
+        tv.tile.type = cell.type;
+        tv.tile.special = cell.special;
+        tv.tile.frozen = 0;
+        tv.gemSprite.setTexture(gemTextureKey(cell.type));
+        this.syncTileOverlay(tv);
+      }
+    }
+    this.hintGraphics.clear();
+    this.idleTimer = 0;
+    return true;
+  }
+
+  /** Tahtadaki geçerli bir hamle (öğretici yedeği: hazır tahta kurulamazsa ipucu hamlesi rehber olur). */
+  public tutorialAnyMove(): TutorialGuide | null {
+    const m = this.findPossibleMoves()[0];
+    return m ? { cells: [[m.a.row, m.a.col], [m.b.row, m.b.col]], from: [m.a.row, m.a.col], to: [m.b.row, m.b.col] } : null;
+  }
+
+  /** Rehberli hamle: altın nabız çerçeveler + kaydırma oku. null kaldırır. */
+  public tutorialSetGuide(guide: TutorialGuide | null) {
+    this.tutorial.guide = guide;
+    this.hintGraphics?.clear();
+    this.drawTutorialGuide();
+  }
+
+  private drawTutorialGuide() {
+    this.tutorialGfx?.destroy();
+    this.tutorialGfx = undefined;
+    this.tutorialArrow?.destroy();
+    this.tutorialArrow = undefined;
+    const g = this.tutorial.guide;
+    if (!g || !this.cellSize) return;
+    const cs = this.cellSize;
+    const gfx = this.add.graphics().setDepth(900);
+    for (const [r, c] of g.cells) {
+      const p = this.cellToWorld(r, c);
+      gfx.lineStyle(3, 0xfcd34d, 1);
+      gfx.strokeRoundedRect(p.x - cs / 2 + 2, p.y - cs / 2 + 2, cs - 4, cs - 4, 8);
+      gfx.lineStyle(7, 0xf59e0b, 0.25);
+      gfx.strokeRoundedRect(p.x - cs / 2 + 1, p.y - cs / 2 + 1, cs - 2, cs - 2, 9);
+    }
+    this.tweens.add({ targets: gfx, alpha: { from: 1, to: 0.45 }, duration: 650, yoyo: true, repeat: -1 });
+    this.tutorialGfx = gfx;
+    // Ok: kaydırılacak taştan hedef hücreye doğru salınır
+    const a = this.cellToWorld(g.from[0], g.from[1]);
+    const b = this.cellToWorld(g.to[0], g.to[1]);
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    const arrow = this.add.container(a.x, a.y).setDepth(901).setRotation(ang);
+    const head = this.add.graphics();
+    head.fillStyle(0xfde047, 1);
+    head.lineStyle(2, 0x78350f, 1);
+    const L = cs * 0.42;
+    head.fillRect(-L * 0.1, -cs * 0.07, L * 0.75, cs * 0.14);
+    head.strokeRect(-L * 0.1, -cs * 0.07, L * 0.75, cs * 0.14);
+    head.fillTriangle(L * 0.6, -cs * 0.18, L * 0.6, cs * 0.18, L * 1.05, 0);
+    head.strokeTriangle(L * 0.6, -cs * 0.18, L * 0.6, cs * 0.18, L * 1.05, 0);
+    arrow.add(head);
+    this.tweens.add({
+      targets: arrow,
+      x: { from: a.x, to: a.x + Math.cos(ang) * cs * 0.55 },
+      y: { from: a.y, to: a.y + Math.sin(ang) * cs * 0.55 },
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+    this.tutorialArrow = arrow;
+  }
+
+  /** Öğretici: tahtanın ekran üzerindeki dikdörtgeni (oyun pikselinde) ve sahne alanı yüksekliği. */
+  public tutorialLayout() {
+    if (!this.scale || !this.sys?.isActive?.() || !this.stageArea) return null;
+    return { boardX: this.boardX, boardY: this.boardY, boardSize: this.boardPixelSize, stageH: this.stageArea.h, width: this.scale.width, height: this.scale.height };
   }
 
   private emitSnapshot() {

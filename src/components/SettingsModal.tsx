@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Save, RotateCcw, Sparkles, X, BookOpen, Copy, Upload } from 'lucide-react';
+import { Volume2, VolumeX, Save, RotateCcw, Sparkles, X, BookOpen, Copy, Upload, GraduationCap } from 'lucide-react';
 import { GEM_INFO } from '../data/skills';
 import { GameSettings, GemType } from '../types/game';
 
@@ -8,6 +8,8 @@ interface SettingsModalProps {
   onUpdateSettings: (next: GameSettings) => void;
   onManualSave: () => void;
   onResetProgress: () => void;
+  /** İlk 5 aşamanın öğreticilerini yeniden etkinleştirir */
+  onResetTutorials?: () => void;
   /** Kaydı aktarılabilir metin olarak döndürür */
   onExportSave: () => string;
   /** Metinden kayıt yükler; başarılıysa true */
@@ -20,12 +22,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onUpdateSettings,
   onManualSave,
   onResetProgress,
+  onResetTutorials,
   onExportSave,
   onImportSave,
   onClose,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
+  const [tutorialToast, setTutorialToast] = useState(false);
   const [transferMsg, setTransferMsg] = useState<string | null>(null);
   const [importText, setImportText] = useState('');
   const [showImport, setShowImport] = useState(false);
@@ -174,6 +178,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             ))}
           </div>
         </div>
+
+        {onResetTutorials && (
+          <button
+            type="button"
+            data-testid="reset-tutorials"
+            onClick={() => {
+              onResetTutorials();
+              setTutorialToast(true);
+              setTimeout(() => setTutorialToast(false), 2600);
+            }}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/50 bg-amber-500/10 px-4 py-2.5 text-xs font-extrabold text-amber-200 hover:bg-amber-500/20"
+          >
+            <GraduationCap className="h-4 w-4" />
+            {tutorialToast ? 'Öğreticiler ilk 5 aşamada yeniden gösterilecek ✓' : 'Öğreticileri Yeniden Göster'}
+          </button>
+        )}
 
         {/* Save & Reset */}
         <div className="mt-4 flex flex-wrap items-center gap-2.5">

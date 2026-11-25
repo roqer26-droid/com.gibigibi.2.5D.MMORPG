@@ -707,6 +707,8 @@ export interface GameSaveState {
   speed: { unlocked: boolean; noticeShown: boolean };
   /** Seviye iksirleri (küçük/orta/büyük) */
   potions: { small: number; medium: number; large: number };
+  /** İlk 5 aşamanın öğreticileri: tamamlanan / atlanan (1–5) */
+  tutorials: { done: number[] };
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;

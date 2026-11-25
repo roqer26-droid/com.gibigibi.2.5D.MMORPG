@@ -13,7 +13,7 @@ import { boostedShield, chainDamageMult, gainMult, incomingDamageMult, squareDam
 import { squareCellKeys } from '../src/game/match3';
 import { upgradeSkillNode } from '../src/state/saveActions';
 import { computeHeroBuild } from '../src/utils/rpgLogic';
-import { createInitialSaveState, parseSaveString } from '../src/utils/storage';
+import { SAVE_VERSION, createInitialSaveState, parseSaveString } from '../src/utils/storage';
 import type { HeroProgress, StatBlock } from '../src/types/game';
 
 const PASSIVE_FIELD: Record<string, string> = {
@@ -140,7 +140,7 @@ describe('eski kayıt geçişi (v12 → v13, bir kez)', () => {
     raw.heroes.warrior = { ...raw.heroes.warrior, level: 10, skillPoints: 2, skillRanks: { war_off_1: 1, war_off_2: 2, war_off_3: 3, war_mag_3: 1, war_mag_1: 0 } };
     raw.heroes.mage = { ...raw.heroes.mage, level: 20, skillPoints: 5, skillRanks: {} };
     const loaded = parseSaveString(JSON.stringify(raw))!;
-    expect(loaded.version).toBe(13);
+    expect(loaded.version).toBe(SAVE_VERSION);
     expect(loaded.heroes.warrior.skillRanks).toEqual({ war_off_1: 4, war_off_2: 7, war_off_3: 10, war_mag_3: 5 });
     // 26 harcanmış + 2 harcanmamış = 28 = 10. seviye bütçesi → ek puan yok, harcanmamış 2 korunur
     expect(loaded.heroes.warrior.skillPoints).toBe(2);

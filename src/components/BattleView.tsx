@@ -56,6 +56,8 @@ import { activeCompanionFor, getCompanion } from '../data/companions';
 import { COMPANION_IMAGES } from '../data/companionArt';
 import { computeHeroBuild } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
+import { BattleTutorial } from './BattleTutorial';
+import { buildTutorial } from '../game/tutorial';
 
 const INTENT_ICONS: Record<IntentIcon, { Icon: typeof Sword; cls: string }> = {
   attack: { Icon: Sword, cls: 'text-rose-300' },
@@ -92,6 +94,9 @@ interface BattleViewProps {
   masteryRoute?: boolean;
   onStartRouteStage?: (stage: StageDef) => void;
   onBackToRegion?: (stageId: string) => void;
+  /** İlk 5 aşamanın öğreticisi: gösterilecekse numarası (1–5); tamamlanınca / atlanınca kayda yazılır */
+  tutorialNumber?: number;
+  onTutorialDone?: (n: number) => void;
   onEquipItem: (item: EquipmentItem) => void;
   onOpenSettings: () => void;
 }
@@ -115,6 +120,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   masteryRoute = false,
   onStartRouteStage,
   onBackToRegion,
+  tutorialNumber = 0,
+  onTutorialDone,
   onEquipItem,
   onOpenSettings,
 }) => {
@@ -215,6 +222,24 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const [showSkillBook, setShowSkillBook] = useState(false);
   const [confirmForfeit, setConfirmForfeit] = useState(false);
   const [battleKey, setBattleKey] = useState(0);
+  // Öğretici planı savaş başında bir kez kurulur (savaş ortasında tamamlandı işaretlense de bu savaşta sürer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const tutorialAtStart = useMemo(() => tutorialNumber, [battleKey, stage.id]);
+  const tutorialPlan = useMemo(
+    () =>
+      tutorialAtStart > 0
+        ? buildTutorial(tutorialAtStart, {
+            heroName: cls.name,
+            classId: hero.classId,
+            loadout,
+            ulti: cls.ultimateSkill,
+            enemy: stage.enemy,
+          })
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [battleKey, tutorialAtStart, stage.id]
+  );
+  const arenaRef = useRef<HTMLDivElement | null>(null);
   // Hızlı tekrar / sonraki aşama: zafer kaydı tamamlanınca açılır, ilk dokunuş kilitler (çift dokunma tek savaş başlatır)
   const transitionGate = useRef(createTransitionGate());
   const [transitioning, setTransitioning] = useState(false);
@@ -445,6 +470,19 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   return (
     <div className="game-no-scroll flex h-full w-full flex-col bg-[#080b14] overflow-hidden">
+      {tutorialPlan && onTutorialDone && (
+        <BattleTutorial
+          key={`${battleKey}-${tutorialPlan.number}`}
+          plan={tutorialPlan}
+          sceneRef={sceneRef}
+          arenaRef={arenaRef}
+          heroMana={snapshot.heroMana}
+          heroUlti={snapshot.heroUlti}
+          heroMaxUlti={snapshot.heroMaxUlti}
+          outcome={outcome ? (outcome.victory ? 'victory' : 'defeat') : null}
+          onDone={() => onTutorialDone(tutorialPlan.number)}
+        />
+      )}
       {/* TOP COMBAT HUD */}
       <div className="z-20 border-b border-amber-500/25 bg-slate-950/95 px-2.5 py-1 sm:px-4">
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-[3px]">
@@ -461,7 +499,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
               )}
             </div>
             {/* HP Bar */}
-            <div className="relative mt-0.5 h-3.5 w-full overflow-hidden rounded-full bg-slate-800 border border-slate-700">
+            <div data-tut="hero-hp" className="relative mt-0.5 h-3.5 w-full overflow-hidden rounded-full bg-slate-800 border border-slate-700">
               <div
                 className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-300"
                 style={{ width: `${Math.max(0, (snapshot.heroHp / snapshot.heroMaxHp) * 100)}%` }}
@@ -472,7 +510,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
             </div>
             {/* Mana & Ulti Mini Bars */}
             <div className="mt-1 grid grid-cols-2 gap-1.5">
-              <div className="relative h-2.5 overflow-hidden rounded-full bg-slate-800">
+              <div data-tut="hero-mana" className="relative h-2.5 overflow-hidden rounded-full bg-slate-800">
                 <div
                   className="h-full bg-gradient-to-r from-sky-600 to-cyan-300 transition-all duration-300"
                   style={{ width: `${(snapshot.heroMana / snapshot.heroMaxMana) * 100}%` }}
@@ -540,6 +578,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
               </span>
             </div>
             <div
+              data-tut="enemy-hp"
               className={`relative mt-0.5 h-3 w-full overflow-hidden rounded-full bg-slate-800 border ${
                 snapshot.barrierIntent?.active ? 'border-sky-300' : stage.enemy.isBoss ? 'border-rose-500/60' : 'border-slate-700'
               }`}
@@ -710,7 +749,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
       })()}
 
       {/* PHASER 3 ARENA + BOARD CANVAS */}
-      <div className="relative flex min-h-0 w-full flex-1">
+      <div ref={arenaRef} className="relative flex min-h-0 w-full flex-1">
         <div ref={mountRef} className="game-no-scroll relative h-full min-h-0 w-full flex-1 overflow-hidden" />
         {snapshot.kit && (
           <div
@@ -883,7 +922,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
           <div className="flex items-stretch gap-2">
             {/* Yetenek şeridi — seviye ile genişler, yatay kaydırılabilir */}
-            <div className="flex flex-1 items-stretch gap-1.5 overflow-x-auto pb-1">
+            <div data-tut="skill-bar" className="flex flex-1 items-stretch gap-1.5 overflow-x-auto pb-1">
               {loadout.map((sk, idx) => {
                 const cd = snapshot.skillCooldowns[sk.id] ?? 0;
                 const canCast =
@@ -898,6 +937,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     key={sk.id}
                     type="button"
                     disabled={!canCast}
+                    data-tut={`skill-${sk.id}`}
                     onClick={() => sceneRef.current?.castSkill(sk.id)}
                     title={`${sk.name} — ${sk.manaCost} Mana, ${sk.cooldown} tur bekleme\n${sk.description}`}
                     className={`relative flex w-[70px] shrink-0 flex-col items-center justify-center rounded-xl border px-1 py-1.5 text-center transition active:scale-95 ${
@@ -944,6 +984,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
               <button
                 type="button"
                 disabled={!ultiReady || !!outcome}
+                data-tut="ulti"
                 onClick={() => sceneRef.current?.castSkill(cls.ultimateSkill.id)}
                 title={`ULTİ (U tuşu): ${cls.ultimateSkill.name} — ${cls.ultimateSkill.description}`}
                 className={`relative flex flex-1 flex-col items-center justify-center rounded-xl border-2 px-1 py-1.5 text-center transition active:scale-95 ${

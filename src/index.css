@@ -194,3 +194,11 @@
 }
 .costume-sheet { animation: costumeSlideUp 0.22s ease-out; }
 @media (prefers-reduced-motion: reduce) { .costume-sheet { animation: none; } }
+
+/* Öğretici oku: yerinde parıldar (hareket etmez; tahtaya ya da düğmelere taşmaz) */
+@keyframes tutArrowPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.88); }
+}
+.tut-arrow { animation: tutArrowPulse 0.9s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .tut-arrow { animation: none; } }

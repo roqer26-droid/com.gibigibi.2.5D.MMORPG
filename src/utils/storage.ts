@@ -4,6 +4,7 @@ import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
 import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
 import { emptyPotions, sanitizePotions } from '../data/potions';
+import { emptyTutorialSave, sanitizeTutorials, tutorialsForExistingProgress } from '../game/tutorial';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
 import { createHuntRecords, HUNT_IDS } from '../data/hunts';
@@ -23,7 +24,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 type RawSave = Record<string, unknown>;
 
@@ -82,6 +83,12 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
     }
     return { ...raw, heroes: out };
   },
+  // v13 -> v14: öğreticiler (`tutorials`) eklendi. Daha önce geçilen ilk 5 aşamanın öğreticisi tamamlanmış sayılır
+  // (mevcut oyuncuya zorunlu açılmaz). Sürüm adımı olduğu için yalnızca bir kez çalışır; "Yeniden Göster" sonrası boş liste korunur.
+  13: (raw) => ({
+    ...raw,
+    tutorials: tutorialsForExistingProgress(Array.isArray(raw.completedStages) ? (raw.completedStages as unknown[]).filter((x): x is string => typeof x === 'string') : []),
+  }),
 };
 
 function readVersion(raw: RawSave): number {
@@ -175,6 +182,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     companions: sanitizeCompanions(save.companions, Object.keys(heroes)),
     speed: sanitizeSpeed(save.speed),
     potions: sanitizePotions(save.potions),
+    tutorials: sanitizeTutorials(save.tutorials),
   };
   // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
   const reconciled = reconcileCompanionParts(sanitized);
@@ -228,6 +236,7 @@ export function createInitialSaveState(): GameSaveState {
     companions: emptyCompanionSave(),
     speed: { unlocked: false, noticeShown: false },
     potions: emptyPotions(),
+    tutorials: emptyTutorialSave(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

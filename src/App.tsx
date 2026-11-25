@@ -14,6 +14,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { StartStageOptions, WorldNav, WorldView } from './components/WorldMapScreen';
 import { regionOfStage } from './game/masteryRoute';
+import { markTutorialDone, shouldShowTutorial, tutorialNumber } from './game/tutorial';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
 import { applySpeedUnlock, setBattleSpeed } from './data/battleSpeed';
@@ -885,6 +886,10 @@ export function App() {
             setWorldView('stages');
             setRoute('world');
           }}
+          tutorialNumber={
+            !dungeonBattle && !activeHunt && !activeLeagueOpponent && shouldShowTutorial(save, activeStage.id) ? tutorialNumber(activeStage.id) : 0
+          }
+          onTutorialDone={(n) => setSave((cur) => ({ ...cur, tutorials: markTutorialDone(cur.tutorials, n) }))}
           onEquipItem={(itm) => handleEquipItem(itm)}
           onOpenSettings={() => setShowSettings(true)}
         />
@@ -898,6 +903,10 @@ export function App() {
           onUpdateSettings={handleUpdateSettings}
           onManualSave={handleManualSave}
           onResetProgress={handleResetProgress}
+          onResetTutorials={() => {
+            setSave((cur) => ({ ...cur, tutorials: { done: [] } }));
+            pushToast('Öğreticiler ilk 5 aşamada yeniden gösterilecek');
+          }}
           onExportSave={() => exportSaveString(saveRef.current)}
           onImportSave={handleImportSave}
           onClose={() => setShowSettings(false)}
