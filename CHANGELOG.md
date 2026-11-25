@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.91.0 — Yeni yoldaş çizimleri
+- Kök Filizi, Buz Tilkisi ve Köz Ejderciği için yeni çizimler (`src/art/companions/root_sprout.webp`, `ice_fox.webp`, `ember_whelp.webp`). Gönderilen şeffaf görseller saydam boşlukları kırpılıp kare tuvale ortalandı ve 256×256 şeffaf WebP'ye dönüştürüldü (en-boy oranı korunur; küçük simgelerde karakter alanı büyük kalır).
+- Mevcut kimlikler ve görsel eşlemesi (`companionArt.ts`, dosya adı = yoldaş kimliği) kullanıldı; Yoldaşlar ekranı, savaş simgesi ve zafer ekranındaki parça ödülü yeni çizimleri gösterir. Yetenekler, açılma şartları, parça miktarları ve kayıtlar değişmedi.
+
 ## v1.90.0 — Dünya Haritası: uzun savaşlar (normal 10, elit 20, boss 25 hamle)
 - İstek: ilk aşamalardan itibaren normal savaşlar ortalama en az 10, elitler en az 20 hamle sürsün. Seçilen yöntem: yalnızca Dünya Haritası düşman canı artar; ekipman, pasifler ve Seçimli Zindan / Lig / Boss Avı değişmez.
 - Tek hedef tablosu `WORLD_TARGET_MOVES` (`src/data/stageHpScaling.ts`): normal 10, hazine 10, elit 20, boss 25 (referans kahraman: önerilen seviye, seviyeye uygun tam set — 36+ efsanevi —, dağıtılmış pasifler, iyi hamle seçen oyuncu). Taban artık 1. aşamadan itibaren geçerli (v1.89.0'daki 12→24. seviye kademeli geçiş kaldırıldı).
