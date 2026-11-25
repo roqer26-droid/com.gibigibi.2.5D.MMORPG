@@ -38,6 +38,7 @@ import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
 import { MATERIAL_IDS, MATERIAL_META } from '../data/awakening';
+import { TOWER_RULES, type TowerRuleId, type TowerVictoryOutcome } from '../data/tower';
 import { MaterialIcon } from './MaterialIcon';
 import { applyRelicsToBuild, getRelic } from '../data/dungeons';
 import type { RelicId } from '../types/game';
@@ -60,6 +61,10 @@ import { computeHeroBuild } from '../utils/rpgLogic';
 import { ItemArtSvg } from './ItemCard';
 import { BattleTutorial } from './BattleTutorial';
 import { buildTutorial } from '../game/tutorial';
+
+/** Göstergede kısa sayı (ör. kule kalkanı 3324270 → 3,3 Mn) */
+const compactNum = (n: number): string =>
+  n >= 1e6 ? `${(n / 1e6).toFixed(1).replace('.', ',')} Mn` : n >= 1e5 ? `${Math.round(n / 1e3)} B` : n.toLocaleString('tr-TR');
 
 const INTENT_ICONS: Record<IntentIcon, { Icon: typeof Sword; cls: string }> = {
   attack: { Icon: Sword, cls: 'text-rose-300' },
@@ -88,6 +93,11 @@ interface BattleViewProps {
   /** Zindan modu: savaş numarası, kalıcı güçler ve başlangıç canı; sonuç App'te kayda işlenir */
   dungeon?: { battleNo: number; total: number; relics: RelicId[]; startHp: number };
   onDungeonBattleEnd?: (victory: boolean, turns: number, heroHp: number) => { completed: boolean; healed: number };
+  /** Sonsuzluk Kulesi katı: kural, zafer kaydı ve sonuç ekranı düğmeleri */
+  tower?: { floor: number; total: number; rule: TowerRuleId | null };
+  onTowerVictory?: (floor: number) => TowerVictoryOutcome | null;
+  onTowerNextFloor?: () => void;
+  onTowerImproveHero?: () => void;
   onExitToMap: () => void;
   /** Savaş sonu ekranından doğrudan ana menüye dön */
   onExitToMenu?: () => void;
@@ -116,6 +126,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
   onHuntVictory,
   dungeon,
   onDungeonBattleEnd,
+  tower,
+  onTowerVictory,
+  onTowerNextFloor,
+  onTowerImproveHero,
   onExitToMap,
   onExitToMenu,
   onNextStage,
@@ -218,8 +232,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const companionId = useMemo(() => activeCompanionFor(save, save.activeHeroClass), [save.companions, save.activeHeroClass]); // eslint-disable-line react-hooks/exhaustive-deps
   // Ustalık yalnızca hikâye aşamalarında (lig, av ve zindan savaşlarında yok)
   const masteryObjectives = useMemo(
-    () => (isLeague || hunt || dungeon ? undefined : getStageObjectives(stage.id)),
-    [isLeague, hunt, dungeon, stage.id]
+    () => (isLeague || hunt || dungeon || tower ? undefined : getStageObjectives(stage.id)),
+    [isLeague, hunt, dungeon, tower, stage.id]
   );
   const [showSkillBook, setShowSkillBook] = useState(false);
   const [confirmForfeit, setConfirmForfeit] = useState(false);
@@ -261,13 +275,14 @@ export const BattleView: React.FC<BattleViewProps> = ({
     companionParts?: BattleRewardSummary['companionParts'];
     potions?: BattleRewardSummary['potions'];
     materials?: BattleRewardSummary['materials'];
+    tower?: TowerVictoryOutcome | null;
   } | null>(null);
   const isHunt = !!hunt;
-  const exitLabel = dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
+  const exitLabel = tower ? 'Kuleye Dön' : dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
 
   // Latest callbacks in refs so Phaser never holds stale closures
-  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd });
-  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd };
+  const callbacksRef = useRef({ onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory });
+  callbacksRef.current = { onMatchStats, onCompleteVictory, onLeagueDefeat, onHuntVictory, onDungeonBattleEnd, onTowerVictory };
 
   // Switch music mode
   useEffect(() => {
@@ -303,9 +318,16 @@ export const BattleView: React.FC<BattleViewProps> = ({
       speed: speedPref,
       arenaImage: hunt ? ARENA_IMAGES[hunt.id] : undefined,
       startHeroHp: dungeon?.startHp,
+      towerRule: tower?.rule ?? undefined,
       onBattleEnd: (victory, turns, heroHp) => {
         if (resolved) return;
         resolved = true;
+        if (tower) {
+          // Kule: ödül ve ilerleme App'te tek kayıt işlemiyle yazılır (tamamlanmış katta antrenman, ödül yok)
+          const res = victory ? callbacksRef.current.onTowerVictory?.(tower.floor) ?? null : null;
+          setOutcome({ victory, turns, tower: res });
+          return;
+        }
         if (dungeon) {
           const res = callbacksRef.current.onDungeonBattleEnd?.(victory, turns, heroHp);
           setOutcome({ victory, turns, dungeon: res ?? { completed: false, healed: 0 } });
@@ -497,8 +519,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 {cls.title} <span className="text-slate-400">Sv.{hero.level}</span>
               </span>
               {snapshot.heroShield > 0 && (
-                <span className="flex items-center gap-0.5 rounded bg-emerald-500/20 px-1.5 text-[10px] text-emerald-300">
-                  <Shield className="h-3 w-3" /> {snapshot.heroShield}
+                <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded bg-emerald-500/20 px-1.5 text-[10px] text-emerald-300">
+                  <Shield className="h-3 w-3" /> {compactNum(snapshot.heroShield)}
                 </span>
               )}
             </div>
@@ -572,8 +594,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
             )}
             <div className="flex items-center justify-end gap-1.5 text-[11px] font-bold">
               {snapshot.enemyShield > 0 && (
-                <span className="flex items-center gap-0.5 rounded bg-sky-500/25 px-1.5 text-[10px] text-sky-200">
-                  <Shield className="h-3 w-3" /> {snapshot.enemyShield}
+                <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded bg-sky-500/25 px-1.5 text-[10px] text-sky-200">
+                  <Shield className="h-3 w-3" /> {compactNum(snapshot.enemyShield)}
                 </span>
               )}
               {stage.enemy.isBoss && <Crown className="h-3.5 w-3.5 text-rose-400 shrink-0" />}
@@ -807,6 +829,15 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 {!speedUnlocked && <Lock className="h-3 w-3" />}
                 {speedUnlocked ? `${speedPref}×` : '2×'}
               </button>
+              {tower && (
+                <span
+                  data-testid="tower-battle-chip"
+                  className="pointer-events-none flex h-9 max-w-[150px] items-center gap-1 rounded-full border border-violet-400/50 bg-slate-950/85 px-2.5 text-[11px] font-extrabold text-violet-200"
+                >
+                  <span className="shrink-0">{tower.floor}. Kat</span>
+                  {tower.rule && <span className="truncate text-amber-200">· {TOWER_RULES[tower.rule].name}</span>}
+                </span>
+              )}
               {masteryObjectives && (
                 <button
                   type="button"
@@ -1200,7 +1231,112 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 : 'border-rose-500/60'
             }`}
           >
-            {dungeon && outcome.dungeon ? (
+            {tower ? (
+              outcome.victory ? (
+                <>
+                  <div className="text-xs font-extrabold uppercase tracking-widest text-violet-300">SONSUZLUK KULESİ</div>
+                  <h2 className="mt-1 font-display text-3xl font-black text-white">ZAFER!</h2>
+                  <p className="mt-1 text-sm font-bold text-amber-200" data-testid="tower-victory-floor">{tower.floor}. Kat tamamlandı</p>
+                  {outcome.tower?.firstClear ? (
+                    <div className="mt-3 space-y-2 text-left text-sm" data-testid="tower-rewards">
+                      <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-700 bg-slate-900/70 p-2.5 text-center">
+                        <div><div className="text-[10px] text-slate-400">Altın</div><div className="font-bold text-amber-300">+{outcome.tower.gold.toLocaleString('tr-TR')}</div></div>
+                        <div><div className="text-[10px] text-slate-400">Kristal</div><div className="font-bold text-sky-300">+{outcome.tower.crystals}</div></div>
+                        <div><div className="text-[10px] text-slate-400">Tecrübe</div><div className="font-bold text-fuchsia-300">+{outcome.tower.xp.toLocaleString('tr-TR')}</div></div>
+                      </div>
+                      <div className="flex items-center justify-between rounded-xl border border-violet-400/40 bg-violet-950/30 px-3 py-2 font-bold text-violet-200" data-testid="tower-seal-gain">
+                        <span>Kule Mührü</span><span>+{outcome.tower.seals}</span>
+                      </div>
+                      {outcome.tower.items.map((it) => (
+                        <div key={it.id} className="flex items-center gap-2 rounded-xl border px-3 py-2" style={{ borderColor: `${RARITY_META[it.rarity].color}66` }} data-testid="tower-item">
+                          <span className="font-bold" style={{ color: RARITY_META[it.rarity].color }}>{RARITY_META[it.rarity].label}</span>
+                          <span className="min-w-0 flex-1 truncate text-slate-200">{it.name}</span>
+                          <span className="text-[11px] text-slate-400">Sv.{it.levelReq}</span>
+                        </div>
+                      ))}
+                      {outcome.tower.chest && (
+                        <div className="rounded-xl border border-amber-400/40 bg-amber-950/25 px-3 py-2 text-[12px] font-bold text-amber-200" data-testid="tower-chest">
+                          Kule Sandığı: +{outcome.tower.chest.gold.toLocaleString('tr-TR')} altın · +{outcome.tower.chest.crystals} kristal · {outcome.tower.chest.potions.medium} Orta{outcome.tower.chest.potions.large ? ` · ${outcome.tower.chest.potions.large} Büyük` : ''} iksir
+                          <span className="block text-[10px] font-normal text-amber-200/70">(altın ve kristal yukarıdaki toplama dahil)</span>
+                        </div>
+                      )}
+                      {outcome.tower.materials && (
+                        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-950/25 px-3 py-2 text-xs font-bold" data-testid="tower-materials">
+                          <span className="text-violet-200">Uyanış:</span>
+                          {MATERIAL_IDS.filter((id) => (outcome.tower?.materials?.[id] ?? 0) > 0).map((id) => (
+                            <span key={id} className="inline-flex items-center gap-1" style={{ color: MATERIAL_META[id].color }}>
+                              <MaterialIcon id={id} size={14} />+{outcome.tower!.materials![id]} {MATERIAL_META[id].name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {outcome.tower.title && (
+                        <div className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-500/25 to-rose-500/20 px-3 py-2 text-center font-display text-base font-black text-amber-100" data-testid="tower-title">
+                          Unvan: “{outcome.tower.title}”
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-3 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-[12px] text-slate-300" data-testid="tower-practice">
+                      Antrenman zaferi — bu katın ödülleri daha önce alındı.
+                    </p>
+                  )}
+                  <div className="mt-5 flex flex-col gap-2">
+                    {tower.floor < tower.total && (
+                      <button
+                        type="button"
+                        onClick={() => { if (transitionGate.current.take(true)) onTowerNextFloor?.(); }}
+                        data-testid="tower-next"
+                        className="gold-btn flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950"
+                      >
+                        Sonraki Kat ({tower.floor + 1})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={onExitToMap}
+                      data-testid="tower-back"
+                      className="flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 text-sm font-bold text-slate-200"
+                    >
+                      Kuleye Dön
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-display text-3xl font-black text-rose-400">YENİLGİ</h2>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                    {tower.floor}. Kat bu sefer geçilemedi. Aynı katı istediğin kadar tekrar deneyebilirsin; kahramanını, ekipmanını veya yoldaşını değiştirmek de işe yarar.
+                  </p>
+                  <div className="mt-5 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBattleKey((k) => k + 1)}
+                      data-testid="tower-retry"
+                      className="gold-btn flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl text-base font-black text-slate-950"
+                    >
+                      <RotateCcw className="h-4 w-4" /> Tekrar Dene
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onTowerImproveHero?.()}
+                      data-testid="tower-improve"
+                      className="flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-xl border border-amber-400/50 bg-amber-950/30 text-sm font-bold text-amber-200"
+                    >
+                      Kahramanı Geliştir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onExitToMap}
+                      data-testid="tower-back"
+                      className="flex min-h-[46px] w-full items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 text-sm font-bold text-slate-200"
+                    >
+                      Kuleye Dön
+                    </button>
+                  </div>
+                </>
+              )
+            ) : dungeon && outcome.dungeon ? (
               outcome.victory ? (
                 <>
                   <div className="text-xs font-extrabold uppercase tracking-widest text-emerald-300">

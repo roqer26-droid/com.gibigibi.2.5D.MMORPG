@@ -16,6 +16,7 @@ import type { StartStageOptions, WorldNav, WorldView } from './components/WorldM
 import { regionOfStage } from './game/masteryRoute';
 import { addMaterials, emptyMaterials, hasAnyMaterial, performAwakening, rollAwakenDrop, rollHuntEssence } from './data/awakening';
 import { worldStageOrder } from './data/stageHpScaling';
+import { TOWER_CONFIG, applyTowerVictory, canEnterFloor, floorKind, towerFloorStage, towerRuleFor, type TowerVictoryOutcome } from './data/tower';
 import { markTutorialDone, shouldShowTutorial, tutorialNumber } from './game/tutorial';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
@@ -73,12 +74,13 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade' | 'awakening';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade' | 'awakening' | 'tower';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
   import('./components/BattleView').then((m) => ({ default: m.BattleView }))
 );
+const TowerScreen = lazy(() => import('./components/TowerScreen').then((m) => ({ default: m.TowerScreen })));
 const AwakeningScreen = lazy(() => import('./components/AwakeningScreen').then((m) => ({ default: m.AwakeningScreen })));
 const WorldMapScreen = lazy(() =>
   import('./components/WorldMapScreen').then((m) => ({ default: m.WorldMapScreen }))
@@ -137,6 +139,9 @@ export function App() {
   // Seçimli Zindan: açık savaşın sabit parametreleri (kayıttaki deneme savaş sonunda değişse de savaş ekranı sabit kalır)
   const [dungeonBattle, setDungeonBattle] = useState<{ id: DungeonId; battleNo: number; total: number; relics: RelicId[]; startHp: number } | null>(null);
   const [dungeonJustCompleted, setDungeonJustCompleted] = useState(false);
+  /** Sonsuzluk Kulesi savaşındaki kat (kule dışı savaşta null) ve kule ekranının odaklanacağı kat */
+  const [towerBattle, setTowerBattle] = useState<{ floor: number } | null>(null);
+  const [towerFocus, setTowerFocus] = useState<number | null>(null);
   // Ekipman Geliştir: nereden açıldı (geri dönüş) ve açılışta seçili eşya; ekipman ekranındaki seçim geri dönüşte korunur
   const [upgradeOrigin, setUpgradeOrigin] = useState<'menu' | 'equipment'>('menu');
   const [upgradeInitialId, setUpgradeInitialId] = useState<string | null>(null);
@@ -174,7 +179,7 @@ export function App() {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
       return;
     }
-    if (route === 'dungeons' || route === 'companions') return setRoute('menu');
+    if (route === 'dungeons' || route === 'companions' || route === 'tower') return setRoute('menu');
     if (route === 'quests' || route === 'achievements') return setRoute(questBack);
     if (route === 'upgrade') return setRoute(upgradeOrigin);
     if (route === 'hunts') {
@@ -574,6 +579,7 @@ export function App() {
     setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(null);
+    setTowerBattle(null);
     setActiveStage(worldBattleStage(stage));
     setRoute('battle');
   };
@@ -585,8 +591,38 @@ export function App() {
     setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(hunt);
+    setTowerBattle(null);
     setActiveStage(found.stage);
     setRoute('battle');
+  };
+
+  /** Sonsuzluk Kulesi katına gir: yalnızca tamamlanmış katlar ve sıradaki kat. Düşman kata göre sabittir (kahramana göre ölçeklenmez). */
+  const handleEnterTowerFloor = (floor: number) => {
+    if (!canEnterFloor(saveRef.current, floor)) return;
+    SoundEngine.unlock();
+    setMasteryRoute(false);
+    setDungeonBattle(null);
+    setActiveLeagueOpponent(null);
+    setActiveHunt(null);
+    setTowerBattle({ floor });
+    setTowerFocus(floor);
+    setActiveStage(towerFloorStage(floor));
+    setRoute('battle');
+  };
+
+  /** Kule zaferi: ilk zafer ödülleri + ilerleme tek kayıt güncellemesinde; tamamlanmış katta (antrenman / çift işlem) ödül yok. */
+  const handleTowerVictory = (floor: number): TowerVictoryOutcome | null => {
+    const res = applyTowerVictory(saveRef.current, floor);
+    if (!res.outcome) return null;
+    setSave(recordQuestActivity(res.save, { win: true, bossWin: floorKind(floor) === 'boss' || floorKind(floor) === 'final' }));
+    if (res.outcome.firstClear) {
+      SoundEngine.playLootReveal(res.outcome.items.some((it) => RARITY_META[it.rarity].rank >= 4));
+      if (res.outcome.leveledUp) {
+        const lv = res.outcome.newLevel;
+        window.setTimeout(() => { SoundEngine.playLevelUp(); setLevelUpPopup({ newLevel: lv, levelsGained: 1 }); }, 550);
+      }
+    }
+    return res.outcome;
   };
 
   /** Av zaferini kayda işler (rekor + ilk zafer ödülü tek güncellemede). */
@@ -614,6 +650,7 @@ export function App() {
     setActiveHunt(null);
     setDungeonJustCompleted(false);
     setDungeonBattle({ id, battleNo: run.battle + 1, total: def.battles.length, relics: [...run.relics], startHp: dungeonStartHp(cur, run) });
+    setTowerBattle(null);
     setActiveStage(dungeonBattleStage(def, run.battle, run));
     setRoute('battle');
   };
@@ -661,6 +698,7 @@ export function App() {
     setDungeonBattle(null);
     setActiveHunt(null);
     setActiveLeagueOpponent(opponent);
+    setTowerBattle(null);
     setActiveStage(createLeagueStage(opponent, current.heroes[current.activeHeroClass].level));
     setRoute('battle');
   };
@@ -741,12 +779,17 @@ export function App() {
             if (dest === 'upgrade') { setUpgradeOrigin('menu'); setUpgradeInitialId(null); }
             if (dest === 'hunts') setSelectedHuntId(null);
             if (dest === 'dungeons') setDungeonJustCompleted(false);
+            if (dest === 'tower') setTowerFocus(null);
             if (dest === 'quests') { setQuestTab('main'); setQuestBack('menu'); }
             if (dest === 'achievements') { setQuestTab('achievement'); setQuestBack('menu'); }
             setRoute(dest);
           }}
           onOpenSettings={() => setShowSettings(true)}
         />
+      )}
+
+      {route === 'tower' && (
+        <TowerScreen save={save} focusFloor={towerFocus} onBack={() => setRoute('menu')} onEnterFloor={handleEnterTowerFloor} />
       )}
 
       {route === 'companions' && (
@@ -888,6 +931,10 @@ export function App() {
         <BattleView
           dungeon={dungeonBattle ?? undefined}
           onDungeonBattleEnd={handleDungeonBattleEnd}
+          tower={towerBattle ? { floor: towerBattle.floor, total: TOWER_CONFIG.floors, rule: towerRuleFor(towerBattle.floor) } : undefined}
+          onTowerVictory={handleTowerVictory}
+          onTowerNextFloor={() => towerBattle && handleEnterTowerFloor(towerBattle.floor + 1)}
+          onTowerImproveHero={() => { setTowerBattle(null); setRoute('heroes'); }}
           hunt={activeHunt ?? undefined}
           onHuntVictory={handleHuntVictory}
           save={save}
@@ -899,13 +946,14 @@ export function App() {
           onLeagueDefeat={activeLeagueOpponent ? () => handleLeagueResult(false) : undefined}
           onLeagueForfeit={activeLeagueOpponent ? () => { handleLeagueResult(false, true); } : undefined}
           onExitToMap={() => {
+            if (towerBattle) { setTowerBattle(null); setRoute('tower'); return; }
             if (dungeonBattle) { setRoute('dungeons'); return; }
             if (activeHunt) { setSelectedHuntId(null); setRoute('hunts'); return; }
             setRoute(activeLeagueOpponent ? 'league' : 'world');
           }}
-          onExitToMenu={dungeonBattle || activeHunt || activeLeagueOpponent ? undefined : () => setRoute('menu')}
+          onExitToMenu={towerBattle || dungeonBattle || activeHunt || activeLeagueOpponent ? undefined : () => setRoute('menu')}
           onNextStage={(st) => handleStartStage(st)}
-          masteryRoute={masteryRoute && !dungeonBattle && !activeHunt && !activeLeagueOpponent}
+          masteryRoute={masteryRoute && !towerBattle && !dungeonBattle && !activeHunt && !activeLeagueOpponent}
           onStartRouteStage={(st) => {
             // Rota savaşları arasında bölge ekranının seçili aşaması da güncel kalsın
             if (worldNavRef.current) worldNavRef.current = { ...worldNavRef.current, stageId: st.id };
@@ -918,7 +966,7 @@ export function App() {
             setRoute('world');
           }}
           tutorialNumber={
-            !dungeonBattle && !activeHunt && !activeLeagueOpponent && shouldShowTutorial(save, activeStage.id) ? tutorialNumber(activeStage.id) : 0
+            !towerBattle && !dungeonBattle && !activeHunt && !activeLeagueOpponent && shouldShowTutorial(save, activeStage.id) ? tutorialNumber(activeStage.id) : 0
           }
           onTutorialDone={(n) => setSave((cur) => ({ ...cur, tutorials: markTutorialDone(cur.tutorials, n) }))}
           onEquipItem={(itm) => handleEquipItem(itm)}

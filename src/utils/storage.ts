@@ -5,6 +5,7 @@ import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
 import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
 import { emptyPotions, sanitizePotions } from '../data/potions';
 import { emptyMaterials, sanitizeAwakening, sanitizeMaterials } from '../data/awakening';
+import { emptyTowerSave, sanitizeTower } from '../data/tower';
 import { emptyTutorialSave, sanitizeTutorials, tutorialsForExistingProgress } from '../game/tutorial';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
@@ -25,7 +26,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 type RawSave = Record<string, unknown>;
 
@@ -92,6 +93,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   }),
   // v14 -> v15: Kahraman Uyanışı. Kahramanlar 0. kademeden, malzemeler 0 adetten başlar (sanitize varsayılanları).
   14: (raw) => raw,
+  // v15 -> v16: Sonsuzluk Kulesi. İlerleme 0. kattan, Kule Mührü 0'dan başlar (sanitize varsayılanları).
+  15: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -191,6 +194,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     potions: sanitizePotions(save.potions),
     tutorials: sanitizeTutorials(save.tutorials),
     materials: sanitizeMaterials(save.materials),
+    tower: sanitizeTower(save.tower),
   };
   // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
   const reconciled = reconcileCompanionParts(sanitized);
@@ -246,6 +250,7 @@ export function createInitialSaveState(): GameSaveState {
     potions: emptyPotions(),
     tutorials: emptyTutorialSave(),
     materials: emptyMaterials(),
+    tower: emptyTowerSave(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

@@ -415,7 +415,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
             </div>
 
             {filterCat === 'materials' ? (
-              <MaterialsPanel materials={save.materials} />
+              <MaterialsPanel materials={save.materials} towerSeals={save.tower?.seals ?? 0} />
             ) : (
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
               {/* Inventory Grid */}

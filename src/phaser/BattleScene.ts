@@ -2,6 +2,7 @@ import { barrierDamage, barrierIntent, barrierMatch, barrierMove, boardBossPhase
 import Phaser from "phaser";
 import { HERO_CLASSES } from "../data/classes";
 import { awakenTierDef } from "../data/awakening";
+import { TOWER_RULE_VALUES, type TowerRuleId } from "../data/tower";
 import {
   ACTIVE_SKILLS,
   CLASS_SKILLS,
@@ -232,6 +233,8 @@ export interface BattleSceneInitData {
   /** Boss Avı modu: özel kural ve arena görseli */
   hunt?: HuntDef;
   arenaImage?: string;
+  /** Sonsuzluk Kulesi katının özel savaş kuralı (yoksa tanımsız) */
+  towerRule?: TowerRuleId;
 }
 
 /** Küre biçimli mermi efektlerinin renkleri: ruh büyüsü (yeşil, dalgalı), kor (turuncu, düz), eter küresi (turkuaz, hafif dalgalı). */
@@ -637,7 +640,8 @@ export class BattleScene extends Phaser.Scene {
 
     this.enemyMaxHp = this.enemy.maxHp;
     this.enemyHp = this.enemyMaxHp;
-    this.enemyShield = 0;
+    this.enemyShield =
+      this.initData.towerRule === "armored" ? Math.round(this.enemyMaxHp * TOWER_RULE_VALUES.enemyShieldPct) : 0;
     this.boardPhase = boardBossPhase(this.enemy);
     this.boardBarrier = undefined;
     this.enemyTurnCounter = this.enemy.attackInterval;
@@ -874,6 +878,8 @@ export class BattleScene extends Phaser.Scene {
     this.computeLayout();
     this.drawBackgroundAndFrame();
     this.buildInitialBoard();
+    // Kule kuralı Donmuş Zemin: savaş başında iki rastgele taş donmuş
+    if (this.initData.towerRule === "frozen_ground") this.freezeRandomTiles(TOWER_RULE_VALUES.frozenTiles);
 
     // Setup input listeners
     this.input.on("pointerdown", this.handlePointerDown, this);
@@ -2190,7 +2196,7 @@ export class BattleScene extends Phaser.Scene {
     const P = build.passives;
     const sqM = (t: GemType) => squareDamageMult(P.squareDmgPct ?? 0, squareCounts?.[t] ?? 0, counts[t]);
     const chainM = chainDamageMult(P.chainDmgPct ?? 0, this.comboCount);
-    const manaM = gainMult(P.manaFlowPct ?? 0);
+    const manaM = gainMult(P.manaFlowPct ?? 0) * (this.initData.towerRule === "mana_drought" ? TOWER_RULE_VALUES.manaGainMult : 1);
     const ultiM = gainMult(P.ultiFocusPct ?? 0);
     this.passiveLog.push({ combo: this.comboCount, square: { ...(squareCounts ?? {}) }, counts: { ...counts }, sq: Object.fromEntries((Object.keys(counts) as GemType[]).map((t) => [t, sqM(t)])), chain: chainM, mana: manaM, ulti: ultiM });
     if (this.passiveLog.length > 40) this.passiveLog.shift();
@@ -2228,7 +2234,7 @@ export class BattleScene extends Phaser.Scene {
       // Ejder Kalbi: alev taşları ejder pullarını besler, küçük can yeniler
       if (classId === "dragonheart" && build.passives.dragonScalePct > 0) {
         const scaleHeal = Math.round(this.heroMaxHp * 0.008 * counts.fire);
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + scaleHeal);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(scaleHeal));
       }
       this.launchOrbs(
         centers.fire,
@@ -2323,7 +2329,7 @@ export class BattleScene extends Phaser.Scene {
         () => {
           this.heroHp = Math.min(
             this.heroMaxHp,
-            this.heroHp + healAmt + sproutHeal,
+            this.heroHp + this.towerHeal(healAmt + sproutHeal),
           );
           if (sproutHeal > 0)
             this.spawnFloatingText(
@@ -2429,7 +2435,7 @@ export class BattleScene extends Phaser.Scene {
         () => {
           this.heroMana = Math.min(this.heroMaxMana, this.heroMana + manaGain);
           this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + ultiGain);
-          this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healAmt);
+          this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(healAmt));
           this.heroShield = Math.max(
             this.heroShield,
             capGemShield(this.heroShield + boostedShield(35 * counts.golden, P.shieldBoostPct ?? 0), this.heroMaxHp),
@@ -2485,7 +2491,15 @@ export class BattleScene extends Phaser.Scene {
     const isWeak = element === this.enemyWeakness || element === "golden";
     const isRes = this.enemy.resistance === element;
     if (isWeak)
-      dmg = Math.round(dmg * (1.45 + build.passives.weaknessBonusPct / 100));
+      dmg = Math.round(
+        dmg *
+          (1.45 +
+            build.passives.weaknessBonusPct / 100 +
+            (this.initData.towerRule === "element_mastery" ? TOWER_RULE_VALUES.weaknessBonusAdd : 0)),
+      );
+    // Kule kuralı Kombo Bereketi: 3+ zincirde kahraman hasarı artar
+    if (this.initData.towerRule === "combo_blessing" && this.comboCount >= TOWER_RULE_VALUES.comboMinChain)
+      dmg = Math.round(dmg * TOWER_RULE_VALUES.comboDamageMult);
     if (isRes) dmg = Math.round(dmg * 0.72);
     // Elit Avcısı (ortak Ustalık): elit aşama düşmanlarına verilen hasar
     if (this.initData.stage.type === "elite" && (build.passives.eliteDmgPct ?? 0) > 0) {
@@ -2505,7 +2519,7 @@ export class BattleScene extends Phaser.Scene {
         1,
         Math.round((dmg * build.passives.lifestealPct) / 100),
       );
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + stolen);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(stolen));
     }
 
     // Apply to enemy shield first
@@ -2528,7 +2542,7 @@ export class BattleScene extends Phaser.Scene {
       const bb = bloodBond(dmg, this.heroMaxHp, this.bloodBondUsed);
       this.bloodBondUsed = bb.used;
       if (bb.heal > 0) {
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + bb.heal);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(bb.heal));
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 100,
@@ -3726,6 +3740,11 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  /** Kahramana gelen iyileştirme (Kule kuralı Şifa Laneti: %15 az). */
+  private towerHeal(amount: number): number {
+    return this.initData.towerRule === "heal_curse" ? Math.round(amount * TOWER_RULE_VALUES.healMult) : amount;
+  }
+
   private freezeRandomTiles(count: number) {
     const candidates: TileVisual[] = [];
     for (let r = 0; r < GRID_SIZE; r++) {
@@ -3904,7 +3923,7 @@ export class BattleScene extends Phaser.Scene {
       const dealt = this.damageEnemyHp(sumDmg);
       this.heroHp = Math.min(
         this.heroMaxHp,
-        this.heroHp + Math.round(sumDmg * 0.2),
+        this.heroHp + this.towerHeal(Math.round(sumDmg * 0.2)),
       );
       this.spawnFloatingText(
         this.enemyContainer.x,
@@ -4279,7 +4298,7 @@ export class BattleScene extends Phaser.Scene {
     // Şövalye pasifi: her yetenek kullanımında küçük iyileşme
     if (classId === "paladin") {
       const pHeal = Math.round(this.heroMaxHp * 0.05);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + pHeal);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(pHeal));
     }
 
     SoundEngine.playSkillCast(
@@ -4341,7 +4360,7 @@ export class BattleScene extends Phaser.Scene {
           1,
           Math.round((hpBeforeUlt - this.enemyHp) * 0.5),
         );
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + soulHeal);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(soulHeal));
         this.summonTurns =
           3 + Math.floor(this.initData.build.passives.summonPowerPct / 60);
         this.spawnFloatingText(
@@ -4413,7 +4432,7 @@ export class BattleScene extends Phaser.Scene {
       }
       if (this.initData.hero.classId === "vampire") {
         const h = vampireUltHeal(this.lastDealt, this.heroMaxHp);
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + h);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(h));
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 52,
@@ -4435,7 +4454,7 @@ export class BattleScene extends Phaser.Scene {
         this.delayEnemyAction();
       if (this.initData.hero.classId === "paladin") {
         const heal = Math.round(this.heroMaxHp * 0.35);
-        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + heal);
+        this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(heal));
         this.heroShield += this.boostShield(Math.round(this.heroMaxHp * 0.25));
         this.spawnFloatingText(
           this.heroContainer.x,
@@ -4495,7 +4514,7 @@ export class BattleScene extends Phaser.Scene {
         false,
       );
       const rh = vampireSlashHeal(this.lastDealt, this.heroMaxHp);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + rh);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(rh));
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 46,
@@ -4589,7 +4608,7 @@ export class BattleScene extends Phaser.Scene {
       this.spawnBannerText("DOĞANIN LÜTFU!", "#4ade80");
       const heal = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const shield = Math.round(this.heroMaxHp * 0.22);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + heal);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(heal));
       this.heroShield += this.boostShield(shield);
       this.drawShockwave(
         this.heroContainer.x,
@@ -4735,7 +4754,7 @@ export class BattleScene extends Phaser.Scene {
         true,
       );
       const holyHeal = Math.round(this.heroMaxHp * 0.1);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + holyHeal);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(holyHeal));
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 46,
@@ -4980,7 +4999,7 @@ export class BattleScene extends Phaser.Scene {
       const hsShield = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const hsHeal = Math.round(this.heroMaxHp * 0.12);
       this.heroShield += this.boostShield(hsShield);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + hsHeal);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(hsHeal));
       this.drawShockwave(
         this.heroContainer.x,
         this.heroContainer.y,
@@ -4998,7 +5017,7 @@ export class BattleScene extends Phaser.Scene {
       this.screenFlash(0xfef3c7, 0.5);
       const dhHeal = Math.round(this.heroMaxHp * skill.powerMultiplier);
       const dhShield = Math.round(this.heroMaxHp * 0.3);
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + dhHeal);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(dhHeal));
       this.heroShield += this.boostShield(dhShield);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 25);
       this.drawShockwave(
@@ -5030,7 +5049,7 @@ export class BattleScene extends Phaser.Scene {
         true,
       );
       const drained = Math.max(1, Math.round((hpBefore - this.enemyHp) * 0.6));
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + drained);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(drained));
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 48,
@@ -5345,7 +5364,7 @@ export class BattleScene extends Phaser.Scene {
     if (fx.drainPct && dealt > 0) healed += Math.round(dealt * fx.drainPct);
     if (fx.healPct) healed += Math.round(this.heroMaxHp * fx.healPct);
     if (healed > 0) {
-      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + healed);
+      this.heroHp = Math.min(this.heroMaxHp, this.heroHp + this.towerHeal(healed));
       heroNotes.push(`+${healed} Can`);
     }
     if (fx.shieldPct) {

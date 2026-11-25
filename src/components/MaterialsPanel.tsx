@@ -3,7 +3,8 @@ import { MATERIAL_IDS, MATERIAL_META, type AwakenMaterials, type AwakenMaterialI
 import { MaterialIcon } from './MaterialIcon';
 
 /** Envanterdeki "Geliştirme Malzemeleri" kategorisi: adetler; dokununca nerelerden elde edildiği açılır. */
-export function MaterialsPanel({ materials }: { materials: AwakenMaterials }) {
+export function MaterialsPanel({ materials, towerSeals = 0 }: { materials: AwakenMaterials; towerSeals?: number }) {
+  const [sealOpen, setSealOpen] = useState(false);
   const [open, setOpen] = useState<AwakenMaterialId | null>(null);
   return (
     <div className="fantasy-panel rounded-2xl p-3" data-testid="materials-panel">
@@ -45,6 +46,30 @@ export function MaterialsPanel({ materials }: { materials: AwakenMaterials }) {
             </li>
           );
         })}
+        <li>
+          <button
+            type="button"
+            onClick={() => setSealOpen((v) => !v)}
+            aria-expanded={sealOpen}
+            data-testid="material-towerSeal"
+            className="flex w-full items-center gap-3 rounded-xl border border-violet-400/40 bg-violet-500/10 px-3 py-2 text-left transition hover:bg-slate-900/80"
+          >
+            <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-violet-300/70 bg-violet-950 text-[15px] font-black text-violet-200">✦</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-extrabold text-violet-200">Kule Mührü</span>
+              <span className="block text-[11px] text-slate-400">Gelecekteki kule mağazasında kullanılacak.</span>
+            </span>
+            <span className="shrink-0 text-lg font-black text-white" data-testid="material-count-towerSeal">×{towerSeals.toLocaleString('tr-TR')}</span>
+          </button>
+          {sealOpen && (
+            <div className="mt-1 rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2" data-testid="material-info-towerSeal">
+              <p className="text-[11px] font-extrabold uppercase tracking-wide text-slate-400">Nereden elde edilir?</p>
+              <ul className="mt-0.5 list-disc space-y-0.5 pl-4 text-[12px] text-slate-200">
+                <li>Sonsuzluk Kulesi ilk zaferleri: normal kat 1, elit kat 3, boss katı 5, 100. kat 25 mühür</li>
+              </ul>
+            </div>
+          )}
+        </li>
       </ul>
     </div>
   );

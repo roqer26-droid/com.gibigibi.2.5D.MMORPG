@@ -131,7 +131,7 @@ export const MATERIAL_META: Record<AwakenMaterialId, MaterialMeta> = {
     short: 'Parça',
     color: '#2dd4bf',
     description: 'Kahraman Uyanışı’nın temel malzemesi.',
-    sources: [`50. aşamadan sonraki elitler: %15 (${AWAKEN_DROPS.shard.elite.join('–')} adet)`, `50. aşamadan sonraki bosslar: %30 (${AWAKEN_DROPS.shard.boss.join('–')} adet)`],
+    sources: [`50. aşamadan sonraki elitler: %15 (${AWAKEN_DROPS.shard.elite.join('–')} adet)`, `50. aşamadan sonraki bosslar: %30 (${AWAKEN_DROPS.shard.boss.join('–')} adet)`, 'Sonsuzluk Kulesi: 25., 50., 75. ve 100. katların ilk zaferi'],
   },
   soulCrystal: {
     id: 'soulCrystal',
@@ -139,7 +139,7 @@ export const MATERIAL_META: Record<AwakenMaterialId, MaterialMeta> = {
     short: 'Kristal',
     color: '#a78bfa',
     description: 'Kademe II ve sonrası için gereken nadir kristal.',
-    sources: [`100. aşamadan sonraki bosslar: %15 (${AWAKEN_DROPS.crystal.amount.join('–')} adet)`],
+    sources: [`100. aşamadan sonraki bosslar: %15 (${AWAKEN_DROPS.crystal.amount.join('–')} adet)`, 'Sonsuzluk Kulesi: 50., 75. ve 100. katların ilk zaferi'],
   },
   divineEssence: {
     id: 'divineEssence',
@@ -147,7 +147,7 @@ export const MATERIAL_META: Record<AwakenMaterialId, MaterialMeta> = {
     short: 'Öz',
     color: '#fbbf24',
     description: 'Kademe IV ve V için gereken en nadir öz.',
-    sources: [`200. aşamadan sonraki bosslar: %5 (${AWAKEN_DROPS.essence.amount.join('–')} adet)`, 'Yüksek zorluklu Boss Avları: %10 (henüz yüksek zorluklu av yok)'],
+    sources: [`200. aşamadan sonraki bosslar: %5 (${AWAKEN_DROPS.essence.amount.join('–')} adet)`, 'Yüksek zorluklu Boss Avları: %10 (henüz yüksek zorluklu av yok)', 'Sonsuzluk Kulesi: 75. ve 100. katların ilk zaferi'],
   },
 };
 

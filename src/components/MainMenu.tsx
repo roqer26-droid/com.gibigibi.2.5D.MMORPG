@@ -17,6 +17,7 @@ import {
   Hammer,
   Skull,
   PawPrint,
+  TowerControl,
   type LucideIcon,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
@@ -26,6 +27,7 @@ import { HUNTS, isHuntUnlocked } from '../data/hunts';
 import { COMPANIONS, companionStatus } from '../data/companions';
 import { DUNGEONS, isDungeonUnlocked, dungeonUnlockText } from '../data/dungeons';
 import { tierFor } from '../data/league';
+import { TOWER_CONFIG, isTowerUnlocked, towerCurrentFloor, towerUnlockText } from '../data/tower';
 import { TOTAL_STAGES, WORLD_REGIONS } from '../data/world';
 import { GameSaveState, StageDef } from '../types/game';
 import { computeEnchantAura } from '../phaser/HeroRenderer';
@@ -44,6 +46,7 @@ export type MenuDest =
   | 'hunts'
   | 'dungeons'
   | 'companions'
+  | 'tower'
   | 'league';
 
 const QUEST_CATEGORIES = ['main', 'side', 'daily', 'weekly'];
@@ -194,6 +197,24 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         wide: !open,
       };
     }),
+    (() => {
+      const open = isTowerUnlocked(save);
+      const best = save.tower?.highest ?? 0;
+      return {
+        id: 'tower',
+        label: 'Sonsuzluk Kulesi',
+        sub: !open
+          ? `Kilitli: ${towerUnlockText(save)}`
+          : best >= TOWER_CONFIG.floors
+            ? `Tüm ${TOWER_CONFIG.floors} kat fethedildi`
+            : `Sıradaki: ${towerCurrentFloor(save)}. kat · En yüksek ${best}`,
+        Icon: TowerControl,
+        border: open ? 'border-violet-400/50' : 'border-slate-700',
+        iconWrap: open ? 'bg-violet-500/15 text-violet-300' : 'bg-slate-700/40 text-slate-400',
+        badge: !open ? { text: 'Kilitli', cls: 'bg-slate-700 text-slate-200' } : best === 0 ? { text: 'Yeni', cls: 'bg-violet-500 text-white' } : undefined,
+        wide: !open,
+      } satisfies MenuTile;
+    })(),
     {
       id: 'companions',
       label: 'Yoldaşlar',
@@ -343,6 +364,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                   key={id}
                   type="button"
                   onClick={() => onNavigate(id)}
+                  data-testid={`menu-${id}`}
                   className={`fantasy-card group relative flex min-h-16 items-center gap-3 rounded-2xl border p-3 text-left transition hover:border-amber-400 ${border} ${wide ? 'col-span-2 sm:col-span-3' : ''}`}
                 >
                   <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 ${iconWrap}`}>

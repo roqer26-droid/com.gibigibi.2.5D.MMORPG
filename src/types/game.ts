@@ -713,6 +713,8 @@ export interface GameSaveState {
   tutorials: { done: number[] };
   /** Ortak geliştirme malzemeleri (Kahraman Uyanışı) */
   materials: { awakenShard: number; soulCrystal: number; divineEssence: number };
+  /** Sonsuzluk Kulesi (hesap geneli) */
+  tower: import('../data/tower').TowerSave;
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
