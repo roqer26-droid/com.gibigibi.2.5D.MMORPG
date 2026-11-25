@@ -11,23 +11,49 @@ import {
 } from '../src/data/companions';
 import { claimMasteryChest } from '../src/data/mastery';
 import { WORLD_REGIONS } from '../src/data/world';
-import { emberTrigger, foxArm, foxDisarm, foxResolve, sproutTrigger } from '../src/game/companionEffects';
-import type { GameSaveState } from '../src/types/game';
+import { emberTrigger, foxArm, foxDisarm, foxResolve, mothTrigger, owlTrigger, sproutTrigger, tortoiseTrigger } from '../src/game/companionEffects';
+import type { CompanionId, GameSaveState } from '../src/types/game';
 import { createInitialSaveState, parseSaveString } from '../src/utils/storage';
 
 const fresh = (): GameSaveState => createInitialSaveState();
 const stageOf = (id: string) => WORLD_REGIONS.flatMap((r) => r.stages).find((s) => s.id === id)!;
 const elite = (region: string) => WORLD_REGIONS.find((r) => r.id === region)!.stages.find((s) => s.type === 'elite')!;
-const withParts = (s: GameSaveState, id: 'root_sprout' | 'ice_fox' | 'ember_whelp', n: number): GameSaveState => ({ ...s, companions: { ...s.companions, parts: { ...s.companions.parts, [id]: n } } });
+const withParts = (s: GameSaveState, id: CompanionId, n: number): GameSaveState => ({ ...s, companions: { ...s.companions, parts: { ...s.companions.parts, [id]: n } } });
 
 describe('companion data', () => {
-  it('has the three companions with the specified costs, regions and boss modes', () => {
+  it('has the six companions with the specified costs, regions and boss modes (first three unchanged)', () => {
     expect(COMPANIONS.map((c) => [c.id, c.partsNeeded, c.regionId, c.boss.mode, c.boss.arenaLabel])).toEqual([
       ['root_sprout', 24, 'forest', 'dungeon', 'Köklerin Mahzeni'],
       ['ice_fox', 32, 'mountains', 'hunt', 'Donmuş Taht'],
       ['ember_whelp', 40, 'volcano', 'hunt', 'Kül Arenası'],
+      ['storm_owl', 48, 'sky', 'story', 'Gök Kalesi'],
+      ['obsidian_tortoise', 56, 'abyss', 'story', 'Karanlık Uçurum'],
+      ['moon_moth', 64, 'moonlit', 'story', 'Ay Işığı Vadisi'],
     ]);
-    for (const c of COMPANIONS) expect([c.eliteParts, c.chestParts[1], c.chestParts[2]]).toEqual([2, 4, 6]);
+    for (const c of COMPANIONS.slice(0, 3)) expect([c.eliteParts, c.chestParts[1], c.chestParts[2]]).toEqual([2, 4, 6]);
+    for (const c of COMPANIONS.slice(3)) expect([c.eliteParts, c.chestParts[1], c.chestParts[2]]).toEqual([3, 6, 9]);
+    expect(COMPANIONS.slice(3).map((c) => c.partName)).toEqual(['Fırtına Tüyü', 'Obsidyen Parçası', 'Ay Tozu']);
+  });
+
+  it('story boss requirements point to real boss stages (stage id, boss id, name) in the companion region', () => {
+    const expected: Record<string, [string, string, string]> = {
+      storm_owl: ['sky_8', 'sky_tyrant', 'Gök Tiranı Zephyros'],
+      obsidian_tortoise: ['abyss_5', 'abyssal_king', 'Uçurum Kralı Malakor'],
+      moon_moth: ['moonlit_8', 'moonlight_matron', 'Ay Matronu Selene'],
+    };
+    for (const c of COMPANIONS.slice(3)) {
+      const b = c.boss;
+      if (b.mode !== 'story') throw new Error(c.id);
+      const st = stageOf(b.stageId);
+      expect([b.stageId, b.bossId, b.bossName]).toEqual(expected[c.id]);
+      expect(st.type).toBe('boss');
+      expect(st.regionId).toBe(c.regionId);
+      expect(st.enemy.bossId).toBe(b.bossId);
+      expect(st.enemy.name).toBe(b.bossName);
+      expect(WORLD_REGIONS.find((r) => r.id === c.regionId)!.name).toBe(c.regionName);
+      // bölgede parça veren elit savaş var
+      expect(WORLD_REGIONS.find((r) => r.id === c.regionId)!.stages.some((s) => s.type === 'elite')).toBe(true);
+    }
   });
 });
 
@@ -74,10 +100,10 @@ describe('earning parts', () => {
     const base = fresh();
     const raw = { ...base, version: 9, companions: undefined, mastery: { objectives: {}, chests: ['forest:0', 'forest:1', 'mountains:2', 'volcano:1', 'volcano:2'] } };
     const loaded = parseSaveString(JSON.stringify(raw))!;
-    expect(loaded.companions.parts).toEqual({ root_sprout: 4, ice_fox: 6, ember_whelp: 10 });
+    expect(loaded.companions.parts).toEqual({ root_sprout: 4, ice_fox: 6, ember_whelp: 10, storm_owl: 0, obsidian_tortoise: 0, moon_moth: 0 });
     // yeniden kaydedip yüklemek payı ikinci kez vermez
     const again = parseSaveString(JSON.stringify(loaded))!;
-    expect(again.companions.parts).toEqual({ root_sprout: 4, ice_fox: 6, ember_whelp: 10 });
+    expect(again.companions.parts).toEqual({ root_sprout: 4, ice_fox: 6, ember_whelp: 10, storm_owl: 0, obsidian_tortoise: 0, moon_moth: 0 });
     expect(reconcileCompanionParts(again)).toEqual(again);
   });
 });
@@ -160,3 +186,73 @@ describe('battle effects (once per battle)', () => {
     expect(emberTrigger('used', 2, 200).burn).toBeNull();
   });
 });
+
+describe('new companions (v1.92.0)', () => {
+  const won = (s: GameSaveState, ...ids: string[]): GameSaveState => ({ ...s, completedStages: [...s.completedStages, ...ids] });
+
+  it('elite wins in sky / abyss / moonlit give +3 of the region part; other types give none', () => {
+    expect(applyEliteParts(fresh(), elite('sky'), 'a').gain).toEqual({ companionId: 'storm_owl', parts: 3, partName: 'Fırtına Tüyü' });
+    expect(applyEliteParts(fresh(), elite('abyss'), 'b').save.companions.parts.obsidian_tortoise).toBe(3);
+    expect(applyEliteParts(fresh(), elite('moonlit'), 'c').save.companions.parts.moon_moth).toBe(3);
+    expect(applyEliteParts(fresh(), stageOf('sky_8'), 'd').gain).toBeNull();
+    const twice = applyEliteParts(applyEliteParts(fresh(), elite('sky'), 'e').save, elite('sky'), 'e');
+    expect(twice.gain).toBeNull();
+  });
+
+  it('2nd and 3rd mastery chests give +6 / +9 once each; old saves with claimed chests are credited once on load', () => {
+    const c1 = creditChestParts(fresh(), 'moonlit', 1);
+    expect(c1.gain?.parts).toBe(6);
+    const c2 = creditChestParts(c1.save, 'moonlit', 2);
+    expect(c2.save.companions.parts.moon_moth).toBe(15);
+    expect(creditChestParts(c2.save, 'moonlit', 2).gain).toBeNull();
+    const base = fresh();
+    const raw = { ...base, companions: { ...base.companions, parts: { root_sprout: 7, ice_fox: 1, ember_whelp: 0 }, unlocked: ['root_sprout'], active: { warrior: 'root_sprout' } }, mastery: { objectives: {}, chests: ['sky:1', 'sky:2', 'abyss:1'] } };
+    const loaded = parseSaveString(JSON.stringify(raw))!;
+    expect(loaded.companions.parts).toEqual({ root_sprout: 7, ice_fox: 1, ember_whelp: 0, storm_owl: 15, obsidian_tortoise: 6, moon_moth: 0 });
+    expect(loaded.companions.unlocked).toEqual(['root_sprout']);
+    expect(loaded.companions.active).toEqual({ warrior: 'root_sprout' });
+    const again = parseSaveString(JSON.stringify(loaded))!;
+    expect(again.companions.parts).toEqual(loaded.companions.parts);
+  });
+
+  it('unlock needs the parts AND the story boss stage; hunts/dungeons do not count; deducts exactly the parts', () => {
+    const owl = COMPANIONS.find((c) => c.id === 'storm_owl')!;
+    expect(bossRequirementMet(fresh(), owl)).toBe(false);
+    expect(bossRequirementMet(won(fresh(), 'sky_7', 'abyss_5'), owl)).toBe(false);
+    expect(bossRequirementMet(won(fresh(), 'sky_8'), owl)).toBe(true);
+    expect(companionStatus(withParts(fresh(), 'storm_owl', 48), 'storm_owl').canUnlock).toBe(false);
+    expect(companionStatus(won(withParts(fresh(), 'storm_owl', 47), 'sky_8'), 'storm_owl').canUnlock).toBe(false);
+    const r = unlockCompanion(won(withParts(fresh(), 'obsidian_tortoise', 60), 'abyss_5'), 'obsidian_tortoise');
+    expect(r.ok).toBe(true);
+    expect(r.save.companions.parts.obsidian_tortoise).toBe(4);
+    const m = unlockCompanion(won(withParts(fresh(), 'moon_moth', 64), 'moonlit_8'), 'moon_moth');
+    expect(m.ok && m.save.companions.unlocked).toEqual(['moon_moth']);
+    expect(setActiveCompanion(m.save, 'mage', 'moon_moth').save.companions.active.mage).toBe('moon_moth');
+    const locked = unlockCompanion(withParts(fresh(), 'moon_moth', 64), 'moon_moth');
+    expect(locked.ok).toBe(false);
+    expect(locked.toast).toContain('Ay Matronu Selene');
+  });
+
+  it('Fırtına Baykuşu: first chain step 3 only, 50% of attack, once', () => {
+    expect(owlTrigger('ready', 2, 1000)).toEqual({ state: 'ready', dmg: 0 });
+    const r = owlTrigger('ready', 3, 1001);
+    expect(r).toEqual({ state: 'used', dmg: 501 });
+    expect(owlTrigger(r.state, 4, 1000).dmg).toBe(0);
+  });
+
+  it('Obsidyen Kaplumbağası: first drop below 30% gives a 12% max-HP shield once; not at exactly 30% or when dead', () => {
+    expect(tortoiseTrigger('ready', 300, 1000).shield).toBe(0);
+    expect(tortoiseTrigger('ready', 0, 1000).shield).toBe(0);
+    const r = tortoiseTrigger('ready', 299, 1000);
+    expect(r).toEqual({ state: 'used', shield: 120 });
+    expect(tortoiseTrigger(r.state, 100, 1000).shield).toBe(0);
+  });
+
+  it('Ay Güvesi: first arcane 2×2 only, 15% of max ulti, once', () => {
+    expect(mothTrigger('ready', 0, 100)).toEqual({ state: 'ready', ulti: 0 });
+    const r = mothTrigger('ready', 1, 100);
+    expect(r).toEqual({ state: 'used', ulti: 15 });
+    expect(mothTrigger(r.state, 2, 100).ulti).toBe(0);
+  });
+});
+

@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.92.0 — Üç yeni yoldaş: Fırtına Baykuşu, Obsidyen Kaplumbağası, Ay Güvesi
+- Fırtına Baykuşu (`storm_owl`): 48 Fırtına Tüyü + Gök Kalesi bossu (`sky_8`, Gök Tiranı Zephyros). Savaşın ilk üçlü zincirinde (kaskadın 3. adımı) bir kez saldırı değerinin %50'si kadar yıldırım hasarı.
+- Obsidyen Kaplumbağası (`obsidian_tortoise`): 56 Obsidyen Parçası + Uçurum Kralı Malakor (`abyss_5`). Can ilk kez %30'un altına düştüğünde (hayattayken) maksimum canın %12'si kadar kalkan (kalkan pasifleri diğer kalkanlarda olduğu gibi uygulanır).
+- Ay Güvesi (`moon_moth`): 64 Ay Tozu + Ay Işığı Vadisi bossu (`moonlit_8`, Ay Matronu Selene). Savaşın ilk arcane 2×2 kare eşleşmesinde bir kez en yüksek ulti enerjisinin %15'i.
+- Parçalar mevcut sistemle: ilgili bölgenin (Gök Kalesi / Karanlık Uçurum / Ay Işığı Vadisi) her elit zaferi +3 (tekrarlar dahil, aynı sonuç bir kez), bölge ustalık sandıkları 2. ve 3. sandık +6 / +9 (tek sefer). Boss şartı yeni `story` türü: boss aşamasının tamamlanmış olması (Boss Avı / zindan gerekmez). Aşama ve boss kimlikleri testte gerçek veriden doğrulanır.
+- Eski kayıtlar korunur: mevcut üç yoldaşın parçaları, açılmışları ve aktif seçimleri aynı kalır; yeni yoldaşlar 0 parçayla başlar, önceden alınmış sandıkların yeni payı yüklemede bir kez verilir.
+- Kartlarda tüm yoldaşlar için kazanım satırı (elit ve sandık payı) eklendi; görseller 256×256 şeffaf WebP.
+
 ## v1.91.0 — Yeni yoldaş çizimleri
 - Kök Filizi, Buz Tilkisi ve Köz Ejderciği için yeni çizimler (`src/art/companions/root_sprout.webp`, `ice_fox.webp`, `ember_whelp.webp`). Gönderilen şeffaf görseller saydam boşlukları kırpılıp kare tuvale ortalandı ve 256×256 şeffaf WebP'ye dönüştürüldü (en-boy oranı korunur; küçük simgelerde karakter alanı büyük kalır).
 - Mevcut kimlikler ve görsel eşlemesi (`companionArt.ts`, dosya adı = yoldaş kimliği) kullanıldı; Yoldaşlar ekranı, savaş simgesi ve zafer ekranındaki parça ödülü yeni çizimleri gösterir. Yetenekler, açılma şartları, parça miktarları ve kayıtlar değişmedi.

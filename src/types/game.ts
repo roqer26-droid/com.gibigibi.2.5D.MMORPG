@@ -669,7 +669,7 @@ export interface MasterySave {
   chests: string[];
 }
 
-export type CompanionId = 'root_sprout' | 'ice_fox' | 'ember_whelp';
+export type CompanionId = 'root_sprout' | 'ice_fox' | 'ember_whelp' | 'storm_owl' | 'obsidian_tortoise' | 'moon_moth';
 
 /** Yoldaşlar: parçalar, açılanlar, kahraman başına aktif yoldaş ve parça payı kayıtları */
 export interface CompanionSave {

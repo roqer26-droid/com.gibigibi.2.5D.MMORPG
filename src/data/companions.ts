@@ -8,7 +8,9 @@ import type { CompanionId, CompanionSave } from '../types/game';
 
 export type BossRequirement =
   | { mode: 'dungeon'; dungeonId: 'roots_vault'; modeLabel: string; arenaLabel: string; bossName: string; bossAcc: string; bossId: string }
-  | { mode: 'hunt'; huntId: 'frozen_throne' | 'ash_arena'; modeLabel: string; arenaLabel: string; bossName: string; bossAcc: string; bossId: string };
+  | { mode: 'hunt'; huntId: 'frozen_throne' | 'ash_arena'; modeLabel: string; arenaLabel: string; bossName: string; bossAcc: string; bossId: string }
+  /** Dünya Haritası hikâye bossu: aşama kimliği tamamlanmış aşamalar listesinde olmalı (tekrar gerekmez) */
+  | { mode: 'story'; stageId: string; modeLabel: string; arenaLabel: string; bossName: string; bossAcc: string; bossId: string };
 
 export interface CompanionDef {
   id: CompanionId;
@@ -39,6 +41,14 @@ export const COMPANION_EFFECTS = {
   /** Köz Ejderciği: yanma süresi (tur) ve tur başına hasar (kahramanın saldırı değerinin oranı) */
   emberBurnTurns: 2,
   emberBurnAtkPct: 0.15,
+  /** Fırtına Baykuşu: savaşın ilk üçlü zincirinde (kaskadın 3. adımı) kahramanın saldırı değerinin bu oranı kadar yıldırım hasarı */
+  owlChainStep: 3,
+  owlAtkPct: 0.5,
+  /** Obsidyen Kaplumbağası: can bu oranın altına ilk düştüğünde maksimum canın bu oranı kadar kalkan */
+  tortoiseHpThreshold: 0.3,
+  tortoiseShieldPct: 0.12,
+  /** Ay Güvesi: ilk arcane 2×2 kare eşleşmesinde en yüksek ulti enerjisinin bu oranı */
+  mothUltiPct: 0.15,
 } as const;
 
 export const COMPANIONS: CompanionDef[] = [
@@ -105,6 +115,69 @@ export const COMPANIONS: CompanionDef[] = [
     effectTitle: 'Köz Nefesi',
     effectText: 'İlk 2×2 kare eşleşmesi düşmana iki turluk yanma uygular. Her turdaki yanma, saldırı değerinin %15’i kadar hasar verir.',
   },
+  {
+    id: 'storm_owl',
+    name: 'Fırtına Baykuşu',
+    partName: 'Fırtına Tüyü',
+    partsNeeded: 48,
+    regionId: 'sky',
+    regionName: 'Gök Kalesi',
+    eliteParts: 3,
+    chestParts: { 1: 6, 2: 9 },
+    boss: {
+      mode: 'story',
+      stageId: 'sky_8',
+      modeLabel: 'Dünya Haritası',
+      arenaLabel: 'Gök Kalesi',
+      bossName: 'Gök Tiranı Zephyros',
+      bossAcc: 'Gök Tiranı Zephyros’u',
+      bossId: 'sky_tyrant',
+    },
+    effectTitle: 'Fırtına Pençesi',
+    effectText: 'Savaşta ilk üçlü zincir oluştuğunda bir kez düşmana saldırı değerinin %50’si kadar ek yıldırım hasarı verir.',
+  },
+  {
+    id: 'obsidian_tortoise',
+    name: 'Obsidyen Kaplumbağası',
+    partName: 'Obsidyen Parçası',
+    partsNeeded: 56,
+    regionId: 'abyss',
+    regionName: 'Karanlık Uçurum',
+    eliteParts: 3,
+    chestParts: { 1: 6, 2: 9 },
+    boss: {
+      mode: 'story',
+      stageId: 'abyss_5',
+      modeLabel: 'Dünya Haritası',
+      arenaLabel: 'Karanlık Uçurum',
+      bossName: 'Uçurum Kralı Malakor',
+      bossAcc: 'Uçurum Kralı Malakor’u',
+      bossId: 'abyssal_king',
+    },
+    effectTitle: 'Obsidyen Kabuk',
+    effectText: 'Canın ilk kez %30’un altına düştüğünde maksimum canının %12’si kadar kalkan oluşturur.',
+  },
+  {
+    id: 'moon_moth',
+    name: 'Ay Güvesi',
+    partName: 'Ay Tozu',
+    partsNeeded: 64,
+    regionId: 'moonlit',
+    regionName: 'Ay Işığı Vadisi',
+    eliteParts: 3,
+    chestParts: { 1: 6, 2: 9 },
+    boss: {
+      mode: 'story',
+      stageId: 'moonlit_8',
+      modeLabel: 'Dünya Haritası',
+      arenaLabel: 'Ay Işığı Vadisi',
+      bossName: 'Ay Matronu Selene',
+      bossAcc: 'Ay Matronu Selene’yi',
+      bossId: 'moonlight_matron',
+    },
+    effectTitle: 'Ay Işıltısı',
+    effectText: 'Savaşta ilk arcane 2×2 kare eşleşmesinde bir kez en yüksek ulti enerjinin %15’i kadar enerji kazandırır.',
+  },
 ];
 
 export const COMPANION_IDS: CompanionId[] = COMPANIONS.map((c) => c.id);
@@ -118,7 +191,7 @@ export function getCompanion(id: CompanionId): CompanionDef {
 // ---------------------------------------------------------------------------
 
 export const emptyCompanionSave = (): CompanionSave => ({
-  parts: { root_sprout: 0, ice_fox: 0, ember_whelp: 0 },
+  parts: { root_sprout: 0, ice_fox: 0, ember_whelp: 0, storm_owl: 0, obsidian_tortoise: 0, moon_moth: 0 },
   unlocked: [],
   active: {},
   creditedChests: [],
@@ -223,10 +296,11 @@ export function reconcileCompanionParts(save: GameSaveState): GameSaveState {
 // Açma ve seçim
 // ---------------------------------------------------------------------------
 
-/** Boss şartı: yalnızca doğru modun kaydı sayılır (hikâye boss zaferi av ya da zindan şartını karşılamaz). */
+/** Boss şartı: yalnızca doğru modun kaydı sayılır (hikâye boss zaferi av ya da zindan şartını karşılamaz; hikâye şartı ise aşamanın tamamlanmasıdır). */
 export function bossRequirementMet(save: GameSaveState, def: CompanionDef): boolean {
   const b = def.boss;
   if (b.mode === 'dungeon') return (save.dungeons[b.dungeonId]?.completions ?? 0) > 0;
+  if (b.mode === 'story') return save.completedStages.includes(b.stageId);
   const rec = save.huntRecords[b.huntId];
   return !!rec && (rec.wins > 0 || rec.bestTurns !== null);
 }

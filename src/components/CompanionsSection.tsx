@@ -67,6 +67,9 @@ export function CompanionsSection({ save, onUnlock, onSetActive }: CompanionsSec
                       <div className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-300" style={{ width: `${(shown / c.partsNeeded) * 100}%` }} />
                     </div>
                   </div>
+                  <p className="mt-1.5 text-[11px] leading-snug text-slate-400" data-testid={`earn-${c.id}`}>
+                    Kazanım: {c.regionName} elit zaferleri +{c.eliteParts} (tekrarlar dahil) · ustalık sandıkları +{c.chestParts[1]} / +{c.chestParts[2]} (tek sefer)
+                  </p>
                   <p
                     className={`mt-2 flex items-start gap-1.5 text-[12px] font-semibold ${st.bossOk ? 'text-emerald-300' : 'text-slate-400'}`}
                     data-testid={`boss-${c.id}`}

@@ -125,7 +125,10 @@ import {
   foxArm,
   foxDisarm,
   foxResolve,
+  mothTrigger,
+  owlTrigger,
   sproutTrigger,
+  tortoiseTrigger,
   type CompanionState,
 } from "../game/companionEffects";
 import {
@@ -2065,7 +2068,7 @@ export class BattleScene extends Phaser.Scene {
       onResolve(this.mastery, counts, squares.length),
       frozenCleared,
     );
-    this.applyCompanionOnMatch(counts, squares.length);
+    this.applyCompanionOnMatch(counts, squares);
     this.applyHeroPassiveOnMatch(squares.length);
 
     // Boss Avı kuralı: turun ilk ateş eşleşmesi (zincirlerde tekrar etmez)
@@ -4113,6 +4116,7 @@ export class BattleScene extends Phaser.Scene {
     if (dmg > 0) {
       this.heroHp = Math.max(0, this.heroHp - dmg);
       this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + 8);
+      this.checkCompanionLowHp();
       this.holdHeroBreath(360);
       // Çizilmiş hasar alma klibi isabet anında başlar (yoksa yalnızca kırmızı parlama)
       this.playHeroClip("hurt");
@@ -4794,7 +4798,7 @@ export class BattleScene extends Phaser.Scene {
       this.screenFlash(0xdc2626, 0.42);
       this.heroRageStacks = Math.min(12, this.heroRageStacks + 4);
       const selfDmg = Math.round(this.heroMaxHp * 0.08);
-      this.heroHp = Math.max(1, this.heroHp - selfDmg);
+      this.heroHp = Math.max(1, this.heroHp - selfDmg); this.checkCompanionLowHp();
       this.spawnFloatingText(
         this.heroContainer.x,
         this.heroContainer.y - 42,
@@ -5315,7 +5319,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (fx.selfDmgPct) {
       const cost = Math.round(this.heroMaxHp * fx.selfDmgPct);
-      this.heroHp = Math.max(1, this.heroHp - cost);
+      this.heroHp = Math.max(1, this.heroHp - cost); this.checkCompanionLowHp();
       heroNotes.push(`-${cost} Can bedeli`);
     }
     if (fx.convert) this.convertTiles(fx.convert.count, fx.convert.types);
@@ -6493,14 +6497,67 @@ export class BattleScene extends Phaser.Scene {
     this.emitSnapshot();
   }
 
+  /** Obsidyen Kaplumbağası: kahramanın canı ilk kez %30'un altına düştüğünde (hayattayken) bir kez kalkan. */
+  private checkCompanionLowHp() {
+    if (this.initData.companion !== "obsidian_tortoise") return;
+    const r = tortoiseTrigger(this.companionState, this.heroHp, this.heroMaxHp);
+    if (r.shield <= 0) return;
+    this.companionState = r.state;
+    const sh = this.boostShield(r.shield);
+    this.heroShield += sh;
+    this.spawnFloatingText(
+      this.heroContainer.x,
+      this.heroContainer.y - 110,
+      `OBSİDYEN KABUK +${sh}`,
+      "#fbbf24",
+      15,
+    );
+    this.emitSnapshot();
+  }
+
   /** Yoldaş: Köz Ejderciği (ilk kare → yanma) ve Buz Tilkisi (ağır saldırı hazırlığında ilk buz eşleşmesi → hazırlan). */
   private applyCompanionOnMatch(
     counts: Record<GemType, number>,
-    squareCount: number,
+    squares: readonly { type: GemType }[],
   ) {
     const id = this.initData.companion;
     if (!id) return;
-    if (id === "ember_whelp") {
+    const squareCount = squares.length;
+    if (id === "storm_owl") {
+      // Fırtına Baykuşu: savaşın ilk üçlü zinciri (kaskadın 3. adımı) → bir kez yıldırım hasarı
+      const r = owlTrigger(this.companionState, this.comboCount, this.initData.build.stats.attack);
+      this.companionState = r.state;
+      if (r.dmg > 0) {
+        const dealt = this.damageEnemyHp(r.dmg);
+        this.spawnFloatingText(
+          this.enemyContainer.x + 18,
+          this.enemyContainer.y - 70,
+          `FIRTINA BAYKUŞU -${dealt}`,
+          "#c4b5fd",
+          15,
+        );
+        this.emitSnapshot();
+      }
+    } else if (id === "moon_moth") {
+      // Ay Güvesi: savaşın ilk arcane 2×2 kare eşleşmesi → bir kez ulti enerjisi
+      const r = mothTrigger(
+        this.companionState,
+        squares.filter((sq) => sq.type === "arcane").length,
+        this.heroMaxUlti,
+      );
+      this.companionState = r.state;
+      if (r.ulti > 0) {
+        this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + r.ulti);
+        this.spawnFloatingText(
+          this.heroContainer.x,
+          this.heroContainer.y - 110,
+          `AY GÜVESİ +${r.ulti} ULTİ`,
+          "#d8b4fe",
+          15,
+        );
+        this.emitSnapshot();
+      }
+    } else if (id === "ember_whelp") {
       const r = emberTrigger(
         this.companionState,
         squareCount,
