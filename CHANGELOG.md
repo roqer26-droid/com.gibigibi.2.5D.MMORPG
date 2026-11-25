@@ -4,6 +4,17 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.97.0 — Kahraman Uyanışı
+- Kahraman detayında "Kahraman Uyanışı" düğmesi ayrı bir ekran açar: kahramanın güncel kostümüyle bekleme animasyonu, ad ve seviye, mevcut kademe, 5 kademe simgesi, mevcut / sonraki kademe bonusları (toplam değer), malzemeler (sahip / gereken), altın, yenilmesi gereken gerçek boss ve "Uyanışı Gerçekleştir". Seviye 50'nin altında ekran incelenebilir, düğme kilitlidir.
+- Kademeler (toplam, birikmeli değil): I Uyanmış can +%3 / saldırı +%2 / savunma +%2 · II Yükselmiş +%6 / +%4 / +%4, mana +%3 · III Aşkın +%10 / +%7 / +%6, mana +%5, ulti +%3 · IV Efsanevi +%15 / +%10 / +%9, mana +%7, ulti +%5 · V İlahi +%20 / +%15 / +%12, mana +%10, ulti +%8. Bonuslar `computeHeroBuild` içinde ekipmandan sonra uygulanır; gerçek savaşı ve güç puanını etkiler. Boss canları otomatik ölçeklenmez.
+- Maliyetler: I 25 parça + 25.000 altın (50. aşama, Gök Tiranı Zephyros) · II 50 parça + 5 kristal + 75.000 (100., Kül Savaş Lordu Magmor) · III 100 + 15 + 150.000 (200., Kadim Ejderha Kralı Bahamut) · IV 175 + 30 + 5 öz + 300.000 (350., Kara Gelgitin Leviathanı) · V 250 + 50 + 15 öz + 500.000 (500., Şafağın Kalbi Aurel).
+- Malzemeler (ortak envanter): Uyanış Parçası — 50. aşamadan sonra elitler %15 (8–12), bosslar %30 (15–25); Kadim Ruh Kristali — 100. aşamadan sonra bosslar %15 (10–16); İlahi Öz — 200. aşamadan sonra bosslar %5 (10–14). Zafer ekranında gösterilir. Ekonomi düzeltmesi: oranlar korundu, düşme başına adetler artırıldı (1'er adetle 500 aşamada yalnızca ~34 parça çıkıyordu, tam uyanış 600 gerektiriyor). Beklenen ilk geçiş kazancı 500. aşamada ~480 parça / ~80 kristal / ~18 öz; kalan kısım boss tekrarlarıyla (boss başına ortalama ~6 parça, ~2 kristal, ~0,6 öz). Altın maliyetleri değişmedi (her kademe kendi aralığında kazanılan altının ~%10–20'si).
+- Yüksek zorluklu Boss Avları için %10 İlahi Öz kuralı hazır ama oyunda henüz zorluk kademeli av yok; kaynak listesinde belirtilir.
+- Kurallar: kademeler sırayla açılır, her kahramanın kademesi ayrıdır, işlem her zaman başarılıdır; seviye, ekipman, kostüm ve yetenek puanları korunur. Hızlı çift dokunma tek kademe uygular (beklenen kademe kontrolü + tören kilidi). Kademe V'ten sonra "Maksimum Uyanış".
+- Auralar: I turkuaz, II mavi, III mor (+ yer halkası), IV altın, V beyaz-altın + az sayıda yükselen ışık zerresi; kahraman kartlarında, detayda, uyanış ekranında ve savaşta (Phaser, parçacık sistemi olmadan) tüm kostümlerde otomatik. ~2 sn tören: enerji toplanır, ışık halkası, kademe adı.
+- Uyanış mümkünken kahraman kartında "!" rozeti. Envanterde "Malzemeler" kategorisi; malzemeye dokununca kaynakları gösterilir.
+- Kayıt v15: `materials`, kahraman başına `awakening`. Eski kayıtlar kademe 0 ve 0 malzemeyle yüklenir.
+
 ## v1.96.0 — Etkileşimli öğretici (ilk 5 aşama)
 - Büyülü Orman'ın ilk 5 aşamasında gerçek savaş içinde öğretici (`src/game/tutorial.ts`, `src/components/BattleTutorial.tsx`):
   1. Temel savaş: karşılama, yatay ve dikey 3'lü eşleşme (parlayan çerçeve + hareketli ok), düşman can çubuğu, tur / düşman niyeti; sonra serbest savaş.

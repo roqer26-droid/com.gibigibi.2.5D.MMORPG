@@ -1,6 +1,7 @@
 import { barrierDamage, barrierIntent, barrierMatch, barrierMove, boardBossPhase, crackBarrier, seedBarrierMove, type BoardBarrier } from "../game/boardBossPhase";
 import Phaser from "phaser";
 import { HERO_CLASSES } from "../data/classes";
+import { awakenTierDef } from "../data/awakening";
 import {
   ACTIVE_SKILLS,
   CLASS_SKILLS,
@@ -547,6 +548,8 @@ export class BattleScene extends Phaser.Scene {
   private heroBreath: Phaser.Tweens.Tween | null = null;
   private breathResume: Phaser.Time.TimerEvent | null = null;
   private heroGlowGraphics!: Phaser.GameObjects.Graphics;
+  /** Kahraman Uyanışı aurası (kademe rengi; V'te sınırlı parçacık) */
+  private awakenGraphics?: Phaser.GameObjects.Graphics;
   /** Düşmana özel çizim: zemine sabit nefes ve kristal parlaması */
   private enemyGlowSprite: Phaser.GameObjects.Image | null = null;
   private enemyBreath: Phaser.Tweens.Tween | null = null;
@@ -752,6 +755,8 @@ export class BattleScene extends Phaser.Scene {
     this.ambientGraphics = this.add.graphics();
     this.bossAuraGraphics = this.add.graphics();
     this.heroGlowGraphics = this.add.graphics();
+    if ((this.initData.hero.awakening ?? 0) > 0)
+      this.awakenGraphics = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
     this.heroAuraGraphics = this.add.graphics();
     this.boardFrameGraphics = this.add.graphics();
 
@@ -1016,6 +1021,8 @@ export class BattleScene extends Phaser.Scene {
         }
       }
     }
+
+    if (this.awakenGraphics) this.drawAwakenAura(_time / 1000);
 
     // Kahramanın canlı büyü aurası — ekipman + seviyesi arttıkça kat kat güçlenir
     if (this.heroAuraFrontGraphics) this.heroAuraFrontGraphics.clear();
@@ -6017,6 +6024,50 @@ export class BattleScene extends Phaser.Scene {
     this.enemyBob = null;
     this.enemyIdleResume?.remove(false);
     this.enemyIdleResume = null;
+  }
+
+  /** Uyanış aurası: kademe rengiyle nabız atan ışık + yer halkası; her kademe biraz daha belirgin. Tüm kostümlerde çalışır. */
+  private drawAwakenAura(time: number) {
+    const g = this.awakenGraphics!;
+    g.clear();
+    const tier = this.initData.hero.awakening ?? 0;
+    const def = awakenTierDef(tier);
+    if (!def || this.turnPhase === "victory" || !this.heroContainer?.visible) return;
+    const col = parseInt(def.color.slice(1), 16);
+    const glow = parseInt(def.glow.slice(1), 16);
+    const s = this.heroContainer.scaleX;
+    const GL = HERO_ART_LAYOUT[this.initData.hero.classId];
+    const above = GL?.above ?? 150;
+    const hx = this.heroContainer.x;
+    const ground = this.heroContainer.y + s * (98 - (GL?.float ?? 0));
+    const cy = ground - s * above * 0.48;
+    const pulse = 0.5 + 0.5 * Math.sin(time * 2.4);
+    const k = 0.55 + tier * 0.15; // belirginlik
+    // Gövde ışığı
+    const R = s * above * (0.5 + tier * 0.04);
+    for (let i = 6; i >= 1; i--) {
+      g.fillStyle(i <= 2 ? glow : col, (0.025 + 0.02 * pulse) * k * (1 - i / 8));
+      g.fillCircle(hx, cy, (R * i) / 6);
+    }
+    // Yer halkası
+    const rx = s * (46 + tier * 5);
+    const ry = rx * 0.26;
+    g.lineStyle(2 + (tier >= 4 ? 1 : 0), col, (0.35 + 0.25 * pulse) * k);
+    g.strokeEllipse(hx, ground, rx * 2, ry * 2);
+    if (tier >= 3) {
+      g.lineStyle(1.5, glow, (0.2 + 0.2 * (1 - pulse)) * k);
+      g.strokeEllipse(hx, ground, rx * 2.35, ry * 2.35);
+    }
+    // V: az sayıda yükselen ışık zerresi (mobil için sınırlı, parçacık sistemi yok)
+    if (tier >= 5) {
+      for (let i = 0; i < 6; i++) {
+        const ph = (time / 2.6 + i / 6) % 1;
+        const px = hx + Math.sin(i * 2.3 + time * 0.8) * rx * 0.8;
+        const py = ground - ph * s * above * 0.95;
+        g.fillStyle(i % 2 ? 0xfffbeb : glow, 0.75 * Math.sin(ph * Math.PI));
+        g.fillCircle(px, py, s * (2 + (i % 3)));
+      }
+    }
   }
 
   /**

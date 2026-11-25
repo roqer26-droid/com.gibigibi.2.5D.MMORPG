@@ -1,5 +1,6 @@
 import { scaledValue, SKILL_POINTS_PER_LEVEL, type PassiveType } from '../data/passiveTree';
 import { HERO_CLASSES } from '../data/classes';
+import { awakenBonuses } from '../data/awakening';
 import { RARITY_META } from '../data/skills';
 import type { RelicEffects } from '../data/dungeons';
 import { computeSetEffects, getAllSetProgress, type SetEffects, type SetProgress } from '../data/sets';
@@ -256,6 +257,17 @@ export function computeHeroBuild(hero: HeroProgress): ComputedHeroBuild {
       }
     }
   });
+
+  // Kahraman Uyanışı: kademenin TOPLAM yüzdeleri (önceki kademeler üst üste eklenmez); can/saldırı/savunma tüm kaynaklar
+  // eklendikten sonra çarpılır; mana/ulti kazanımı taş eşleşmelerine (Mana Akışı / Ulti Odağı ile aynı yerde) uygulanır.
+  const aw = awakenBonuses(hero.awakening);
+  if (aw.hpPct || aw.atkPct || aw.defPct) {
+    stats.health = Math.round(stats.health * (1 + aw.hpPct / 100));
+    stats.attack = Math.round(stats.attack * (1 + aw.atkPct / 100));
+    stats.defense = Math.round(stats.defense * (1 + aw.defPct / 100));
+  }
+  passives.manaFlowPct += aw.manaPct;
+  passives.ultiFocusPct += aw.ultiPct;
 
   const powerRating = Math.round(
     stats.attack * 3.5 +

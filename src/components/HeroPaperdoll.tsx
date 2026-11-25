@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { HeroProgress } from '../types/game';
 import { computeEnchantAura, drawHeroToCanvas } from '../phaser/HeroRenderer';
 import { hasHeroArt, heroArtKey, heroArtReady, heroImage } from '../data/heroArt';
+import { AwakeningAura } from './AwakeningAura';
 
 interface HeroPaperdollProps {
   hero: HeroProgress;
@@ -80,9 +81,12 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
   }, [size, staticRender, hero.equipped, hero.classId, hero.level, hero.costumeId]);
 
   const aura = computeEnchantAura(hero);
+  const awakening = hero.awakening ?? 0;
 
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div className={`relative inline-flex items-center justify-center ${className}`} data-awakening={awakening}>
+      {/* Kahraman Uyanışı aurası: tüm görünümlerde (kostümlerde de) otomatik */}
+      {awakening > 0 && <AwakeningAura tier={awakening} size={size} />}
       {/* Aura kademesi yüksekse ekstra CSS parıltısı */}
       {aura.tier >= 2 && (
         <div
@@ -99,6 +103,7 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
         style={{ width: size, height: size }}
         className="relative drop-shadow-[0_12px_20px_rgba(0,0,0,0.7)]"
       />
+      {awakening >= 5 && <AwakeningAura tier={awakening} size={size} layer="front" />}
       {showAuraLabel && aura.tier > 0 && (
         <span
           className="pointer-events-none absolute -bottom-1 rounded-full border px-2 py-0.5 text-[9px] font-extrabold tracking-wide backdrop-blur-sm"

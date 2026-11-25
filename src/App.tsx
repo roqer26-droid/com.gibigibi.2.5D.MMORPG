@@ -14,6 +14,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { StartStageOptions, WorldNav, WorldView } from './components/WorldMapScreen';
 import { regionOfStage } from './game/masteryRoute';
+import { addMaterials, emptyMaterials, hasAnyMaterial, performAwakening, rollAwakenDrop, rollHuntEssence } from './data/awakening';
+import { worldStageOrder } from './data/stageHpScaling';
 import { markTutorialDone, shouldShowTutorial, tutorialNumber } from './game/tutorial';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
@@ -71,12 +73,13 @@ import {
 } from './state/saveActions';
 import { exportSaveString, importSaveString, loadGameState, resetGameState, saveGameState } from './utils/storage';
 
-type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade';
+type AppRoute = 'menu' | 'battle' | 'heroes' | 'equipment' | 'skills' | 'world' | 'quests' | 'achievements' | 'league' | 'hunts' | 'dungeons' | 'companions' | 'upgrade' | 'awakening';
 
 // Ağır modüller (Phaser + savaş sahnesi, lig görselleri) yalnızca ihtiyaç olunca yüklenir.
 const BattleView = lazy(() =>
   import('./components/BattleView').then((m) => ({ default: m.BattleView }))
 );
+const AwakeningScreen = lazy(() => import('./components/AwakeningScreen').then((m) => ({ default: m.AwakeningScreen })));
 const WorldMapScreen = lazy(() =>
   import('./components/WorldMapScreen').then((m) => ({ default: m.WorldMapScreen }))
 );
@@ -125,6 +128,8 @@ export function App() {
   const [questTab, setQuestTab] = useState<QuestCategory>('main');
   const [questBack, setQuestBack] = useState<'menu' | 'league'>('menu');
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
+  /** Kahraman Uyanışı ekranındaki kahraman */
+  const [awakenHeroId, setAwakenHeroId] = useState<HeroClassId | null>(null);
   /** Savaşa Ustalık Rotası üzerinden girildi (zafer ekranında rota düğmeleri) */
   const [masteryRoute, setMasteryRoute] = useState(false);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
@@ -371,6 +376,8 @@ export function App() {
         Boolean(stage.rewards.guaranteedRarity) || Math.random() <= stage.rewards.dropChance;
 
       const potionDrop = rollPotionDrop(stage);
+      // Kahraman Uyanışı malzemeleri (yalnızca Dünya Haritası zaferleri; haritadaki gerçek sıraya göre)
+      const materialDrop = rollAwakenDrop(stage, worldStageOrder(stage.id));
       let droppedItem: EquipmentItem | null = null;
       if (didDrop) {
         // Kahraman seviye sınırı (50) üzerindeki aşamalardan düşen eşyalar
@@ -418,6 +425,7 @@ export function App() {
           companions: withParts.companions,
           speed: unlocked.speed,
           potions: addPotions(prev.potions ?? emptyPotions(), potionDrop),
+          materials: addMaterials(prev.materials ?? emptyMaterials(), materialDrop),
           gold: prev.gold + goldGained,
           crystals: prev.crystals + crystalsGained,
           completedStages,
@@ -445,7 +453,7 @@ export function App() {
         }, 550);
       }
 
-      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome, companionParts: partsGain ?? undefined, potions: potionDrop };
+      return { xpGained, goldGained, crystalsGained, droppedItem, leveledUp, newLevel, mastery: masteryOutcome, companionParts: partsGain ?? undefined, potions: potionDrop, materials: hasAnyMaterial(materialDrop) ? materialDrop : undefined };
     },
     [save.activeHeroClass, save.heroes, activeLeagueOpponent, activeStage, setSave]
   );
@@ -523,6 +531,16 @@ export function App() {
     pushToast(res.toast);
   };
 
+  /** Kahraman Uyanışı: kesin başarılı; dokunulduğu andaki kademe ile (çift dokunmada ikinci istek reddedilir). */
+  const handleAwaken = (heroId: HeroClassId, expectedTier: number) => {
+    const res = performAwakening(saveRef.current, heroId, expectedTier);
+    if (res.ok) {
+      setSave(res.save);
+      SoundEngine.playLevelUp();
+    } else pushToast(res.toast);
+    return { ok: res.ok, tier: res.tier };
+  };
+
   /** Kahraman kartındaki "Seviye Atlat": rastgele iksirlerle tam 1 seviye; yetmezse hiçbir şey değişmez. */
   const handleLevelUpHero = (heroId: HeroClassId) => {
     const res = levelUpWithPotions(saveRef.current, heroId);
@@ -575,6 +593,9 @@ export function App() {
   const handleHuntVictory = (hunt: HuntDef, turns: number) => {
     const outcome = recordHuntVictory(saveRef.current, hunt.id, turns);
     if (outcome.recorded) setSave(outcome.save);
+    // Yüksek zorluklu Boss Avları İlahi Öz düşürür (şu an listede av yok; bkz. AWAKEN_DROPS.huntEssence)
+    const essence = rollHuntEssence(hunt.id);
+    if (hasAnyMaterial(essence)) setSave((cur) => ({ ...cur, materials: addMaterials(cur.materials ?? emptyMaterials(), essence) }));
     return outcome;
   };
 
@@ -737,6 +758,12 @@ export function App() {
         />
       )}
 
+      {route === 'awakening' && awakenHeroId && (
+        <Suspense fallback={<RouteLoading />}>
+          <AwakeningScreen save={save} heroId={awakenHeroId} onBack={() => setRoute('heroes')} onAwaken={handleAwaken} />
+        </Suspense>
+      )}
+
       {route === 'heroes' && (
         <HeroesScreen
           save={save}
@@ -747,6 +774,10 @@ export function App() {
           onOpenSkillTree={() => setRoute('skills')}
           onUsePotion={handleUsePotion}
           onLevelUpHero={handleLevelUpHero}
+          onOpenAwakening={(id) => {
+            setAwakenHeroId(id);
+            setRoute('awakening');
+          }}
         />
       )}
 

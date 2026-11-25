@@ -202,3 +202,41 @@
 }
 .tut-arrow { animation: tutArrowPulse 0.9s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tut-arrow { animation: none; } }
+
+/* Kahraman Uyanışı aurası (hafif; parçacıklar yalnızca İlahi kademede ve sınırlı sayıda) */
+@keyframes awkPulse {
+  0%, 100% { opacity: var(--awk-lo, 0.45); transform: scale(0.96); }
+  50% { opacity: var(--awk-hi, 0.75); transform: scale(1.04); }
+}
+@keyframes awkSpin { 0%, 100% { transform: scale(0.96); opacity: 0.65; } 50% { transform: scale(1.05); opacity: 1; } }
+@keyframes awkRise {
+  0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -70%) scale(1); opacity: 0; }
+}
+.awk-glow { animation: awkPulse 2.6s ease-in-out infinite; }
+.awk-ring { animation: awkSpin 2.6s ease-in-out infinite; }
+.awk-mote { animation: awkRise 3.2s ease-in infinite; }
+/* Uyanış töreni (~2 sn) */
+@keyframes awkGather {
+  0% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0; }
+  25% { opacity: 1; }
+  70% { transform: translate(0, 0) scale(0.6); opacity: 1; }
+  100% { transform: translate(0, 0) scale(0.2); opacity: 0; }
+}
+@keyframes awkRingBurst {
+  0%, 55% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+  65% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+@keyframes awkTitle {
+  0%, 50% { transform: translateY(10px) scale(0.9); opacity: 0; }
+  70% { transform: translateY(0) scale(1.06); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.awk-gather { animation: awkGather 1.4s cubic-bezier(.4,0,.2,1) forwards; }
+.awk-burst { animation: awkRingBurst 2s ease-out forwards; }
+.awk-title { animation: awkTitle 2s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .awk-glow, .awk-ring, .awk-mote { animation: none; }
+}

@@ -4,6 +4,7 @@ import { createStarterEquipment, createStarterInventory } from '../data/items';
 import { createDungeonSaves, sanitizeDungeonSaves } from '../data/dungeons';
 import { applySpeedUnlock, sanitizeSpeed } from '../data/battleSpeed';
 import { emptyPotions, sanitizePotions } from '../data/potions';
+import { emptyMaterials, sanitizeAwakening, sanitizeMaterials } from '../data/awakening';
 import { emptyTutorialSave, sanitizeTutorials, tutorialsForExistingProgress } from '../game/tutorial';
 import { emptyCompanionSave, reconcileCompanionParts, sanitizeCompanions } from '../data/companions';
 import { emptyMastery, sanitizeMastery } from '../data/mastery';
@@ -24,7 +25,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 type RawSave = Record<string, unknown>;
 
@@ -89,6 +90,8 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
     ...raw,
     tutorials: tutorialsForExistingProgress(Array.isArray(raw.completedStages) ? (raw.completedStages as unknown[]).filter((x): x is string => typeof x === 'string') : []),
   }),
+  // v14 -> v15: Kahraman Uyanışı. Kahramanlar 0. kademeden, malzemeler 0 adetten başlar (sanitize varsayılanları).
+  14: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -164,6 +167,10 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     };
     // Kostümler yalnızca kozmetiktir: geçersiz/yabancı kimlik varsayılan görünüme düşer (eski kayıtlarda alan yoktur)
     if (heroes[id].costumeId !== undefined && !isValidCostume(id, heroes[id].costumeId)) delete heroes[id].costumeId;
+    // Uyanış kademesi 0–5 (eski kayıtta yok = 0)
+    const aw = sanitizeAwakening(heroes[id].awakening);
+    if (aw > 0) heroes[id].awakening = aw;
+    else delete heroes[id].awakening;
   });
   const sanitized: GameSaveState = {
     ...save,
@@ -183,6 +190,7 @@ export function sanitizeSave(save: GameSaveState): GameSaveState {
     speed: sanitizeSpeed(save.speed),
     potions: sanitizePotions(save.potions),
     tutorials: sanitizeTutorials(save.tutorials),
+    materials: sanitizeMaterials(save.materials),
   };
   // Eski kayıt: zaten alınmış ustalık sandıklarının yoldaş parça payı bir kez tanınır
   const reconciled = reconcileCompanionParts(sanitized);
@@ -237,6 +245,7 @@ export function createInitialSaveState(): GameSaveState {
     speed: { unlocked: false, noticeShown: false },
     potions: emptyPotions(),
     tutorials: emptyTutorialSave(),
+    materials: emptyMaterials(),
     stats: {
       totalMatches: 0,
       totalGemsMatched: {

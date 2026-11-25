@@ -24,6 +24,7 @@ import { HeroPaperdoll } from './HeroPaperdoll';
 import { CostumeDrawer } from './CostumeDrawer';
 import { costumesForHero } from '../data/costumes';
 import { POTION_META, POTION_SIZES, previewPotion, type PotionSize } from '../data/potions';
+import { awakenTierDef, canAwakenNow } from '../data/awakening';
 
 interface HeroesScreenProps {
   save: GameSaveState;
@@ -35,6 +36,8 @@ interface HeroesScreenProps {
   onUsePotion: (size: PotionSize) => void;
   /** Kartlardaki "Seviye Atlat": rastgele iksirlerle o kahramana tam 1 seviye */
   onLevelUpHero: (heroId: HeroClassId) => void;
+  /** Kahraman Uyanışı ekranını aç */
+  onOpenAwakening: (heroId: HeroClassId) => void;
 }
 
 export const HeroesScreen: React.FC<HeroesScreenProps> = ({
@@ -46,6 +49,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
   onOpenSkillTree,
   onUsePotion,
   onLevelUpHero,
+  onOpenAwakening,
 }) => {
   const [inspectId, setInspectId] = useState<HeroClassId>(save.activeHeroClass);
   /** Kart tıklanınca açılan tam ekran kahraman görünümü (tekrar basınca kapanır) */
@@ -131,6 +135,17 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                 Kostümler
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => onOpenAwakening(id)}
+              data-testid={`awakening-btn-${id}`}
+              className="relative mt-2 flex items-center gap-1.5 rounded-full border border-amber-300/60 bg-gradient-to-r from-amber-500/20 to-teal-500/15 px-3 py-1 text-[11px] font-extrabold text-amber-100 transition hover:from-amber-500/30 active:scale-95"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Kahraman Uyanışı
+              {(savedHero.awakening ?? 0) > 0 && <span className="text-amber-300">· {awakenTierDef(savedHero.awakening ?? 0)?.roman}</span>}
+              {canAwakenNow(save, id) && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />}
+            </button>
           </div>
 
           <div className={`min-w-0 flex-1 ${inModal ? 'text-center sm:text-left' : 'text-center sm:text-left'}`}>
@@ -464,6 +479,15 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                   <div className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left">
                     <div className="relative shrink-0">
                       <HeroPaperdoll hero={prog} size={72} staticRender={!selected && !open} showAuraLabel={false} />
+                      {!locked && canAwakenNow(save, c.id) && (
+                        <span
+                          className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full border border-emerald-300 bg-emerald-500 text-[11px] font-black text-slate-950 shadow-[0_0_8px_#34d399]"
+                          data-testid={`awaken-badge-${c.id}`}
+                          title="Uyanış hazır"
+                        >
+                          !
+                        </span>
+                      )}
                       {locked && (
                         <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border border-slate-600 bg-slate-950/85">
                           <Lock className="h-3.5 w-3.5 text-slate-300" />

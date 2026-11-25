@@ -597,6 +597,8 @@ export interface HeroProgress {
   equipped: Partial<Record<EquipmentSlot, EquipmentItem>>;
   /** Seçili kostüm (yalnızca kozmetik; yoksa varsayılan görünüm). Geçersiz kimlik varsayılana düşer. */
   costumeId?: string;
+  /** Kahraman Uyanışı kademesi (0–5; eski kayıtlarda yok = 0) */
+  awakening?: number;
 }
 
 export type HuntId = 'frozen_throne' | 'ash_arena';
@@ -709,6 +711,8 @@ export interface GameSaveState {
   potions: { small: number; medium: number; large: number };
   /** İlk 5 aşamanın öğreticileri: tamamlanan / atlanan (1–5) */
   tutorials: { done: number[] };
+  /** Ortak geliştirme malzemeleri (Kahraman Uyanışı) */
+  materials: { awakenShard: number; soulCrystal: number; divineEssence: number };
   stats: {
     totalMatches: number;
     totalGemsMatched: Record<GemType, number>;
@@ -787,6 +791,8 @@ export interface BattleRewardSummary {
   companionParts?: { companionId: CompanionId; parts: number; partName: string };
   /** Bu zaferde düşen seviye iksirleri */
   potions?: { small: number; medium: number; large: number };
+  /** Zaferde düşen uyanış malzemeleri */
+  materials?: { awakenShard: number; soulCrystal: number; divineEssence: number };
 }
 
 export type ScreenRoute =

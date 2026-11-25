@@ -37,6 +37,8 @@ import { describeWeakness } from '../game/weaknessInfo';
 import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
+import { MATERIAL_IDS, MATERIAL_META } from '../data/awakening';
+import { MaterialIcon } from './MaterialIcon';
 import { applyRelicsToBuild, getRelic } from '../data/dungeons';
 import type { RelicId } from '../types/game';
 import { GEM_INFO, RARITY_META, getFullSkillCodex, getSkillLoadout } from '../data/skills';
@@ -258,6 +260,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
     mastery?: BattleRewardSummary['mastery'];
     companionParts?: BattleRewardSummary['companionParts'];
     potions?: BattleRewardSummary['potions'];
+    materials?: BattleRewardSummary['materials'];
   } | null>(null);
   const isHunt = !!hunt;
   const exitLabel = dungeon ? 'Zindana Dön' : isHunt ? 'Avlara Dön' : isLeague ? 'Lige Dön' : 'Haritaya Dön';
@@ -324,6 +327,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
             mastery: res.mastery,
             companionParts: res.companionParts,
             potions: res.potions,
+            materials: res.materials,
             xpGained: res.xpGained,
             goldGained: res.goldGained,
             crystalsGained: res.crystalsGained,
@@ -1320,6 +1324,16 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     {outcome.potions.small > 0 && <span className="text-green-300">+{outcome.potions.small} Küçük</span>}
                     {outcome.potions.medium > 0 && <span className="text-sky-300">+{outcome.potions.medium} Orta</span>}
                     {outcome.potions.large > 0 && <span className="text-amber-300">+{outcome.potions.large} Büyük</span>}
+                  </div>
+                )}
+                {outcome.materials && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-violet-400/30 bg-violet-950/25 px-3 py-2 text-xs font-bold" data-testid="material-gain">
+                    <span className="text-violet-200">Uyanış:</span>
+                    {MATERIAL_IDS.filter((id) => (outcome.materials?.[id] ?? 0) > 0).map((id) => (
+                      <span key={id} className="inline-flex items-center gap-1" style={{ color: MATERIAL_META[id].color }}>
+                        <MaterialIcon id={id} size={14} />+{outcome.materials![id]} {MATERIAL_META[id].name}
+                      </span>
+                    ))}
                   </div>
                 )}
                 {outcome.companionParts && (

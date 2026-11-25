@@ -1,3 +1,4 @@
+import { MaterialsPanel } from './MaterialsPanel';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
@@ -70,7 +71,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
   const [equipPlan, setEquipPlan] = useState<EquipPlan | null>(null);
   const [showSell, setShowSell] = useState(false);
 
-  const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories'>('all');
+  const [filterCat, setFilterCat] = useState<'all' | 'weapons' | 'armor' | 'accessories' | 'materials'>('all');
   const [sortBy, setSortBy] = useState<'rarity' | 'level' | 'power'>('rarity');
   const [selectedRef, setSelectedRef] = useState<EquipSelection | null>(initialSelection);
   useEffect(() => {
@@ -371,9 +372,11 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                   { id: 'weapons', label: 'Silahlar' },
                   { id: 'armor', label: 'Zırhlar' },
                   { id: 'accessories', label: 'Aksesuarlar' },
+                  { id: 'materials', label: 'Malzemeler' },
                 ].map((f) => (
                   <button
                     key={f.id}
+                    data-testid={`inv-filter-${f.id}`}
                     type="button"
                     onClick={() => setFilterCat(f.id as typeof filterCat)}
                     className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
@@ -411,6 +414,9 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
               </div>
             </div>
 
+            {filterCat === 'materials' ? (
+              <MaterialsPanel materials={save.materials} />
+            ) : (
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
               {/* Inventory Grid */}
               <div className="fantasy-panel rounded-2xl p-3 xl:col-span-7">
@@ -511,6 +517,7 @@ export const EquipmentInventoryScreen: React.FC<EquipmentInventoryScreenProps> =
                 )}
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>
