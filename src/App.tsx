@@ -14,7 +14,8 @@ import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
 import type { StartStageOptions, WorldNav, WorldView } from './components/WorldMapScreen';
 import { regionOfStage } from './game/masteryRoute';
-import { addMaterials, emptyMaterials, hasAnyMaterial, performAwakening, rollAwakenDrop, rollHuntEssence } from './data/awakening';
+import { addMaterials, emptyMaterials, hasAnyMaterial, performAwakening, rollAwakenDrop } from './data/awakening';
+import { huntBattleStage, isDifficultyUnlocked, rollHuntRepeatReward, type HuntDifficulty } from './data/huntScaling';
 import { worldStageOrder } from './data/stageHpScaling';
 import { TOWER_CONFIG, applyTowerVictory, canEnterFloor, floorKind, towerFloorStage, towerRuleFor, type TowerVictoryOutcome } from './data/tower';
 import { markTutorialDone, shouldShowTutorial, tutorialNumber } from './game/tutorial';
@@ -135,6 +136,7 @@ export function App() {
   /** Savaşa Ustalık Rotası üzerinden girildi (zafer ekranında rota düğmeleri) */
   const [masteryRoute, setMasteryRoute] = useState(false);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
+  const [activeHuntDiff, setActiveHuntDiff] = useState<HuntDifficulty>('normal');
   const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
   // Seçimli Zindan: açık savaşın sabit parametreleri (kayıttaki deneme savaş sonunda değişse de savaş ekranı sabit kalır)
   const [dungeonBattle, setDungeonBattle] = useState<{ id: DungeonId; battleNo: number; total: number; relics: RelicId[]; startHp: number } | null>(null);
@@ -584,15 +586,19 @@ export function App() {
     setRoute('battle');
   };
 
-  const handleStartHunt = (hunt: HuntDef) => {
+  const handleStartHunt = (hunt: HuntDef, difficulty: HuntDifficulty = 'normal') => {
     const found = findStageById(hunt.storyStageId);
     if (!found) return;
+    const cur = saveRef.current;
+    if (!isDifficultyUnlocked(cur, hunt.id, difficulty)) return;
+    setActiveHuntDiff(difficulty);
     SoundEngine.unlock();
     setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(hunt);
     setTowerBattle(null);
-    setActiveStage(found.stage);
+    // Boss canı / saldırısı ava giren kahramanın gücüne göre (savaş başında bir kez)
+    setActiveStage(huntBattleStage(hunt.id, difficulty, cur.heroes[cur.activeHeroClass]));
     setRoute('battle');
   };
 
@@ -627,11 +633,14 @@ export function App() {
 
   /** Av zaferini kayda işler (rekor + ilk zafer ödülü tek güncellemede). */
   const handleHuntVictory = (hunt: HuntDef, turns: number) => {
-    const outcome = recordHuntVictory(saveRef.current, hunt.id, turns);
-    if (outcome.recorded) setSave(outcome.save);
-    // Yüksek zorluklu Boss Avları İlahi Öz düşürür (şu an listede av yok; bkz. AWAKEN_DROPS.huntEssence)
-    const essence = rollHuntEssence(hunt.id);
-    if (hasAnyMaterial(essence)) setSave((cur) => ({ ...cur, materials: addMaterials(cur.materials ?? emptyMaterials(), essence) }));
+    const cur = saveRef.current;
+    // Tekrar ödülü (her zafer) burada bir kez zarlanır; ilk zafer ödülü, rekor ve kademe açılışıyla tek güncellemede yazılır
+    const repeat = rollHuntRepeatReward(activeHuntDiff, cur.heroes[cur.activeHeroClass]);
+    const outcome = recordHuntVictory(cur, hunt.id, turns, activeHuntDiff, repeat);
+    if (outcome.recorded) {
+      setSave(outcome.save);
+      if (repeat.item) SoundEngine.playLootReveal(RARITY_META[repeat.item.rarity].rank >= 4);
+    }
     return outcome;
   };
 
@@ -948,7 +957,7 @@ export function App() {
           onExitToMap={() => {
             if (towerBattle) { setTowerBattle(null); setRoute('tower'); return; }
             if (dungeonBattle) { setRoute('dungeons'); return; }
-            if (activeHunt) { setSelectedHuntId(null); setRoute('hunts'); return; }
+            if (activeHunt) { setRoute('hunts'); return; }
             setRoute(activeLeagueOpponent ? 'league' : 'world');
           }}
           onExitToMenu={towerBattle || dungeonBattle || activeHunt || activeLeagueOpponent ? undefined : () => setRoute('menu')}

@@ -4,7 +4,7 @@
  * yetenek puanları korunur. Boss canları uyanışa göre değişmez.
  */
 import { WORLD_REGIONS } from './world';
-import type { GameSaveState, HeroClassId, HuntId, StageDef } from '../types/game';
+import type { GameSaveState, HeroClassId, StageDef } from '../types/game';
 
 export const AWAKEN_MAX_TIER = 5;
 /** Uyanış için gereken kahraman seviyesi (oyunun seviye sınırı) */
@@ -120,8 +120,8 @@ export const AWAKEN_DROPS = {
   shard: { fromOrder: 51, eliteChance: 0.15, bossChance: 0.3, elite: [8, 12] as [number, number], boss: [15, 25] as [number, number] },
   crystal: { fromOrder: 101, bossChance: 0.15, amount: [10, 16] as [number, number] },
   essence: { fromOrder: 201, bossChance: 0.05, amount: [10, 14] as [number, number] },
-  /** Yüksek zorluklu Boss Avları (%10). Mevcut iki av (Buz Kraliçesi, Cehennem Ejderhası) erken oyun bosslarıdır; liste boştur. */
-  huntEssence: { hunts: [] as HuntId[], chance: 0.1, amount: [10, 14] as [number, number] },
+  /** Yüksek zorluklu Boss Avları: Kâbus kademesindeki her zafer %10 (bkz. huntScaling.ts, v1.99.0) */
+  huntEssence: { chance: 0.1, amount: [10, 14] as [number, number] },
 };
 
 export const MATERIAL_META: Record<AwakenMaterialId, MaterialMeta> = {
@@ -147,7 +147,7 @@ export const MATERIAL_META: Record<AwakenMaterialId, MaterialMeta> = {
     short: 'Öz',
     color: '#fbbf24',
     description: 'Kademe IV ve V için gereken en nadir öz.',
-    sources: [`200. aşamadan sonraki bosslar: %5 (${AWAKEN_DROPS.essence.amount.join('–')} adet)`, 'Yüksek zorluklu Boss Avları: %10 (henüz yüksek zorluklu av yok)', 'Sonsuzluk Kulesi: 75. ve 100. katların ilk zaferi'],
+    sources: [`200. aşamadan sonraki bosslar: %5 (${AWAKEN_DROPS.essence.amount.join('–')} adet)`, 'Boss Avları (Kâbus zorluğu): her zaferde %10 (10–14 adet)', 'Sonsuzluk Kulesi: 75. ve 100. katların ilk zaferi'],
   },
 };
 
@@ -166,14 +166,6 @@ export function rollAwakenDrop(stage: Pick<StageDef, 'type' | 'enemy'>, order: n
   }
   if (boss && order >= D.crystal.fromOrder && rng() < D.crystal.bossChance) out.soulCrystal += roll(rng, D.crystal.amount);
   if (boss && order >= D.essence.fromOrder && rng() < D.essence.bossChance) out.divineEssence += roll(rng, D.essence.amount);
-  return out;
-}
-
-/** Boss Avı zaferi: yalnızca yüksek zorluklu avlar İlahi Öz düşürür. */
-export function rollHuntEssence(huntId: HuntId, rng: () => number = Math.random): AwakenMaterials {
-  const out = emptyMaterials();
-  const H = AWAKEN_DROPS.huntEssence;
-  if (H.hunts.includes(huntId) && rng() < H.chance) out.divineEssence = roll(rng, H.amount);
   return out;
 }
 

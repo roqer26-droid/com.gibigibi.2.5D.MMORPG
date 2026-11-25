@@ -1,5 +1,17 @@
-import { ArrowLeft, Check, Coins, Flame, Gem, Lock, Snowflake, Trophy, Wind } from 'lucide-react';
-import { useMemo } from 'react';
+import { ArrowLeft, Check, Coins, Flame, Gem, Heart, Lock, Snowflake, Swords, Trophy, Wind } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  HUNT_DIFFICULTIES,
+  HUNT_DIFFICULTY_IDS,
+  defaultDifficulty,
+  huntBossStats,
+  huntRewardPreview,
+  isDifficultyUnlocked,
+  type HuntDifficulty,
+} from '../data/huntScaling';
+import { RARITY_META } from '../data/skills';
+import { HERO_CLASSES } from '../data/classes';
+import { MaterialIcon } from './MaterialIcon';
 import { HUNTS, getHunt, getHuntRuleLines, isHuntUnlocked, type HuntDef, type HuntRuleLine } from '../data/hunts';
 import { findStageById } from '../data/world';
 import type { GameSaveState, HuntId } from '../types/game';
@@ -11,7 +23,7 @@ interface HuntsScreenProps {
   selectedId: HuntId | null;
   onSelect: (id: HuntId | null) => void;
   onBack: () => void;
-  onStart: (hunt: HuntDef) => void;
+  onStart: (hunt: HuntDef, difficulty: HuntDifficulty) => void;
 }
 
 const RULE_ICONS: Record<HuntRuleLine['icon'], typeof Flame> = {
@@ -68,7 +80,7 @@ function HuntList({ save, onSelect }: { save: GameSaveState; onSelect: (id: Hunt
     <div className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
       <div className="mx-auto flex max-w-xl flex-col gap-3">
         <p className="text-[15px] leading-relaxed text-slate-400">
-          Hikâyede yendiğin bosslara arenalarında yeniden meydan oku. Her avın kendine özgü bir kuralı ve ilk zafer ödülü var.
+          Hikâyede yendiğin bosslara arenalarında yeniden meydan oku. Boss, ava giren kahramanın gücüne göre güçlenir; her zafer ödül verir. Normal → Zor → Kâbus kademelerini sırayla aç.
         </p>
         {HUNTS.map((hunt) => {
           const unlocked = isHuntUnlocked(save, hunt);
@@ -101,13 +113,16 @@ function HuntList({ save, onSelect }: { save: GameSaveState; onSelect: (id: Hunt
                 </div>
                 {unlocked ? (
                   <div className="mt-2 space-y-0.5 text-[15px] text-slate-300">
-                    {rec.bestTurns ? (
-                      <div className="flex items-center gap-1.5 font-semibold text-amber-200">
-                        <Trophy className="h-4 w-4" /> Rekor: {rec.bestTurns} tur
-                      </div>
-                    ) : (
-                      <div className="text-slate-400">Henüz kazanılmadı</div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-1.5" data-testid={`hunt-cleared-${hunt.id}`}>
+                      {HUNT_DIFFICULTY_IDS.map((d) => {
+                        const done = (rec.cleared ?? []).includes(d);
+                        return (
+                          <span key={d} className="rounded-full border px-2 py-0.5 text-[11px] font-bold" style={{ borderColor: `${HUNT_DIFFICULTIES[d].color}${done ? 'cc' : '44'}`, color: done ? HUNT_DIFFICULTIES[d].color : '#64748b' }}>
+                            {done ? '✓ ' : ''}{HUNT_DIFFICULTIES[d].name}
+                          </span>
+                        );
+                      })}
+                    </div>
                     <div className="text-[13px] text-slate-500">
                       {rec.firstRewardClaimed ? 'İlk zafer ödülü alındı' : `İlk zafer: ${hunt.firstReward.gold.toLocaleString('tr-TR')} altın · ${hunt.firstReward.crystals} kristal`}
                     </div>
@@ -127,10 +142,16 @@ function HuntList({ save, onSelect }: { save: GameSaveState; onSelect: (id: Hunt
   );
 }
 
-function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveState; onStart: (h: HuntDef) => void }) {
+function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveState; onStart: (h: HuntDef, d: HuntDifficulty) => void }) {
   const stage = useMemo(() => bossOf(hunt), [hunt]);
   const rec = save.huntRecords[hunt.id];
   const lines = getHuntRuleLines(hunt, stage.enemy.attackInterval);
+  const [diff, setDiff] = useState<HuntDifficulty>(() => defaultDifficulty(save, hunt.id));
+  const hero = save.heroes[save.activeHeroClass];
+  const boss = useMemo(() => huntBossStats(hunt.id, diff, hero), [hunt.id, diff, hero]);
+  const reward = huntRewardPreview(diff, hero.level);
+  const D = HUNT_DIFFICULTIES[diff];
+  const fmt = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(2).replace('.', ',')} Mn` : n >= 1e4 ? `${Math.round(n / 1e3)} B` : n.toLocaleString('tr-TR'));
 
   return (
     <>
@@ -144,6 +165,40 @@ function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveStat
               {hunt.arenaName}
             </div>
             <h2 className="font-display text-[30px] font-bold leading-tight text-[#fff3d0]">{hunt.bossName}</h2>
+          </section>
+
+          <section className="rounded-3xl border-2 border-slate-700/80 bg-[#0c1222] p-3" data-testid="hunt-difficulty">
+            <div className="grid grid-cols-3 gap-2">
+              {HUNT_DIFFICULTY_IDS.map((d) => {
+                const def = HUNT_DIFFICULTIES[d];
+                const open = isDifficultyUnlocked(save, hunt.id, d);
+                const sel = d === diff;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    disabled={!open}
+                    onClick={() => setDiff(d)}
+                    data-testid={`hunt-diff-${d}`}
+                    aria-pressed={sel}
+                    className="flex min-h-[52px] flex-col items-center justify-center rounded-xl border-2 px-1 text-[15px] font-black transition disabled:cursor-not-allowed disabled:opacity-45"
+                    style={{ borderColor: sel ? def.color : `${def.color}44`, background: sel ? `${def.color}22` : 'transparent', color: open ? def.color : '#64748b' }}
+                  >
+                    <span className="flex items-center gap-1">{!open && <Lock className="h-3.5 w-3.5" />}{def.name}</span>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {(rec.cleared ?? []).includes(d) ? `✓ ${rec.best?.[d] ?? '-'} tur` : open ? 'açık' : `${HUNT_DIFFICULTIES[def.requires!].name} zaferi`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[12px] leading-snug text-slate-400">
+              Boss, <strong className="text-slate-200">{HERO_CLASSES[hero.classId].name}</strong> kahramanının gücüne ({boss.power.toLocaleString('tr-TR')}) göre ayarlandı. Kahraman güçlendikçe boss da güçlenir.
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-[14px] font-bold" data-testid="hunt-boss-stats">
+              <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-rose-300"><Heart className="h-4 w-4" /> Can <span className="ml-auto text-slate-100" data-testid="hunt-boss-hp">{fmt(boss.maxHp)}</span></div>
+              <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-orange-300"><Swords className="h-4 w-4" /> Saldırı <span className="ml-auto text-slate-100" data-testid="hunt-boss-atk">{fmt(boss.attack)}</span></div>
+            </div>
           </section>
 
           <section className="rounded-3xl border-2 border-slate-700/80 bg-[#0c1222] p-4">
@@ -164,8 +219,22 @@ function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveStat
             </ul>
           </section>
 
+          <section className="rounded-3xl border-2 bg-[#0c1222] p-4" style={{ borderColor: `${D.color}55` }} data-testid="hunt-reward-preview">
+            <div className="text-[15px] font-semibold text-slate-400">Her zafer ödülü · {D.name}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 font-display text-[22px] font-bold text-amber-300">
+              <span className="inline-flex items-center gap-1.5"><Coins className="h-5 w-5" /> {reward.gold.toLocaleString('tr-TR')}</span>
+              <span className="inline-flex items-center gap-1.5 text-sky-300"><Gem className="h-5 w-5" /> {reward.crystals}</span>
+            </div>
+            <div className="mt-1 text-[14px] text-slate-300">
+              %{Math.round(reward.itemChance * 100)} şansla <span style={{ color: RARITY_META[reward.itemRarity].color }} className="font-bold">{RARITY_META[reward.itemRarity].label}</span> ekipman (Sv.{Math.min(50, hero.level)})
+              {reward.essenceChance > 0 && (
+                <span className="mt-0.5 flex items-center gap-1 font-bold text-amber-200"><MaterialIcon id="divineEssence" size={14} /> %{Math.round(reward.essenceChance * 100)} şansla İlahi Öz</span>
+              )}
+            </div>
+          </section>
+
           <section className="rounded-3xl border-2 border-slate-700/80 bg-[#0c1222] p-4">
-            <div className="text-[15px] font-semibold text-slate-400">İlk zafer ödülü</div>
+            <div className="text-[15px] font-semibold text-slate-400">İlk zafer ödülü (bir kez)</div>
             {rec.firstRewardClaimed ? (
               <div className="mt-1 flex items-center gap-2 text-[18px] font-bold text-emerald-300">
                 <Check className="h-5 w-5" /> Ödül alındı
@@ -178,10 +247,10 @@ function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveStat
             )}
             <div className="mt-3 flex items-center gap-2 border-t border-slate-800 pt-3 text-[15px] text-slate-300">
               <Trophy className="h-4 w-4 text-amber-300" />
-              {rec.bestTurns ? (
-                <span>En iyi rekor: <strong className="text-amber-200">{rec.bestTurns} tur</strong> · {rec.wins} zafer</span>
+              {rec.best?.[diff] ? (
+                <span>{D.name} rekoru: <strong className="text-amber-200">{rec.best[diff]} tur</strong> · toplam {rec.wins} zafer</span>
               ) : (
-                <span className="text-slate-400">Henüz rekor yok</span>
+                <span className="text-slate-400">{D.name} kademesinde henüz rekor yok</span>
               )}
             </div>
           </section>
@@ -194,10 +263,11 @@ function HuntDetail({ hunt, save, onStart }: { hunt: HuntDef; save: GameSaveStat
       >
         <button
           type="button"
-          onClick={() => onStart(hunt)}
+          onClick={() => onStart(hunt, diff)}
+          data-testid="hunt-start"
           className="gold-btn mx-auto flex min-h-[56px] w-full max-w-xl items-center justify-center rounded-2xl font-display text-[21px] font-bold text-slate-950"
         >
-          Ava Başla
+          Ava Başla · {D.name}
         </button>
       </div>
     </>

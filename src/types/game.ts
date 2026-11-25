@@ -604,10 +604,17 @@ export interface HeroProgress {
 export type HuntId = 'frozen_throne' | 'ash_arena';
 
 /** Boss Avı kaydı: boss başına en iyi tur sayısı, galibiyet sayısı ve ilk zafer ödülü bilgisi */
+export type HuntDifficulty = 'normal' | 'hard' | 'nightmare';
+
 export interface HuntRecord {
+  /** Tüm kademelerdeki en az tur (eski kayıtlarla uyum; yoldaş açılışı da kullanır) */
   bestTurns: number | null;
   wins: number;
   firstRewardClaimed: boolean;
+  /** Kademe başına en az tur (v1.99.0, ölçekli av) */
+  best: Record<HuntDifficulty, number | null>;
+  /** Zaferi kazanılmış kademeler (sonraki kademeyi açar) */
+  cleared: HuntDifficulty[];
 }
 
 export type DungeonId = 'roots_vault';

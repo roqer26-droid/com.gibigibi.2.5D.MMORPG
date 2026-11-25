@@ -53,7 +53,7 @@ export function getHunt(id: HuntId): HuntDef {
 }
 
 export function emptyHuntRecord(): HuntRecord {
-  return { bestTurns: null, wins: 0, firstRewardClaimed: false };
+  return { bestTurns: null, wins: 0, firstRewardClaimed: false, best: { normal: null, hard: null, nightmare: null }, cleared: [] };
 }
 
 export function createHuntRecords(): Record<HuntId, HuntRecord> {

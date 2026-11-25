@@ -8,7 +8,7 @@ import {
   canAwakenNow,
   performAwakening,
   rollAwakenDrop,
-  rollHuntEssence,
+
   stageAtOrder,
 } from '../src/data/awakening';
 import { WORLD_REGIONS } from '../src/data/world';
@@ -165,7 +165,7 @@ describe('malzeme düşmesi', () => {
     const b300 = ROUTE.slice(200).find((s) => s.enemy.isBoss)!;
     expect(rollAwakenDrop(b300, order(b300.id), always).divineEssence).toBe(AWAKEN_DROPS.essence.amount[0]);
     expect(rollAwakenDrop(b300, order(b300.id), never)).toEqual({ awakenShard: 0, soulCrystal: 0, divineEssence: 0 });
-    expect(rollHuntEssence('frozen_throne', always).divineEssence).toBe(0);
+
   });
   it('expected first-clear yield roughly reaches each tier threshold (single hero)', () => {
     const exp = { shard: 0, crystal: 0, essence: 0 };

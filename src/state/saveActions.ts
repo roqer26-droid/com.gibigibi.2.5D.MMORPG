@@ -1,12 +1,15 @@
 import { HERO_CLASSES } from '../data/classes';
 import { costumeById, isCostumeUnlocked } from '../data/costumes';
 import { getHunt, isHuntUnlocked } from '../data/hunts';
+import { HUNT_DIFFICULTIES, HUNT_DIFFICULTY_IDS, isDifficultyUnlocked, type HuntRepeatReward } from '../data/huntScaling';
 import type {
   EquipmentItem,
   EquipmentSlot,
   GameSaveState,
   HeroClassId,
+  HuntDifficulty,
   HuntId,
+  HuntRecord,
 } from '../types/game';
 import { planBestEquipment, type EquipPlan } from '../game/equipPlanner';
 import { recordQuestActivity } from '../utils/questProgress';
@@ -346,10 +349,15 @@ export function resetSkills(save: GameSaveState): ActionResult {
 
 export interface HuntOutcome {
   save: GameSaveState;
-  /** Av açık değilse veya tur sayısı geçersizse false; kayıt değişmez. */
+  /** Av açık değilse, kademe kilitliyse veya tur sayısı geçersizse false; kayıt değişmez. */
   recorded: boolean;
   /** Bu zaferle verilen ilk zafer ödülü (daha önce verildiyse null) */
   firstReward: { gold: number; crystals: number } | null;
+  /** Her zaferde verilen tekrar ödülü (altın, kristal, şanslı ekipman, Kâbus'ta İlahi Öz) */
+  repeat: HuntRepeatReward | null;
+  difficulty: HuntDifficulty;
+  /** Bu zaferle açılan kademe */
+  unlockedDifficulty: HuntDifficulty | null;
   newRecord: boolean;
   previousBest: number | null;
   bestTurns: number | null;
@@ -357,44 +365,60 @@ export interface HuntOutcome {
 }
 
 /**
- * Av zaferini kayda işler: galibiyet sayısı, en az tur rekoru ve ilk zafer ödülü
- * (ödül + "verildi" bilgisi) tek güncellemede yazılır. Ödül yalnızca bir kez verilir.
+ * Av zaferini kayda işler: galibiyet, kademe rekoru, açılan kademe, ilk zafer ödülü (bir kez) ve tekrar ödülü (her zafer)
+ * tek güncellemede yazılır. `repeat` çağıran tarafta bir kez zarlanır (aynı zafer iki kez işlenmez: BattleView sonuç kilidi).
  */
-export function recordHuntVictory(save: GameSaveState, huntId: HuntId, turns: number): HuntOutcome {
+export function recordHuntVictory(
+  save: GameSaveState,
+  huntId: HuntId,
+  turns: number,
+  difficulty: HuntDifficulty = 'normal',
+  repeat: HuntRepeatReward | null = null
+): HuntOutcome {
   const hunt = getHunt(huntId);
   const rec = save.huntRecords[huntId];
   const t = Math.floor(turns);
-  if (!isHuntUnlocked(save, hunt) || !Number.isFinite(t) || t < 1) {
+  const prevBest = rec.best?.[difficulty] ?? null;
+  if (!isHuntUnlocked(save, hunt) || !isDifficultyUnlocked(save, huntId, difficulty) || !Number.isFinite(t) || t < 1) {
     return {
-      save,
-      recorded: false,
-      firstReward: null,
-      newRecord: false,
-      previousBest: rec.bestTurns,
-      bestTurns: rec.bestTurns,
-      wins: rec.wins,
+      save, recorded: false, firstReward: null, repeat: null, difficulty, unlockedDifficulty: null,
+      newRecord: false, previousBest: prevBest, bestTurns: prevBest, wins: rec.wins,
     };
   }
 
-  const newRecord = rec.bestTurns === null || t < rec.bestTurns;
+  const newRecord = prevBest === null || t < prevBest;
   const grantReward = !rec.firstRewardClaimed;
-  const nextRec = {
-    bestTurns: newRecord ? t : rec.bestTurns,
+  const cleared = rec.cleared ?? [];
+  const nextDiff = HUNT_DIFFICULTY_IDS.find((d) => HUNT_DIFFICULTIES[d].requires === difficulty) ?? null;
+  const unlockedDifficulty = nextDiff && !cleared.includes(difficulty) ? nextDiff : null;
+  const nextRec: HuntRecord = {
+    bestTurns: rec.bestTurns === null || t < rec.bestTurns ? t : rec.bestTurns,
     wins: rec.wins + 1,
     firstRewardClaimed: true,
+    best: { ...(rec.best ?? { normal: null, hard: null, nightmare: null }), [difficulty]: newRecord ? t : prevBest },
+    cleared: cleared.includes(difficulty) ? cleared : [...cleared, difficulty],
   };
+  const gold = (grantReward ? hunt.firstReward.gold : 0) + (repeat?.gold ?? 0);
+  const crystals = (grantReward ? hunt.firstReward.crystals : 0) + (repeat?.crystals ?? 0);
   return {
     save: {
       ...save,
-      gold: save.gold + (grantReward ? hunt.firstReward.gold : 0),
-      crystals: save.crystals + (grantReward ? hunt.firstReward.crystals : 0),
+      gold: save.gold + gold,
+      crystals: save.crystals + crystals,
+      inventory: repeat?.item ? [...save.inventory, repeat.item] : save.inventory,
+      materials: repeat?.essence
+        ? { ...save.materials, divineEssence: (save.materials?.divineEssence ?? 0) + repeat.essence }
+        : save.materials,
       huntRecords: { ...save.huntRecords, [huntId]: nextRec },
     },
     recorded: true,
     firstReward: grantReward ? { ...hunt.firstReward } : null,
+    repeat,
+    difficulty,
+    unlockedDifficulty,
     newRecord,
-    previousBest: rec.bestTurns,
-    bestTurns: nextRec.bestTurns,
+    previousBest: prevBest,
+    bestTurns: nextRec.best[difficulty],
     wins: nextRec.wins,
   };
 }

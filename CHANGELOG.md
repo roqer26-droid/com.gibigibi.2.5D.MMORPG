@@ -4,6 +4,14 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.99.0 — Boss Avları: güce göre ölçekleme, Normal / Zor / Kâbus, her zaferde ödül
+- Sorun: avlar hikâyedeki erken boss aşamalarını (Buz Kraliçesi, Cehennem Ejderhası) ham değerleriyle kullanıyordu; güçlü kahraman birkaç hamlede bitiriyordu ve tek ödül ilk zaferdi.
+- Boss canı ve saldırısı artık ava giren kahramanın savaş gücüne göre ayarlanır (`src/data/huntScaling.ts`). Güç → hamle başına hasar tablosu gerçek savaş ölçümlerinden (Savaşçı / Büyücü / Korucu; ör. güç 16 B ≈ 70 B hasar, güç 71 B ≈ 426 B). Can = hasar × hedef hamle × boss düzeltmesi (×2,1; bosslara karşı hasar normal düşmanın ~2 katı ölçüldü). Saldırı: vuruş kahramanın canının Normal %12 / Zor %15 / Kâbus %18'i (savunma sonrası). Görsel, zayıflık, boss fazları ve av kuralları korunur; can hikâyedekinin altına inmez.
+- Kademeler: Normal (hedef 24 hamle) → Zor (34) → Kâbus (44); her kademe aynı avda bir öncekinin zaferiyle açılır. Ölçüm (×2,1 sonrası): Normal 18–38 (ort. ~24), Kâbus 23–75 (ort. ~47) hamle; Kâbus'ta kahraman savaş boyunca ~2 can barı kadar hasar alır.
+- Her zafer ödül verir (kahraman seviyesiyle büyür): Sv.50'de Normal 11.600 altın + 31 kristal, Zor ×1,8, Kâbus ×3; %35 / %50 / %70 şansla Nadir / Destansı / Efsanevi ekipman; Kâbus'ta %10 şansla 10–14 İlahi Öz ("yüksek zorluklu Boss Avı" kaynağı artık gerçek). İlk zafer ödülü bir kez olarak kalır.
+- Av ekranı: kademe seçici (kilit ve şart), kahramana göre boss canı / saldırısı, her zafer ödülü önizlemesi, kademe rekoru; listede kazanılan kademeler. Zafer ekranında kademe, av ödülü ve açılan kademe; savaştan dönüşte aynı avın detayına dönülür.
+- Kayıt v17: av kaydına kademe rekorları ve kazanılan kademeler. Eski rekor ve zafer sayısı korunur; kademeler Normal'den başlar.
+
 ## v1.98.0 — Sonsuzluk Kulesi
 - Yeni mod: 100 katlı Sonsuzluk Kulesi (`src/data/tower.ts`, `src/components/TowerScreen.tsx`). Dünya Haritası'nın 50. aşaması tamamlanınca açılır; ana menüde kule simgeli giriş, kilitliyken şart ve ilerleme (ör. 49/50). Kat sayısı, açılış, elit/boss aralığı, kural başlangıcı, sayfa boyutu `TOWER_CONFIG`'te; kat grupları ve ödüller oranla tanımlı, referans tablosunun dışında yavaş büyüme ile 200/500/1000 kata genişletilebilir.
 - İlerleme: 1. kattan sırayla; her 5. kat elit, her 10. kat boss (boss öncelikli), 100. kat "Sonsuzluk Bekçisi Aeon" (son bölge bossunun görseli ve faz mekanikleri, en güçlü düşman). Yenilgide aynı kat tekrar denenir; enerji / günlük hak yok. Savaşlar normal başlangıç kurallarıyla başlar; katlar arasında kahraman, ekipman, kostüm, pasif ve yoldaş değiştirilebilir. İlerleme hesap geneli.

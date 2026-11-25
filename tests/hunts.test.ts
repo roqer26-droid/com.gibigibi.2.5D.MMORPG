@@ -121,7 +121,7 @@ describe('recordHuntVictory', () => {
     expect(r.firstReward).toEqual({ gold: 800, crystals: 10 });
     expect(r.save.gold).toBe(s.gold + 800);
     expect(r.save.crystals).toBe(s.crystals + 10);
-    expect(r.save.huntRecords.frozen_throne).toEqual({ bestTurns: 12, wins: 1, firstRewardClaimed: true });
+    expect(r.save.huntRecords.frozen_throne).toEqual({ bestTurns: 12, wins: 1, firstRewardClaimed: true, best: { normal: 12, hard: null, nightmare: null }, cleared: ['normal'] });
     expect(r.save.huntRecords.ash_arena.wins).toBe(0);
     expect(r.newRecord).toBe(true);
   });
@@ -169,7 +169,7 @@ describe('hunt records in the save file', () => {
     const v4 = { ...createInitialSaveState(), version: 4, bossVictories: ['frost_queen'] } as Record<string, unknown>;
     delete v4.huntRecords;
     const s = parseSaveString(JSON.stringify(v4))!;
-    expect(s.huntRecords.frozen_throne).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false });
+    expect(s.huntRecords.frozen_throne).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false, best: { normal: null, hard: null, nightmare: null }, cleared: [] });
     expect(isHuntUnlocked(s, frozen)).toBe(true);
     expect(isHuntUnlocked(s, ash)).toBe(false);
   });
@@ -180,15 +180,15 @@ describe('hunt records in the save file', () => {
       huntRecords: { frozen_throne: { bestTurns: -3, wins: 'x', firstRewardClaimed: 'yes' }, ash_arena: 5 },
     };
     const s = parseSaveString(JSON.stringify(bad))!;
-    expect(s.huntRecords.frozen_throne).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false });
-    expect(s.huntRecords.ash_arena).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false });
+    expect(s.huntRecords.frozen_throne).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false, best: { normal: null, hard: null, nightmare: null }, cleared: [] });
+    expect(s.huntRecords.ash_arena).toEqual({ bestTurns: null, wins: 0, firstRewardClaimed: false, best: { normal: null, hard: null, nightmare: null }, cleared: [] });
   });
 
   it('record and claimed flag survive a reload', () => {
     const r = recordHuntVictory(unlocked(), 'ash_arena', 11);
     expect(saveGameState(r.save)).toBe(true);
     const loaded = loadGameState().save;
-    expect(loaded.huntRecords.ash_arena).toEqual({ bestTurns: 11, wins: 1, firstRewardClaimed: true });
+    expect(loaded.huntRecords.ash_arena).toEqual({ bestTurns: 11, wins: 1, firstRewardClaimed: true, best: { normal: 11, hard: null, nightmare: null }, cleared: ['normal'] });
     // yeniden açılıştan sonra ödül tekrar verilmez
     const again = recordHuntVictory(loaded, 'ash_arena', 9);
     expect(again.firstReward).toBeNull();

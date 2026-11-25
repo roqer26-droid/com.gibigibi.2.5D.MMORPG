@@ -13,7 +13,7 @@ import { createHuntRecords, HUNT_IDS } from '../data/hunts';
 import { isValidCostume } from '../data/costumes';
 import { isSetSlot, SET_IDS } from '../data/sets';
 import { createLeagueSave } from '../data/league';
-import { GameSaveState, HeroClassId, HeroProgress, HuntId, HuntRecord } from '../types/game';
+import { GameSaveState, HeroClassId, HeroProgress, HuntDifficulty, HuntId, HuntRecord } from '../types/game';
 import { dayKey } from './calendar';
 import { createQuestPeriods, refreshProgressPeriods } from './questProgress';
 
@@ -26,7 +26,7 @@ const CORRUPT_BACKUP_KEY = `${SAVE_STORAGE_KEY}_corrupt_backup`;
 const PRE_MIGRATION_BACKUP_KEY = `${SAVE_STORAGE_KEY}_pre_migration_backup`;
 
 /** Güncel kayıt şeması sürümü. Şema değişince artır ve MIGRATIONS'a adım ekle. */
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;
 
 type RawSave = Record<string, unknown>;
 
@@ -95,6 +95,9 @@ const MIGRATIONS: Record<number, (raw: RawSave) => RawSave> = {
   14: (raw) => raw,
   // v15 -> v16: Sonsuzluk Kulesi. İlerleme 0. kattan, Kule Mührü 0'dan başlar (sanitize varsayılanları).
   15: (raw) => raw,
+  // v16 -> v17: Boss Avları güce göre ölçeklenir ve kademeli. Eski av rekorları (eski, kolay bossa karşı) `bestTurns`'te
+  // kalır; kademe rekorları ve açılan kademeler boş başlar (Normal açık).
+  16: (raw) => raw,
 };
 
 function readVersion(raw: RawSave): number {
@@ -141,10 +144,19 @@ export function sanitizeHuntRecords(value: unknown): Record<HuntId, HuntRecord> 
     if (!r || typeof r !== 'object') continue;
     const rec = r as Partial<HuntRecord>;
     const best = Number(rec.bestTurns);
+    const turns = (v: unknown): number | null => {
+      const n = Number(v);
+      return v != null && Number.isFinite(n) && n >= 1 ? Math.floor(n) : null;
+    };
+    const bestBy = (rec.best && typeof rec.best === 'object' ? rec.best : {}) as Partial<Record<HuntDifficulty, unknown>>;
     out[id] = {
       bestTurns: rec.bestTurns != null && Number.isFinite(best) && best >= 1 ? Math.floor(best) : null,
       wins: Math.floor(finiteOr(rec.wins, 0)),
       firstRewardClaimed: rec.firstRewardClaimed === true,
+      best: { normal: turns(bestBy.normal), hard: turns(bestBy.hard), nightmare: turns(bestBy.nightmare) },
+      cleared: Array.isArray(rec.cleared)
+        ? (['normal', 'hard', 'nightmare'] as HuntDifficulty[]).filter((d) => (rec.cleared as unknown[]).includes(d))
+        : [],
     };
   }
   return out;

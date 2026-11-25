@@ -39,6 +39,7 @@ import type { HuntDef } from '../data/hunts';
 import type { HuntOutcome } from '../state/saveActions';
 import { MATERIAL_IDS, MATERIAL_META } from '../data/awakening';
 import { TOWER_RULES, type TowerRuleId, type TowerVictoryOutcome } from '../data/tower';
+import { HUNT_DIFFICULTIES } from '../data/huntScaling';
 import { MaterialIcon } from './MaterialIcon';
 import { applyRelicsToBuild, getRelic } from '../data/dungeons';
 import type { RelicId } from '../types/game';
@@ -1377,6 +1378,11 @@ export const BattleView: React.FC<BattleViewProps> = ({
                 <div className="text-xs font-extrabold uppercase tracking-widest" style={{ color: hunt.accent }}>
                   BOSS AVI TAMAMLANDI!
                 </div>
+                {outcome.hunt && (
+                  <div className="mt-1 text-[12px] font-black" style={{ color: HUNT_DIFFICULTIES[outcome.hunt.difficulty].color }} data-testid="hunt-victory-diff">
+                    {HUNT_DIFFICULTIES[outcome.hunt.difficulty].name} zorluk
+                  </div>
+                )}
                 <h2 className="mt-1 font-display text-3xl font-black text-white">ZAFER!</h2>
                 <p className="mt-1 text-xs text-slate-300">
                   {hunt.arenaName} · {hunt.bossName}
@@ -1387,11 +1393,36 @@ export const BattleView: React.FC<BattleViewProps> = ({
                     <strong className="text-white">{outcome.turns} tur</strong>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2.5 text-sm">
-                    <span className="text-slate-400">En iyi rekor</span>
+                    <span className="text-slate-400">Kademe rekoru</span>
                     <strong className={outcome.hunt?.newRecord ? 'text-amber-300' : 'text-white'}>
                       {outcome.hunt?.bestTurns ?? outcome.turns} tur{outcome.hunt?.newRecord ? ' · Yeni rekor!' : ''}
                     </strong>
                   </div>
+                  {outcome.hunt?.repeat && (
+                    <div className="rounded-xl border border-sky-400/30 bg-sky-950/20 px-3 py-2.5 text-sm" data-testid="hunt-repeat-reward">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-sky-300/80">Av ödülü</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 font-bold">
+                        <span className="inline-flex items-center gap-1 text-amber-300"><Coins className="h-4 w-4" /> +{outcome.hunt.repeat.gold.toLocaleString('tr-TR')}</span>
+                        <span className="inline-flex items-center gap-1 text-sky-300"><Gem className="h-4 w-4" /> +{outcome.hunt.repeat.crystals}</span>
+                        {outcome.hunt.repeat.essence > 0 && (
+                          <span className="inline-flex items-center gap-1" style={{ color: MATERIAL_META.divineEssence.color }} data-testid="hunt-essence">
+                            <MaterialIcon id="divineEssence" size={14} /> +{outcome.hunt.repeat.essence} İlahi Öz
+                          </span>
+                        )}
+                      </div>
+                      {outcome.hunt.repeat.item && (
+                        <div className="mt-1.5 flex items-center gap-2 text-[13px]" data-testid="hunt-item">
+                          <span className="font-bold" style={{ color: RARITY_META[outcome.hunt.repeat.item.rarity].color }}>{RARITY_META[outcome.hunt.repeat.item.rarity].label}</span>
+                          <span className="min-w-0 flex-1 truncate text-slate-200">{outcome.hunt.repeat.item.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {outcome.hunt?.unlockedDifficulty && (
+                    <div className="rounded-xl border px-3 py-2 text-center text-sm font-extrabold" style={{ borderColor: `${HUNT_DIFFICULTIES[outcome.hunt.unlockedDifficulty].color}88`, color: HUNT_DIFFICULTIES[outcome.hunt.unlockedDifficulty].color }} data-testid="hunt-unlocked-diff">
+                      Yeni kademe açıldı: {HUNT_DIFFICULTIES[outcome.hunt.unlockedDifficulty].name}
+                    </div>
+                  )}
                   {outcome.hunt?.firstReward && (
                     <div className="rounded-xl border border-amber-400/40 bg-amber-950/25 px-3 py-2.5 text-sm">
                       <div className="text-[11px] font-bold uppercase tracking-wider text-amber-300/80">İlk zafer ödülü</div>
