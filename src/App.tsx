@@ -25,7 +25,7 @@ import type { HuntDef } from './data/hunts';
 import { chooseDungeonRelic, completeDungeonBattle, dungeonBattleStage, dungeonStartHp, endDungeonRun, getDungeon, startDungeonRun } from './data/dungeons';
 import type { DungeonId, RegionId, RelicId } from './types/game';
 import { generateEquipmentItem } from './data/items';
-import { addPotions, emptyPotions, rollPotionDrop, usePotion, type PotionSize } from './data/potions';
+import { addPotions, emptyPotions, levelUpWithPotions, rollPotionDrop, usePotion, type PotionSize } from './data/potions';
 import { rollDropRarity } from './data/loot';
 import { rollSetDrop } from './data/sets';
 import { createLeagueStage, LEAGUE_TIERS, recordLeagueResult, type LeagueOpponent } from './data/league';
@@ -522,6 +522,16 @@ export function App() {
     pushToast(res.toast);
   };
 
+  /** Kahraman kartındaki "Seviye Atlat": rastgele iksirlerle tam 1 seviye; yetmezse hiçbir şey değişmez. */
+  const handleLevelUpHero = (heroId: HeroClassId) => {
+    const res = levelUpWithPotions(saveRef.current, heroId);
+    if (res.ok) {
+      setSave(res.save);
+      SoundEngine.playLevelUp();
+    }
+    pushToast(`${res.ok ? `${HERO_CLASSES[heroId].name}: ` : ''}${res.toast}`);
+  };
+
   const handleUnlockCompanion = (id: CompanionId) => {
     const res = unlockCompanion(saveRef.current, id);
     if (res.ok) {
@@ -735,6 +745,7 @@ export function App() {
           onSetCostume={handleSetCostume}
           onOpenSkillTree={() => setRoute('skills')}
           onUsePotion={handleUsePotion}
+          onLevelUpHero={handleLevelUpHero}
         />
       )}
 

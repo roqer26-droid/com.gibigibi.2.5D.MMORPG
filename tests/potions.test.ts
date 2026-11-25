@@ -157,3 +157,67 @@ describe('ekipman geliştirme bildirimi', () => {
     expect(upgradeItem(poor, it2.id, true, it2.slot).toast).toMatch(/yeterli/);
   });
 });
+
+import { levelUpWithPotions } from '../src/data/potions';
+import { xpRequiredForLevel } from '../src/utils/rpgLogic';
+import { createInitialSaveState as freshSave } from '../src/utils/storage';
+
+describe('Seviye Atlat (rastgele iksirlerle tam 1 seviye)', () => {
+  const withHero = (level: number, xp: number, potions: { small: number; medium: number; large: number }) => {
+    const s = freshSave();
+    return { ...s, potions, heroes: { ...s.heroes, warrior: { ...s.heroes.warrior, level, xp } } };
+  };
+
+  it('exactly one level; consumes only what is needed; extra XP carried but never a second level', () => {
+    for (const [level, xp] of [[1, 0], [10, 50], [30, 1000], [49, 0]] as const) {
+      for (let seed = 0; seed < 20; seed++) {
+        let x = seed + 1;
+        const rng = () => ((x = (x * 16807) % 2147483647) / 2147483647);
+        const s = withHero(level, xp, { small: 30, medium: 10, large: 3 });
+        const r = levelUpWithPotions(s, 'warrior', rng);
+        expect(r.ok).toBe(true);
+        const h = r.save.heroes.warrior;
+        expect(h.level).toBe(level + 1);
+        expect(h.skillPoints).toBe(s.heroes.warrior.skillPoints + 3);
+        if (level + 1 < 50) expect(h.xp).toBeLessThan(xpRequiredForLevel(level + 1));
+        else expect(h.xp).toBe(0);
+        const used = r.used!;
+        expect(r.save.potions).toEqual({ small: 30 - used.small, medium: 10 - used.medium, large: 3 - used.large });
+        const gained = used.small * 2000 + used.medium * 5000 + used.large * 20000;
+        const need = xpRequiredForLevel(level) - xp;
+        expect(gained).toBeGreaterThanOrEqual(need);
+        // son iksir çıkarılsaydı yetmeyecekti (gereksiz iksir harcanmaz)
+        const smallestUsed = used.small ? 2000 : used.medium ? 5000 : 20000;
+        expect(gained - smallestUsed).toBeLessThan(need);
+      }
+    }
+  });
+
+  it('random choice among potions that do not overshoot; otherwise the smallest available', () => {
+    // seviye 40: ~23.500 XP gerekir → küçük/orta karışık seçilebilir
+    const picks = new Set<string>();
+    for (let seed = 1; seed < 40; seed++) {
+      let x = seed;
+      const rng = () => ((x = (x * 16807) % 2147483647) / 2147483647);
+      const r = levelUpWithPotions(withHero(40, 0, { small: 20, medium: 20, large: 0 }), 'warrior', rng);
+      picks.add(`${r.used!.small}-${r.used!.medium}`);
+    }
+    expect(picks.size).toBeGreaterThan(1);
+    // seviye 1 (100 XP): yalnızca büyük + orta varsa orta harcanır
+    const r1 = levelUpWithPotions(withHero(1, 0, { small: 0, medium: 2, large: 2 }), 'warrior');
+    expect(r1.used).toEqual({ small: 0, medium: 1, large: 0 });
+  });
+
+  it('not enough potions / level 50 / locked hero: nothing changes', () => {
+    const s = withHero(45, 0, { small: 2, medium: 1, large: 0 });
+    const r = levelUpWithPotions(s, 'warrior');
+    expect(r.ok).toBe(false);
+    expect(r.toast).toBe('Yeterli iksir yok');
+    expect(r.save).toBe(s);
+    const max = withHero(50, 0, { small: 5, medium: 5, large: 5 });
+    expect(levelUpWithPotions(max, 'warrior').save).toBe(max);
+    const fresh = freshSave();
+    const locked = { ...fresh, potions: { small: 50, medium: 0, large: 0 }, heroUnlocks: fresh.heroUnlocks.filter((h) => h !== 'mage') };
+    expect(levelUpWithPotions(locked, 'mage').ok).toBe(false);
+  });
+});

@@ -4,6 +4,11 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.95.0 — Kahraman kartları: aura yazısı kaldırıldı, "Seviye Atlat" düğmesi
+- Kahraman kartlarında görselin altındaki aura yazısı (✦ Efsanevi Nüve vb.) kaldırıldı; aura adı güç satırında yazmaya devam eder. Detay görünümündeki büyük görsel değişmedi (`HeroPaperdoll` `showAuraLabel`).
+- Açık her kahramanın kartında "Seviye Atlat": kahramanın bir sonraki seviyeye kalan XP'si dolana kadar stoktan rastgele seviye iksiri tüketir ve tam 1 seviye verir (+3 pasif puanı). Seçim, kalan ihtiyacı aşmayan iksirler arasından adetlerine göre rastgele; hepsi aşıyorsa eldeki en küçük iksir (israf azalır). Artan XP sonraki seviyeye taşınır ama ikinci seviyeyi atlatmaz. İksir yetmezse "Yeterli iksir yok" uyarısı verilir ve hiçbir şey değişmez; seviye 50'de düğme "Maks. Seviye" olarak pasiftir.
+- Yerleşim kartın kendi genişliğine göre (container query): kart en az 340 px genişse düğme sağ altta, değilse kartın altında tam genişlikte. Önceden geniş ekranda kesilen uzun kahraman adları artık tam görünür.
+
 ## v1.94.0 — Ustalık Rotası
 - Bölge ekranında kompakt ustalık özeti: kazanılan / toplam yıldız ve yüzde (ilerleme çubuğu), 3 yıldızlı aşama sayısı, eksik yıldız sayısı (zaferi kazanılmış aşamalarda eksik kalan yıldızlar), sıradaki sandığa kalan yıldız (mevcut sandık sistemi; sandık düğmeleri daha kısa).
 - Filtreler: Tümü / Eksik Yıldızlar / Tamamlananlar, her birinde aşama sayısı. Eksik Yıldızlar yalnızca zaferi kazanılmış ve 3/3 olmayan aşamaları gösterir (kilitli ve kazanılmamış aşamalar girmez). Seçili filtre savaştan dönünce korunur.

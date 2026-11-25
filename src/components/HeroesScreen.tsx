@@ -12,6 +12,7 @@ import {
   X,
   Maximize2,
   Shirt,
+  ChevronsUp,
 } from 'lucide-react';
 import { HERO_CLASSES, HERO_CLASS_LIST } from '../data/classes';
 import { GameSaveState, HeroClassId } from '../types/game';
@@ -32,6 +33,8 @@ interface HeroesScreenProps {
   onSetCostume: (classId: HeroClassId, costumeId: string | null) => void;
   onOpenSkillTree: () => void;
   onUsePotion: (size: PotionSize) => void;
+  /** Kartlardaki "Seviye Atlat": rastgele iksirlerle o kahramana tam 1 seviye */
+  onLevelUpHero: (heroId: HeroClassId) => void;
 }
 
 export const HeroesScreen: React.FC<HeroesScreenProps> = ({
@@ -42,6 +45,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
   onSetCostume,
   onOpenSkillTree,
   onUsePotion,
+  onLevelUpHero,
 }) => {
   const [inspectId, setInspectId] = useState<HeroClassId>(save.activeHeroClass);
   /** Kart tıklanınca açılan tam ekran kahraman görünümü (tekrar basınca kapanır) */
@@ -442,13 +446,14 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
               const locked = !save.heroUnlocks.includes(c.id);
               const open = expandedId === c.id;
 
+              const canLevel = !locked && prog.level < 50;
               return (
+                <div key={c.id} className="@container relative flex">
                 <button
-                  key={c.id}
                   type="button"
                   aria-expanded={open}
                   onClick={() => toggleExpand(c.id)}
-                  className={`fantasy-card relative overflow-hidden rounded-2xl border-2 p-2.5 text-left transition ${
+                  className={`fantasy-card relative w-full overflow-hidden rounded-2xl border-2 p-2.5 text-left transition ${!locked ? 'pb-[52px] @[340px]:pb-2.5' : ''} ${
                     selected || open
                       ? 'border-amber-400 bg-amber-950/25 shadow-[0_0_20px_rgba(245,158,11,0.22)]'
                       : 'border-slate-800 hover:border-slate-600'
@@ -458,7 +463,7 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
 
                   <div className="flex flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2.5 sm:text-left">
                     <div className="relative shrink-0">
-                      <HeroPaperdoll hero={prog} size={72} staticRender={!selected && !open} />
+                      <HeroPaperdoll hero={prog} size={72} staticRender={!selected && !open} showAuraLabel={false} />
                       {locked && (
                         <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border border-slate-600 bg-slate-950/85">
                           <Lock className="h-3.5 w-3.5 text-slate-300" />
@@ -489,14 +494,14 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                           {c.unlockCost.crystals}
                         </p>
                       ) : (
-                        <p className="mt-0.5 text-[10px] font-semibold text-amber-200/80">
+                        <p className="mt-0.5 text-[10px] font-semibold text-amber-200/80 @[340px]:pr-[108px]">
                           Güç {cBuild.powerRating.toLocaleString('tr-TR')}
                           {cAura.tier > 0 && (
                             <span style={{ color: cAura.color }}> • ✦ {cAura.tierName}</span>
                           )}
                         </p>
                       )}
-                      <div className="mt-1 flex items-center justify-center gap-1.5 sm:justify-start">
+                      <div className={`mt-1 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start ${!locked ? '@[340px]:pr-[108px]' : ''}`}>
                         {active && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">
                             <CheckCircle2 className="h-2.5 w-2.5" /> Aktif
@@ -510,6 +515,20 @@ export const HeroesScreen: React.FC<HeroesScreenProps> = ({
                     </div>
                   </div>
                 </button>
+                {!locked && (
+                  <button
+                    type="button"
+                    onClick={() => onLevelUpHero(c.id)}
+                    disabled={!canLevel}
+                    data-testid={`levelup-${c.id}`}
+                    aria-label={`${c.name}: iksirlerle seviye atlat`}
+                    className="absolute inset-x-[10px] bottom-[10px] flex min-h-[34px] items-center justify-center gap-1 rounded-xl border border-emerald-400/60 bg-gradient-to-b from-emerald-500/25 to-emerald-900/40 px-2 text-[11px] font-extrabold text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.18)] transition hover:border-emerald-300 hover:from-emerald-500/35 active:scale-[0.97] disabled:cursor-not-allowed disabled:border-slate-700 disabled:from-slate-800/60 disabled:to-slate-900/60 disabled:text-slate-500 disabled:shadow-none @[340px]:inset-x-auto @[340px]:right-[10px] @[340px]:w-[100px]"
+                  >
+                    <ChevronsUp className="h-3.5 w-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">{canLevel ? 'Seviye Atlat' : 'Maks. Seviye'}</span>
+                  </button>
+                )}
+                </div>
               );
             })}
           </div>

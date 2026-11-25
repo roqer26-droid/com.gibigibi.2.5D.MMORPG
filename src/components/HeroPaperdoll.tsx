@@ -9,6 +9,8 @@ interface HeroPaperdollProps {
   className?: string;
   /** Animasyonu kapat (küçük liste görselleri için performans) */
   staticRender?: boolean;
+  /** Aura kademesinin yazısını görselin altında göster (kahraman kartlarında kapalı: aura adı güç satırında yazar) */
+  showAuraLabel?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
   size = 220,
   className = '',
   staticRender = false,
+  showAuraLabel = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -96,7 +99,7 @@ export const HeroPaperdoll: React.FC<HeroPaperdollProps> = ({
         style={{ width: size, height: size }}
         className="relative drop-shadow-[0_12px_20px_rgba(0,0,0,0.7)]"
       />
-      {aura.tier > 0 && (
+      {showAuraLabel && aura.tier > 0 && (
         <span
           className="pointer-events-none absolute -bottom-1 rounded-full border px-2 py-0.5 text-[9px] font-extrabold tracking-wide backdrop-blur-sm"
           style={{

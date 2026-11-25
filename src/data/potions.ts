@@ -1,5 +1,6 @@
-import type { GameSaveState, HeroProgress, StageDef } from '../types/game';
-import { applyXpToHero } from '../utils/rpgLogic';
+import type { GameSaveState, HeroClassId, HeroProgress, StageDef } from '../types/game';
+import { applyXpToHero, xpRequiredForLevel } from '../utils/rpgLogic';
+import { SKILL_POINTS_PER_LEVEL } from './passiveTree';
 
 /**
  * Seviye iksirleri: yeni alınan kahramanı hızla yetiştirmek için. Her iksir seçili kahramana seviyesinden bağımsız SABİT miktarda XP verir
@@ -92,5 +93,67 @@ export function usePotion(save: GameSaveState, size: PotionSize): PotionUseResul
     toast: res.leveledUp ? `+${xp} XP — Seviye ${res.newLevel}!` : `+${xp} XP`,
     levelsGained: res.levelsGained,
     newLevel: res.newLevel,
+  };
+}
+
+export interface PotionLevelUpResult {
+  save: GameSaveState;
+  ok: boolean;
+  toast: string;
+  /** Tüketilen iksirler */
+  used?: PotionStock;
+  newLevel?: number;
+}
+
+/**
+ * "Seviye Atlat": kahramanın bir sonraki seviyeye kalan XP'si dolana kadar stoktan rastgele iksir tüketir ve TAM 1 seviye verir.
+ * Seçim: kalan ihtiyacı aşmayan iksirler arasından adetlerine göre rastgele; hepsi aşıyorsa eldeki en küçük iksir (israfı azaltır).
+ * Artan XP sonraki seviyeye taşınır, ancak ikinci bir seviye atlatmayacak şekilde sınırlanır.
+ * Yeterli iksir yoksa (ya da kahraman kilitli / seviye 50) kayıt hiç değişmez.
+ */
+export function levelUpWithPotions(save: GameSaveState, heroId: HeroClassId, rng: () => number = Math.random): PotionLevelUpResult {
+  const hero = save.heroes[heroId];
+  if (!hero || !save.heroUnlocks.includes(heroId)) return { save, ok: false, toast: 'Kahraman kilitli.' };
+  if (hero.level >= 50) return { save, ok: false, toast: 'Kahraman zaten en üst seviyede.' };
+  const need = Math.max(1, xpRequiredForLevel(hero.level) - hero.xp);
+  const stock: PotionStock = { ...emptyPotions(), ...sanitizePotions(save.potions) };
+  const total = POTION_SIZES.reduce((n, s) => n + stock[s] * potionXp(s), 0);
+  if (total < need) return { save, ok: false, toast: 'Yeterli iksir yok' };
+  const used = emptyPotions();
+  let gained = 0;
+  while (gained < need) {
+    const avail = POTION_SIZES.filter((s) => stock[s] > 0);
+    const rem = need - gained;
+    const under = avail.filter((s) => potionXp(s) <= rem);
+    let pick: PotionSize;
+    if (under.length > 0) {
+      const weight = under.reduce((n, s) => n + stock[s], 0);
+      let r = rng() * weight;
+      pick = under[under.length - 1];
+      for (const s of under) {
+        if (r < stock[s]) { pick = s; break; }
+        r -= stock[s];
+      }
+    } else {
+      pick = avail.reduce((a, b) => (potionXp(a) <= potionXp(b) ? a : b));
+    }
+    stock[pick] -= 1;
+    used[pick] += 1;
+    gained += potionXp(pick);
+  }
+  const newLevel = hero.level + 1;
+  const carry = hero.xp + gained - xpRequiredForLevel(hero.level);
+  const xp = newLevel >= 50 ? 0 : Math.max(0, Math.min(carry, xpRequiredForLevel(newLevel) - 1));
+  const usedText = POTION_SIZES.filter((s) => used[s] > 0).map((s) => `${used[s]} ${POTION_META[s].name.replace(' Seviye İksiri', '').toLocaleLowerCase('tr-TR')}`).join(', ');
+  return {
+    save: {
+      ...save,
+      potions: stock,
+      heroes: { ...save.heroes, [heroId]: { ...hero, level: newLevel, xp, skillPoints: hero.skillPoints + SKILL_POINTS_PER_LEVEL } },
+    },
+    ok: true,
+    toast: `Seviye ${newLevel}! (${usedText} iksir)`,
+    used,
+    newLevel,
   };
 }
