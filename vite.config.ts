@@ -15,7 +15,7 @@ const singleFile = process.env.SINGLE_FILE === "1";
 // `npm run build:artifact` -> tek dosya, ancak kahraman bekleme/savaş sheet'leri index.html yanında ayrı dosya: yalnızca seçili kahramanınki
 // yüklenir; Artifact önizlemesi tek dosya boyut sınırının altında kalır (SINGLE_FILE=1 SPLIT_SHEETS=1)
 const splitSheets = singleFile && process.env.SPLIT_SHEETS === "1";
-const SHEET_DIRS = /[\\/]art[\\/]heroes-(idle|combat)[\\/]/;
+const SHEET_DIRS = /[\\/]art[\\/](heroes-(idle|combat)|companions-anim)[\\/]/;
 
 const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf8"));
 

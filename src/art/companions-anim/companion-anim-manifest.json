@@ -1,0 +1,90 @@
+{
+  "source": {
+    "cell": 362,
+    "columns": 4,
+    "rows": 3,
+    "scale": 0.5
+  },
+  "companions": {
+    "ember_whelp": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 193,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 170,
+      "padRight": 12,
+      "movedOverflow": [
+        {
+          "row": 1,
+          "fromCol": 3,
+          "toCol": 2,
+          "width": 22
+        }
+      ]
+    },
+    "ice_fox": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 181,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 163,
+      "padRight": 0,
+      "movedOverflow": []
+    },
+    "moon_moth": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 181,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 158,
+      "padRight": 0,
+      "movedOverflow": []
+    },
+    "obsidian_tortoise": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 181,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 160,
+      "padRight": 0,
+      "movedOverflow": []
+    },
+    "root_sprout": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 189,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 168,
+      "padRight": 8,
+      "movedOverflow": [
+        {
+          "row": 1,
+          "fromCol": 3,
+          "toCol": 2,
+          "width": 13
+        }
+      ]
+    },
+    "storm_owl": {
+      "columns": 4,
+      "rows": 3,
+      "frameWidth": 181,
+      "frameHeight": 181,
+      "cellSize": 181,
+      "originX": 90,
+      "originY": 166,
+      "padRight": 0,
+      "movedOverflow": []
+    }
+  }
+}

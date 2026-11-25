@@ -1,6 +1,6 @@
 import { Check, Lock } from 'lucide-react';
 import { COMPANIONS, companionStatus } from '../data/companions';
-import { COMPANION_IMAGES } from '../data/companionArt';
+import { CompanionIdleSprite } from './CompanionIdleSprite';
 import { HERO_CLASSES } from '../data/classes';
 import type { CompanionId, GameSaveState } from '../types/game';
 
@@ -35,14 +35,7 @@ export function CompanionsSection({ save, onUnlock, onSetActive }: CompanionsSec
               className={`rounded-2xl border-2 p-3 ${isActive ? 'border-emerald-400/70 bg-emerald-950/20' : st.canUnlock ? 'border-amber-300 bg-amber-950/20' : 'border-slate-700 bg-slate-950/60'}`}
             >
               <div className="flex items-center gap-3">
-                <img
-                  src={COMPANION_IMAGES[c.id]}
-                  alt={c.name}
-                  width={72}
-                  height={72}
-                  draggable={false}
-                  className={`h-[72px] w-[72px] shrink-0 ${st.unlocked ? '' : 'opacity-70 grayscale-[0.4]'}`}
-                />
+                <CompanionIdleSprite id={c.id} size={72} alt={c.name} className={st.unlocked ? '' : 'opacity-70 grayscale-[0.4]'} />
                 <div className="min-w-0 flex-1">
                   <h3 className="font-display text-[17px] font-bold text-white">{c.name}</h3>
                   <p className="text-[11px] font-semibold text-slate-400">{c.partName} · {c.regionName}</p>

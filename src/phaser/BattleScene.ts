@@ -121,6 +121,14 @@ import {
 } from "../game/heroKits";
 import type { CompanionId } from "../types/game";
 import {
+  companionAnimSpec,
+  companionPose,
+  COMPANION_ANIM_TIMING,
+  type CompanionAnimAction,
+  type CompanionAnimSpec,
+} from "../data/companionAnim";
+import { getCompanion } from "../data/companions";
+import {
   emberTrigger,
   foxArm,
   foxDisarm,
@@ -546,6 +554,18 @@ export class BattleScene extends Phaser.Scene {
   /** Yoldaş: savaş başına tek destek hakkı */
   private companionState: CompanionState = "ready";
   private companionBurn = { turns: 0, perTurn: 0 };
+  /** Aktif yoldaşın sahnedeki animasyonu (yalnızca aktif yoldaşın atlası yüklenir) */
+  private companionAnim: {
+    spec: CompanionAnimSpec;
+    key: string;
+    container: Phaser.GameObjects.Container;
+    base: Phaser.GameObjects.Image;
+    blend: Phaser.GameObjects.Image;
+    action: CompanionAnimAction;
+    /** Hareketin başından (ya da bekleme döngüsünün) geçen süre, 1× ms */
+    clock: number;
+    idleClock: number;
+  } | null = null;
   private arenaSprite?: Phaser.GameObjects.Image;
 
   constructor(initialData?: BattleSceneInitData) {
@@ -675,6 +695,10 @@ export class BattleScene extends Phaser.Scene {
       if (clip && !this.textures.exists(`hero_combat_${clip.key}_${action}`))
         this.load.image(`hero_combat_${clip.key}_${action}`, clip.url);
     }
+    // Aktif yoldaşın animasyon atlası (diğer yoldaşlarınki yüklenmez)
+    const cAnim = companionAnimSpec(this.initData?.companion);
+    if (cAnim && !this.textures.exists(`companion_anim_${cAnim.id}`))
+      this.load.image(`companion_anim_${cAnim.id}`, cAnim.url);
     for (const type of GEM_TYPES) {
       const key = gemTextureKey(type);
       const url = GEM_ART_URL[key];
@@ -712,6 +736,8 @@ export class BattleScene extends Phaser.Scene {
     this.boardFrameGraphics = this.add.graphics();
 
     // Stage entities
+    // Yoldaş kahramanın arkasında (önce oluşturulur, kahraman üstte çizilir)
+    this.createCompanionAnim();
     this.heroContainer = this.add.container(0, 0);
     this.heroSprite = this.add.image(0, 0, this.heroIdleKey);
     this.heroContainer.add(this.heroSprite);
@@ -892,6 +918,7 @@ export class BattleScene extends Phaser.Scene {
 
   public update(_time: number, delta: number) {
     this.updateHeroIdleSheet(delta);
+    this.updateCompanionAnim(delta);
     this.applyPendingSpeed();
     // Yetenek/dondurma/sersemletme gibi hangi yoldan olursa olsun niyet değiştiğinde gösterge hemen güncellenir
     if (this.turnPhase !== "victory" && this.turnPhase !== "defeat") {
@@ -1107,6 +1134,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroContainer.setScale(heroScale);
     this.heroBaseScale = heroScale;
     this.heroHome = { x: this.heroContainer.x, y: this.heroContainer.y };
+    this.layoutCompanionAnim(isPortrait);
 
     this.enemyContainer.setPosition(
       this.stageArea.x + this.stageArea.w * 0.74,
@@ -2240,6 +2268,7 @@ export class BattleScene extends Phaser.Scene {
         );
         this.companionState = sp.state;
         sproutHeal = sp.heal;
+        if (sproutHeal > 0) this.playCompanionAnim();
       }
       this.launchOrbs(
         centers.nature,
@@ -4052,6 +4081,7 @@ export class BattleScene extends Phaser.Scene {
       this.companionState = fx.state;
       dmg = fx.dmg;
       if (fx.absorbed > 0) {
+        this.playCompanionAnim();
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 80,
@@ -6497,12 +6527,90 @@ export class BattleScene extends Phaser.Scene {
     this.emitSnapshot();
   }
 
+  /** Aktif yoldaşın atlasını karelere böler ve sahneye iki katmanlı (kareler arası yumuşak geçiş) görüntü olarak ekler. */
+  private createCompanionAnim() {
+    this.companionAnim = null;
+    this.companionAnimLog = [];
+    const spec = companionAnimSpec(this.initData.companion);
+    const key = spec ? `companion_anim_${spec.id}` : "";
+    if (!spec || !this.textures.exists(key)) return;
+    const tex = this.textures.get(key);
+    for (let i = 0; i < spec.columns * spec.rows; i++) {
+      if (!tex.has(String(i)))
+        tex.add(
+          String(i),
+          0,
+          (i % spec.columns) * spec.frameWidth,
+          Math.floor(i / spec.columns) * spec.frameHeight,
+          spec.frameWidth,
+          spec.frameHeight,
+        );
+    }
+    // Ayak noktası her karede aynı piksel: karakter animasyon boyunca kaymaz
+    const ox = spec.originX / spec.frameWidth;
+    const oy = spec.originY / spec.frameHeight;
+    const base = this.add.image(0, 0, key, "0").setOrigin(ox, oy);
+    const blend = this.add.image(0, 0, key, "0").setOrigin(ox, oy).setAlpha(0);
+    const shadow = this.add.ellipse(0, 0, spec.cellSize * 0.62, spec.cellSize * 0.12, 0x000000, 0.35);
+    const container = this.add.container(0, 0, [shadow, base, blend]);
+    this.companionAnim = { spec, key, container, base, blend, action: "idle", clock: 0, idleClock: 0 };
+  }
+
+  /** Kahramanın arkasında, aynı zemin çizgisinde, küçük boyutta (tahta alanına dokunmaz). */
+  private layoutCompanionAnim(isPortrait: boolean) {
+    const ca = this.companionAnim;
+    if (!ca) return;
+    const targetH = this.stageArea.h * (isPortrait ? 0.4 : 0.36);
+    const scale = targetH / ca.spec.cellSize;
+    const groundY = this.heroHome.y + 100 * this.heroBaseScale;
+    const x = Math.max(
+      this.stageArea.x + (ca.spec.originX * scale) + 4,
+      this.heroHome.x - this.stageArea.w * (isPortrait ? 0.17 : 0.13),
+    );
+    ca.container.setPosition(x, Math.min(groundY, this.stageArea.y + this.stageArea.h - 6));
+    ca.container.setScale(scale);
+  }
+
+  /** Yoldaş animasyon saati: gerçek geçen süre × savaş hızı (2×'te hareketler yarı sürede). */
+  private updateCompanionAnim(delta: number) {
+    const ca = this.companionAnim;
+    if (!ca || !ca.container.active) return;
+    const real = Math.min(100, this.game.loop.rawDelta || delta) * this.speed;
+    ca.idleClock += real;
+    if (ca.action !== "idle") {
+      ca.clock += real;
+      if (ca.clock >= COMPANION_ANIM_TIMING[ca.action]) ca.action = "idle";
+    }
+    const pose = companionPose(ca.action, ca.action === "idle" ? ca.idleClock : ca.clock, ca.spec.columns);
+    ca.base.setFrame(String(pose.frame));
+    ca.blend.setFrame(String(pose.next));
+    ca.blend.setAlpha(pose.mix);
+  }
+
+  /**
+   * Yoldaşın yeteneği tetiklendi: ilgili hareket (yoldaş tanımındaki `animAction`) baştan oynar, bitince beklemeye döner.
+   * Yalnızca görseldir; yeteneğin sonucu (hasar, kalkan, iyileştirme, enerji) mevcut kurallarla aynı anda uygulanır.
+   */
+  private playCompanionAnim(action?: CompanionAnimAction) {
+    const ca = this.companionAnim;
+    const id = this.initData.companion;
+    if (!ca || !id) return;
+    ca.action = action ?? getCompanion(id).animAction;
+    ca.clock = 0;
+    this.companionAnimLog.push({ action: ca.action, at: Math.round(this.time.now) });
+    if (this.companionAnimLog.length > 20) this.companionAnimLog.shift();
+  }
+
+  /** Test/denetim: oynatılan yoldaş hareketleri */
+  public companionAnimLog: { action: CompanionAnimAction; at: number }[] = [];
+
   /** Obsidyen Kaplumbağası: kahramanın canı ilk kez %30'un altına düştüğünde (hayattayken) bir kez kalkan. */
   private checkCompanionLowHp() {
     if (this.initData.companion !== "obsidian_tortoise") return;
     const r = tortoiseTrigger(this.companionState, this.heroHp, this.heroMaxHp);
     if (r.shield <= 0) return;
     this.companionState = r.state;
+    this.playCompanionAnim();
     const sh = this.boostShield(r.shield);
     this.heroShield += sh;
     this.spawnFloatingText(
@@ -6529,12 +6637,16 @@ export class BattleScene extends Phaser.Scene {
       this.companionState = r.state;
       if (r.dmg > 0) {
         const dealt = this.damageEnemyHp(r.dmg);
-        this.spawnFloatingText(
-          this.enemyContainer.x + 18,
-          this.enemyContainer.y - 70,
-          `FIRTINA BAYKUŞU -${dealt}`,
-          "#c4b5fd",
-          15,
+        this.playCompanionAnim();
+        // Hasar kuralı değişmeden anında uygulanır; yazı, saldırı animasyonunun vuruş karesinde (yarısında) görünür
+        this.time.delayedCall(COMPANION_ANIM_TIMING.attack / 2, () =>
+          this.spawnFloatingText(
+            this.enemyContainer.x + 18,
+            this.enemyContainer.y - 70,
+            `FIRTINA BAYKUŞU -${dealt}`,
+            "#c4b5fd",
+            15,
+          ),
         );
         this.emitSnapshot();
       }
@@ -6548,6 +6660,7 @@ export class BattleScene extends Phaser.Scene {
       this.companionState = r.state;
       if (r.ulti > 0) {
         this.heroUlti = Math.min(this.heroMaxUlti, this.heroUlti + r.ulti);
+        this.playCompanionAnim();
         this.spawnFloatingText(
           this.heroContainer.x,
           this.heroContainer.y - 110,
@@ -6566,6 +6679,7 @@ export class BattleScene extends Phaser.Scene {
       this.companionState = r.state;
       if (r.burn) {
         this.companionBurn = { turns: r.burn.turns, perTurn: r.burn.perTurn };
+        this.playCompanionAnim();
         this.spawnFloatingText(
           this.enemyContainer.x,
           this.enemyContainer.y - 70,

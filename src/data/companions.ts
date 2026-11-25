@@ -28,6 +28,11 @@ export interface CompanionDef {
   boss: BossRequirement;
   effectTitle: string;
   effectText: string;
+  /**
+   * Yetenek tetiklendiğinde oynayan animasyon (`companionAnim.ts`): 'attack' = saldırı / özel yetenek satırı
+   * (iyileştirme ve enerji desteği de bu satırı kullanır), 'defend' = savunma satırı.
+   */
+  animAction: 'attack' | 'defend';
 }
 
 /** Savaş etkisi sabitleri (savaş motoru bunları kullanır) */
@@ -72,6 +77,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Filizin Şifası',
     effectText: 'Canın %40’ın altındayken yaptığın ilk doğa eşleşmesi, maksimum canının %10’u kadar ek iyileştirme verir.',
+    animAction: 'attack',
   },
   {
     id: 'ice_fox',
@@ -93,6 +99,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Buz Kalkanı',
     effectText: 'Düşman ağır saldırı hazırlarken yaptığın ilk buz eşleşmesi Tilki’yi hazırlar. O ağır saldırı gerçekleştiğinde hasarın %35’ini karşılar.',
+    animAction: 'defend',
   },
   {
     id: 'ember_whelp',
@@ -114,6 +121,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Köz Nefesi',
     effectText: 'İlk 2×2 kare eşleşmesi düşmana iki turluk yanma uygular. Her turdaki yanma, saldırı değerinin %15’i kadar hasar verir.',
+    animAction: 'attack',
   },
   {
     id: 'storm_owl',
@@ -135,6 +143,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Fırtına Pençesi',
     effectText: 'Savaşta ilk üçlü zincir oluştuğunda bir kez düşmana saldırı değerinin %50’si kadar ek yıldırım hasarı verir.',
+    animAction: 'attack',
   },
   {
     id: 'obsidian_tortoise',
@@ -156,6 +165,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Obsidyen Kabuk',
     effectText: 'Canın ilk kez %30’un altına düştüğünde maksimum canının %12’si kadar kalkan oluşturur.',
+    animAction: 'defend',
   },
   {
     id: 'moon_moth',
@@ -177,6 +187,7 @@ export const COMPANIONS: CompanionDef[] = [
     },
     effectTitle: 'Ay Işıltısı',
     effectText: 'Savaşta ilk arcane 2×2 kare eşleşmesinde bir kez en yüksek ulti enerjinin %15’i kadar enerji kazandırır.',
+    animAction: 'attack',
   },
 ];
 

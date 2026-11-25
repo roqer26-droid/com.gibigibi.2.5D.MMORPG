@@ -4,6 +4,13 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.93.0 — Yoldaş animasyonları (6 yoldaş: bekleme, saldırı/özel yetenek, savunma)
+- Paket `legendary-gems-6-yoldas-animasyon.zip`: her yoldaş için 1448×1086, 4×3 (hücre 362×362) sheet. Kontrol: tüm hücrelerin kenarları şeffaf; Kök Filizi ve Köz Ejderciği'nin saldırı karesindeki yaprak/ateş efektinin ucu sonraki karenin sol kenarına taşmıştı (13 / 22 px). `scripts/companion-sheets.py` taşan parçayı kendi karesine geri taşır, kareleri sağdan aynı boşlukla genişletir (karakter hücredeki yerinde kalır, kareler yeniden ortalanmaz), sheet'i yarı ölçekte şeffaf WebP'ye çevirir ve kare ölçüsü + ayak noktasını `src/art/companions-anim/companion-anim-manifest.json` dosyasına yazar.
+- `src/data/companionAnim.ts`: 1. satır bekleme / nefes (3,5 sn döngü, 0→3→0), 2. satır saldırı / özel yetenek (600 ms), 3. satır savunma (800 ms); hareket bitince beklemeye döner. Kareler arasında kısa yumuşak geçiş (iki katman). Yeni yoldaş: sheet'i betikle işlemek yeterli (manifest + WebP); tetiklenen hareket yoldaş tanımındaki `animAction` alanından gelir.
+- Savaş: yalnızca aktif yoldaşın sheet'i yüklenir. Yoldaş kahramanın arkasında, aynı zemin çizgisinde küçük boyutta durur (tahta boyutu ve konumu değişmez). Yeteneği tetiklenince: Kök Filizi (iyileştirme) ve Ay Güvesi (enerji) özel yetenek olarak saldırı satırını, Köz Ejderciği ve Fırtına Baykuşu saldırıyı, Buz Tilkisi (karşılama) ve Obsidyen Kaplumbağası (kalkan) savunmayı oynatır. Animasyon yalnızca görseldir: yetenek sonuçları aynı anda ve aynı değerlerle uygulanır (Fırtına Baykuşu'nun hasar yazısı vuruş karesinde görünür). Saat savaş hızıyla ölçeklenir (2×'te 300 / 400 ms).
+- Yoldaşlar ekranı kartlarında bekleme animasyonu (aynı poz hesabı; "hareketi azalt" tercihinde sabit). Savaş rozeti ve zafer ekranındaki parça simgesi statik portre olarak kalır.
+- Yetenekler, açılma şartları ve kayıtlar değişmedi.
+
 ## v1.92.0 — Üç yeni yoldaş: Fırtına Baykuşu, Obsidyen Kaplumbağası, Ay Güvesi
 - Fırtına Baykuşu (`storm_owl`): 48 Fırtına Tüyü + Gök Kalesi bossu (`sky_8`, Gök Tiranı Zephyros). Savaşın ilk üçlü zincirinde (kaskadın 3. adımı) bir kez saldırı değerinin %50'si kadar yıldırım hasarı.
 - Obsidyen Kaplumbağası (`obsidian_tortoise`): 56 Obsidyen Parçası + Uçurum Kralı Malakor (`abyss_5`). Can ilk kez %30'un altına düştüğünde (hayattayken) maksimum canın %12'si kadar kalkan (kalkan pasifleri diğer kalkanlarda olduğu gibi uygulanır).
