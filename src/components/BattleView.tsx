@@ -32,6 +32,7 @@ import { ARENA_IMAGES } from '../data/huntArt';
 import { barrierIntent, boardBossPhase } from '../game/boardBossPhase';
 import { describeIntent, type IntentIcon } from '../game/enemyIntent';
 import { createTransitionGate, nextRouteStage, victoryStarStatus } from '../game/quickReplay';
+import { nextMissingStage, regionOfStage, regionRouteSummary } from '../game/masteryRoute';
 import { describeWeakness } from '../game/weaknessInfo';
 import { GemIcon } from './GemIcon';
 import type { HuntDef } from '../data/hunts';
@@ -87,6 +88,10 @@ interface BattleViewProps {
   /** Savaş sonu ekranından doğrudan ana menüye dön */
   onExitToMenu?: () => void;
   onNextStage: (stage: StageDef) => void;
+  /** Ustalık Rotası üzerinden girilen Dünya Haritası savaşı: zafer ekranında Tekrar Oyna / Sıradaki Eksik Aşama / Bölgeye Dön */
+  masteryRoute?: boolean;
+  onStartRouteStage?: (stage: StageDef) => void;
+  onBackToRegion?: (stageId: string) => void;
   onEquipItem: (item: EquipmentItem) => void;
   onOpenSettings: () => void;
 }
@@ -107,6 +112,9 @@ export const BattleView: React.FC<BattleViewProps> = ({
   onExitToMap,
   onExitToMenu,
   onNextStage,
+  masteryRoute = false,
+  onStartRouteStage,
+  onBackToRegion,
   onEquipItem,
   onOpenSettings,
 }) => {
@@ -425,6 +433,10 @@ export const BattleView: React.FC<BattleViewProps> = ({
   const victoryRecorded = !!outcome?.victory && save.completedStages.includes(stage.id);
   const nextChoice = isWorldStage ? nextRouteStage(save, stage.id) : null;
   const starStatus = isWorldStage && outcome?.victory ? victoryStarStatus(save, stage.id) : null;
+  // Ustalık Rotası: zafer kaydından sonraki güncel kayıttan (bu savaşta kazanılan yıldızlar dahil)
+  const routeRegion = isWorldStage && masteryRoute && outcome?.victory ? regionOfStage(stage.id)?.region ?? null : null;
+  const routeNext = routeRegion && victoryRecorded ? nextMissingStage(save, routeRegion, stage.id) : null;
+  const routeSummary = routeRegion && victoryRecorded ? regionRouteSummary(save, routeRegion) : null;
   const go = (fn: () => void) => {
     if (!transitionGate.current.take(victoryRecorded)) return;
     setTransitioning(true);
@@ -1395,6 +1407,56 @@ export const BattleView: React.FC<BattleViewProps> = ({
                         )}
                       </div>
                     )}
+                    {routeRegion ? (
+                      <div data-testid="route-actions">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            data-testid="victory-replay"
+                            disabled={!victoryRecorded || transitioning}
+                            onClick={() => go(() => setBattleKey((k) => k + 1))}
+                            className="flex min-w-0 items-center justify-center gap-1.5 rounded-xl border border-amber-400/50 bg-slate-900 px-2 py-3 text-sm font-extrabold text-amber-100 hover:bg-slate-800 disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-4 w-4 shrink-0" />
+                            <span className="truncate">Tekrar Oyna</span>
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="route-next"
+                            data-next-stage={routeNext?.id ?? ''}
+                            disabled={!routeNext || !victoryRecorded || transitioning}
+                            onClick={() => {
+                              if (routeNext && onStartRouteStage) go(() => onStartRouteStage(routeNext));
+                            }}
+                            className="gold-btn flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-[13px] font-black leading-tight text-slate-950 disabled:cursor-not-allowed disabled:opacity-45 disabled:grayscale"
+                          >
+                            <Swords className="h-4 w-4 shrink-0" />
+                            <span className="min-w-0">Sıradaki Eksik Aşama</span>
+                          </button>
+                        </div>
+                        {routeSummary?.complete ? (
+                          <p className="mt-1.5 flex items-center justify-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-500/15 py-1.5 text-[12px] font-extrabold text-amber-200" data-testid="route-region-complete">
+                            <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" /> Bölge Ustalığı Tamamlandı
+                          </p>
+                        ) : (
+                          <p className="mt-1.5 truncate text-center text-[11px] text-slate-400" data-testid="route-next-name">
+                            {routeNext
+                              ? `Sıradaki: ${routeNext.name} · ${3 - victoryStarStatus(save, routeNext.id).count} eksik yıldız`
+                              : 'Bu bölgede eksik ustalık aşaması bulunmuyor'}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          data-testid="route-back-region"
+                          onClick={() => go(() => onBackToRegion?.(stage.id))}
+                          disabled={transitioning}
+                          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 py-2.5 text-xs font-bold text-slate-200 hover:bg-slate-800"
+                        >
+                          <Map className="h-4 w-4" />
+                          Bölgeye Dön
+                        </button>
+                      </div>
+                    ) : (<>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -1463,6 +1525,7 @@ export const BattleView: React.FC<BattleViewProps> = ({
                         </button>
                       )}
                     </div>
+                    </>)}
                   </div>
                 ) : (
                 <div className="mt-5 flex flex-col gap-2.5">

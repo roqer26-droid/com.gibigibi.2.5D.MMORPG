@@ -12,7 +12,8 @@ import { MainMenu } from './components/MainMenu';
 import { QuestsScreen } from './components/QuestsScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SkillTreeScreen } from './components/SkillTreeScreen';
-import type { WorldNav, WorldView } from './components/WorldMapScreen';
+import type { StartStageOptions, WorldNav, WorldView } from './components/WorldMapScreen';
+import { regionOfStage } from './game/masteryRoute';
 import { HERO_CLASSES } from './data/classes';
 import { applyStageMastery, claimMasteryChest } from './data/mastery';
 import { applySpeedUnlock, setBattleSpeed } from './data/battleSpeed';
@@ -123,6 +124,8 @@ export function App() {
   const [questTab, setQuestTab] = useState<QuestCategory>('main');
   const [questBack, setQuestBack] = useState<'menu' | 'league'>('menu');
   const [activeStage, setActiveStage] = useState<StageDef | null>(null);
+  /** Savaşa Ustalık Rotası üzerinden girildi (zafer ekranında rota düğmeleri) */
+  const [masteryRoute, setMasteryRoute] = useState(false);
   const [activeHunt, setActiveHunt] = useState<HuntDef | null>(null);
   const [selectedHuntId, setSelectedHuntId] = useState<HuntId | null>(null);
   // Seçimli Zindan: açık savaşın sabit parametreleri (kayıttaki deneme savaş sonunda değişse de savaş ekranı sabit kalır)
@@ -536,8 +539,9 @@ export function App() {
   };
 
   /** Dünya Haritası aşama savaşı (harita ve "Sonraki Aşama"): düşman canı haritadaki sıraya göre artırılır (temel aşamadan bir kez). */
-  const handleStartStage = (stage: StageDef) => {
+  const handleStartStage = (stage: StageDef, opts?: StartStageOptions) => {
     SoundEngine.unlock();
+    setMasteryRoute(!!opts?.masteryRoute);
     setDungeonBattle(null);
     setActiveLeagueOpponent(null);
     setActiveHunt(null);
@@ -857,7 +861,19 @@ export function App() {
             setRoute(activeLeagueOpponent ? 'league' : 'world');
           }}
           onExitToMenu={dungeonBattle || activeHunt || activeLeagueOpponent ? undefined : () => setRoute('menu')}
-          onNextStage={handleStartStage}
+          onNextStage={(st) => handleStartStage(st)}
+          masteryRoute={masteryRoute && !dungeonBattle && !activeHunt && !activeLeagueOpponent}
+          onStartRouteStage={(st) => {
+            // Rota savaşları arasında bölge ekranının seçili aşaması da güncel kalsın
+            if (worldNavRef.current) worldNavRef.current = { ...worldNavRef.current, stageId: st.id };
+            handleStartStage(st, { masteryRoute: true });
+          }}
+          onBackToRegion={(stageId) => {
+            const r = regionOfStage(stageId);
+            worldNavRef.current = { scrollTop: null, filter: 'all', ...(worldNavRef.current ?? {}), regionIndex: r?.index ?? 0, stageId };
+            setWorldView('stages');
+            setRoute('world');
+          }}
           onEquipItem={(itm) => handleEquipItem(itm)}
           onOpenSettings={() => setShowSettings(true)}
         />

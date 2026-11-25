@@ -1,5 +1,5 @@
 import { worldEnemyMaxHp } from '../data/stageHpScaling';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   Star,
   Gift,
+  Route,
+  Sparkles,
 } from 'lucide-react';
 import { GEM_INFO, RARITY_META } from '../data/skills';
 import { WORLD_REGIONS } from '../data/world';
@@ -19,6 +21,7 @@ import { GameSaveState, RegionId, StageDef } from '../types/game';
 import { getStageObjectives, objectiveText, regionMastery, stageStars } from '../data/mastery';
 import { focusRegionIndex, getRegionStatuses, isStageUnlocked } from '../utils/worldProgress';
 import { pageOf } from '../utils/mapPages';
+import { firstMissingStage, matchesFilter, regionRouteSummary, type MasteryFilter } from '../game/masteryRoute';
 import { ExplorationMap } from './ExplorationMap';
 
 /** Harita/aşama ekranı arasında gidip gelirken (ve savaştan dönünce) korunan gezinti durumu. */
@@ -26,6 +29,13 @@ export interface WorldNav {
   regionIndex: number;
   scrollTop: number | null;
   stageId: string | null;
+  /** Bölge ekranındaki ustalık filtresi (savaştan dönünce korunur) */
+  filter?: MasteryFilter;
+}
+
+/** Savaş başlatma seçenekleri: Ustalık Rotası üzerinden girildiyse zafer ekranı rota düğmelerini gösterir. */
+export interface StartStageOptions {
+  masteryRoute?: boolean;
 }
 
 export type WorldView = 'map' | 'stages';
@@ -34,7 +44,7 @@ interface WorldMapScreenProps {
   save: GameSaveState;
   /** Ana menüye dön */
   onBack: () => void;
-  onStartStage: (stage: StageDef) => void;
+  onStartStage: (stage: StageDef, opts?: StartStageOptions) => void;
   /** Bölge ustalık sandığını aç (ödül ve alındı bilgisi tek kayıt güncellemesinde yazılır) */
   onClaimChest: (regionId: RegionId, tier: 0 | 1 | 2) => void;
   view: WorldView;
@@ -107,6 +117,8 @@ export const WorldMapScreen: React.FC<WorldMapScreenProps> = ({
           regionIndex={regionIndex}
           initialStageId={nav.current?.stageId ?? null}
           onStageChange={(id) => patchNav({ stageId: id })}
+          initialFilter={nav.current?.filter ?? 'all'}
+          onFilterChange={(f) => patchNav({ filter: f })}
           onStartStage={onStartStage}
           onClaimChest={onClaimChest}
         />
@@ -121,9 +133,11 @@ const StageScreen: React.FC<{
   regionIndex: number;
   initialStageId: string | null;
   onStageChange: (stageId: string) => void;
-  onStartStage: (stage: StageDef) => void;
+  initialFilter: MasteryFilter;
+  onFilterChange: (f: MasteryFilter) => void;
+  onStartStage: (stage: StageDef, opts?: StartStageOptions) => void;
   onClaimChest: (regionId: RegionId, tier: 0 | 1 | 2) => void;
-}> = ({ save, regionIndex, initialStageId, onStageChange, onStartStage, onClaimChest }) => {
+}> = ({ save, regionIndex, initialStageId, onStageChange, initialFilter, onFilterChange, onStartStage, onClaimChest }) => {
   const activeRegion = WORLD_REGIONS[regionIndex];
   const [selectedStage, setSelectedStageState] = useState<StageDef>(
     () =>
@@ -131,10 +145,38 @@ const StageScreen: React.FC<{
       activeRegion.stages.find((s) => !save.completedStages.includes(s.id)) ??
       activeRegion.stages[activeRegion.stages.length - 1]
   );
-  const setSelectedStage = (st: StageDef) => {
+  const [filter, setFilterState] = useState<MasteryFilter>(initialFilter);
+  /** Seçim Ustalık Rotası'ndan geldi (Sıradaki Eksik Aşama düğmesi ya da Eksik Yıldızlar listesi) */
+  const [routeMode, setRouteMode] = useState(initialFilter === 'missing');
+  const [routeNote, setRouteNote] = useState<string | null>(null);
+  const detailRef = useRef<HTMLDivElement | null>(null);
+  const setSelectedStage = (st: StageDef, fromRoute = false) => {
     setSelectedStageState(st);
+    setRouteMode(fromRoute);
     onStageChange(st.id);
   };
+  const setFilter = (f: MasteryFilter) => {
+    setFilterState(f);
+    onFilterChange(f);
+    setRouteNote(null);
+  };
+  // İlerleme yalnızca yıldız / zafer kaydı ya da bölge değişince yeniden hesaplanır
+  const summary = useMemo(
+    () => regionRouteSummary(save, activeRegion),
+    [save.completedStages, save.mastery, save.bossVictories, activeRegion] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  const goNextMissing = () => {
+    const st = firstMissingStage(save, activeRegion);
+    if (!st) {
+      setRouteNote(summary.complete ? null : 'Bu bölgede eksik ustalık aşaması bulunmuyor');
+      return;
+    }
+    setRouteNote(null);
+    setSelectedStage(st, true);
+    // Aşama detayını (eksik hedefler + savaş düğmesi) görünür yap
+    requestAnimationFrame(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+  const visibleStages = activeRegion.stages.filter((st) => matchesFilter(summary.states[st.id], filter));
   const isUnlocked = (stageId: string) => isStageUnlocked(save, stageId);
   const unlocked = isUnlocked(selectedStage.id);
   const completed = save.completedStages.includes(selectedStage.id);
@@ -160,13 +202,31 @@ const StageScreen: React.FC<{
                 </h2>
                 <p className="mt-1 text-xs text-slate-300">{activeRegion.description}</p>
                 <div className="mt-3 rounded-xl border border-amber-400/30 bg-slate-950/70 p-3" data-testid="region-mastery">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 font-display text-[15px] font-bold text-amber-300">
-                      <Star className="h-4 w-4 fill-amber-300" /> Ustalık
+                      <Star className="h-4 w-4 fill-amber-300 text-amber-300" /> Ustalık
                     </span>
-                    <span className="text-[15px] font-bold text-white" data-testid="region-stars">
-                      {rm.stars}/{rm.max} ★
+                    <span className="flex items-baseline gap-1.5 text-[15px] font-bold text-white">
+                      <span data-testid="region-stars">{summary.stars}/{summary.max} ★</span>
+                      <span className="text-[12px] font-extrabold text-amber-300" data-testid="region-pct">%{summary.pct}</span>
                     </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-300" style={{ width: `${summary.pct}%` }} />
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5 text-center" data-testid="region-route-stats">
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-1 py-1.5">
+                      <div className="text-[13px] font-extrabold text-amber-200" data-testid="stat-three-star">{summary.threeStarStages}/{summary.totalStages}</div>
+                      <div className="text-[10px] font-semibold leading-tight text-slate-400">3★ aşama</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-1 py-1.5">
+                      <div className="text-[13px] font-extrabold text-slate-200" data-testid="stat-missing-stars">{summary.missingStars} ★</div>
+                      <div className="text-[10px] font-semibold leading-tight text-slate-400">eksik yıldız</div>
+                    </div>
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/70 px-1 py-1.5">
+                      <div className="text-[13px] font-extrabold text-slate-200" data-testid="next-chest">{summary.toNextChest !== null ? `${summary.toNextChest} ★` : '✓'}</div>
+                      <div className="text-[10px] font-semibold leading-tight text-slate-400">{summary.toNextChest !== null ? 'sonraki sandığa' : 'tüm sandıklar'}</div>
+                    </div>
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     {rm.chests.map((c) => (
@@ -178,7 +238,7 @@ const StageScreen: React.FC<{
                         data-testid={`chest-${c.tier}`}
                         data-state={c.claimed ? 'claimed' : c.claimable ? 'ready' : 'locked'}
                         aria-label={`Sandık ${c.tier + 1}: ${c.threshold} yıldız, ${c.claimed ? 'alındı' : c.claimable ? 'alınabilir' : 'kilitli'}`}
-                        className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-xl border-2 px-1 py-1.5 text-center ${
+                        className={`flex min-h-[48px] items-center justify-center gap-1 rounded-xl border-2 px-1 py-1 text-center ${
                           c.claimed
                             ? 'border-emerald-500/50 bg-emerald-950/30 text-emerald-300'
                             : c.claimable
@@ -186,21 +246,78 @@ const StageScreen: React.FC<{
                               : 'border-slate-700 bg-slate-900/70 text-slate-500'
                         }`}
                       >
-                        {c.claimed ? <Check className="h-5 w-5" /> : c.claimable ? <Gift className="h-5 w-5" /> : <Lock className="h-4 w-4" />}
-                        <span className="text-[12px] font-bold">{c.threshold} ★</span>
-                        <span className="text-[10px] font-semibold">{c.claimed ? 'Alındı' : c.claimable ? 'Aç' : 'Kilitli'}</span>
+                        {c.claimed ? <Check className="h-4 w-4 shrink-0" /> : c.claimable ? <Gift className="h-4 w-4 shrink-0" /> : <Lock className="h-3.5 w-3.5 shrink-0" />}
+                        <span className="flex flex-col leading-tight">
+                          <span className="text-[12px] font-bold">{c.threshold} ★</span>
+                          <span className="text-[10px] font-semibold">{c.claimed ? 'Alındı' : c.claimable ? 'Aç' : 'Kilitli'}</span>
+                        </span>
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-center text-[11px] font-semibold text-slate-400" data-testid="next-chest">
-                    {rm.toNextChest !== null ? `Sıradaki sandığa ${rm.toNextChest} yıldız kaldı` : 'Tüm sandık eşiklerine ulaşıldı'}
-                  </p>
+
+                  {/* Ustalık Rotası */}
+                  {summary.complete ? (
+                    <div
+                      className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-amber-300/70 bg-gradient-to-r from-amber-500/25 via-amber-300/20 to-amber-500/25 px-3 py-2 text-[13px] font-extrabold text-amber-200 shadow-[0_0_18px_rgba(251,191,36,0.25)]"
+                      data-testid="region-mastery-complete"
+                      role="status"
+                    >
+                      <Crown className="h-4 w-4 shrink-0 text-amber-300" /> Bölge Ustalığı Tamamlandı
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={goNextMissing}
+                        data-testid="route-next-missing"
+                        className="mt-2.5 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-amber-400/60 bg-amber-500/10 px-3 py-2 text-[13px] font-extrabold text-amber-200 hover:bg-amber-500/20"
+                      >
+                        <Route className="h-4 w-4 shrink-0" /> Sıradaki Eksik Aşama
+                      </button>
+                      {routeNote && (
+                        <p className="mt-1.5 text-center text-[11px] font-semibold text-slate-400" data-testid="route-note" role="status">
+                          {routeNote}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
+              </div>
+
+              {/* Ustalık filtreleri */}
+              <div className="mb-2 grid grid-cols-3 gap-1.5" role="tablist" aria-label="Ustalık filtresi" data-testid="mastery-filters">
+                {([
+                  ['all', 'Tümü'],
+                  ['missing', 'Eksik Yıldızlar'],
+                  ['complete', 'Tamamlananlar'],
+                ] as const).map(([f, label]) => (
+                  <button
+                    key={f}
+                    type="button"
+                    role="tab"
+                    aria-selected={filter === f}
+                    onClick={() => setFilter(f)}
+                    data-testid={`filter-${f}`}
+                    className={`flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border px-0.5 py-1 text-[11px] font-extrabold leading-none tracking-tight ${
+                      filter === f ? 'border-amber-300 bg-amber-500/20 text-amber-100' : 'border-slate-700 bg-slate-950/70 text-slate-300 hover:border-amber-500/50'
+                    }`}
+                  >
+                    <span className="whitespace-nowrap text-center" data-testid={`filter-label-${f}`}>{label}</span>
+                    <span className={`shrink-0 rounded-full px-1.5 py-px text-[10px] ${filter === f ? 'bg-amber-300 text-slate-950' : 'bg-slate-800 text-slate-300'}`} data-testid={`filter-count-${f}`}>
+                      {summary.counts[f]}
+                    </span>
+                  </button>
+                ))}
               </div>
 
               {/* Connected Nodes */}
               <div className="relative flex flex-col gap-3.5 py-2">
-                {activeRegion.stages.map((st, idx) => {
+                {visibleStages.length === 0 && (
+                  <p className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-4 text-center text-[12px] font-semibold text-slate-400" data-testid="filter-empty">
+                    {filter === 'missing' ? 'Bu bölgede eksik ustalık aşaması bulunmuyor' : 'Henüz 3 yıldızla tamamlanan aşama yok'}
+                  </p>
+                )}
+                {visibleStages.map((st, idx) => {
                   const stUnlocked = isUnlocked(st.id);
                   const stDone = save.completedStages.includes(st.id);
                   const isSel = selectedStage.id === st.id;
@@ -216,12 +333,12 @@ const StageScreen: React.FC<{
 
                   return (
                     <div key={st.id} className="relative flex items-center gap-3">
-                      {idx < activeRegion.stages.length - 1 && (
+                      {idx < visibleStages.length - 1 && (
                         <div className="absolute left-6 top-12 h-6 w-0.5 bg-amber-500/45" />
                       )}
                       <button
                         type="button"
-                        onClick={() => setSelectedStage(st)}
+                        onClick={() => setSelectedStage(st, filter === 'missing')}
                         className={`flex w-full items-center gap-3.5 rounded-2xl border-2 p-3 text-left transition ${
                           isSel
                             ? 'border-amber-300 bg-slate-950/90 shadow-[0_0_20px_rgba(251,191,36,0.28)]'
@@ -290,7 +407,7 @@ const StageScreen: React.FC<{
             </div>
 
             {/* Selected Stage Detail Card */}
-            <div className="fantasy-panel flex flex-col justify-between rounded-2xl p-5 lg:col-span-5">
+            <div ref={detailRef} className="fantasy-panel flex scroll-mt-3 flex-col justify-between rounded-2xl p-5 lg:col-span-5" data-testid="stage-detail">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-0.5 text-[11px] font-bold text-amber-300">
@@ -306,6 +423,11 @@ const StageScreen: React.FC<{
                 <h3 className="mt-2 font-display text-xl font-extrabold text-white">
                   {selectedStage.name}
                 </h3>
+                {routeMode && selStars.count < 3 && selStars.victory && (
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[12px] font-bold text-amber-300" data-testid="route-banner">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0" /> Ustalık Rotası · {3 - selStars.count} eksik yıldız
+                  </p>
+                )}
                 <p className="mt-1 text-xs leading-relaxed text-slate-300">
                   {selectedStage.description}
                 </p>
@@ -425,7 +547,7 @@ const StageScreen: React.FC<{
               <button
                 type="button"
                 disabled={!unlocked}
-                onClick={() => onStartStage(selectedStage)}
+                onClick={() => onStartStage(selectedStage, { masteryRoute: routeMode && selStars.victory && selStars.count < 3 })}
                 className="gold-btn mt-5 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-base font-extrabold text-slate-950 disabled:opacity-45 disabled:cursor-not-allowed"
               >
                 {unlocked ? (
