@@ -4,6 +4,10 @@ Her güncellemede sürüm artırılır (`npm version minor --no-git-tag-version`
 `npm run release` çalıştırılır: tek dosyalık oynanabilir derleme `releases/` altına
 `legendary-gems-v<sürüm>.html` olarak yedeklenir. Eski sürümler silinmez.
 
+## v1.101.0 — Uygulama (APK) simgesi
+- Yeni simge: kırmızı ejderha ve yakut taş (`resources/icon.png`, 1254×1254 kaynak).
+- Android: tüm yoğunluklarda (mdpi–xxxhdpi) `ic_launcher` (yuvarlatılmış kare) ve `ic_launcher_round`; uyarlanabilir simgede ön katman amblemi güvenli alana sığacak şekilde %82 ölçekli, kenarlar arka plan rengine (#280106) yumuşak geçişli. Daire, yuvarlatılmış kare ve kare maskelerinde amblem kesilmez.
+
 ## v1.100.0 — Unvan Sistemi
 - 50 kalıcı unvan (`src/data/titles.ts`): Keşif (10), Savaş (10), Boss (7), Kahraman ve Ekipman (10), Yoldaş (4), Zindan ve Kule (9). Her unvanda kimlik, ad, açıklama, nadirlik, kategori, sembol ve şart (tür + hedef). Şartlar kayıt defterindeki değerlendiricilerle gerçek kayıt verisinden okunur; yeni unvan için listeye satır, yeni şart türü için tek fonksiyon eklemek yeterli. Değerlendiricisi olmayan şart "özellik eklendiğinde açılır" olarak görünür ve kendiliğinden etkinleşir.
 - Nadirlikler: Sıradan (beyaz, 6), Nadir (mavi, 17), Epik (mor, 15), Efsanevi (turuncu, 9), Mitik (kırmızı-altın, animasyonlu parıltı, 3). Simgeler mevcut lucide setinden (kılıç, yıldız, taç, kule, kalkan, pati…).
