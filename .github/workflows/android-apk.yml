@@ -22,7 +22,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      # Eski "tools" paketi Google SDK deposundan kaldırıldı; varsayılan paket listesi yerine yalnızca projenin
+      # (android/variables.gradle: compileSdk 35; AGP 8.7.2 varsayılan build-tools 34.0.0) istediği bileşenler kurulur.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;34.0.0
 
       - run: npm ci
       - run: npm test
