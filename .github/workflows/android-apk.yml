@@ -1,0 +1,48 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, improve/**]
+    paths-ignore: ["releases/**", "*.md"]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Eski "tools" paketi Google SDK deposundan kaldırıldı; varsayılan paket listesi yerine yalnızca projenin
+      # (android/variables.gradle: compileSdk 35; AGP 8.7.2 varsayılan build-tools 34.0.0) istediği bileşenler kurulur.
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;34.0.0
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Web build + Android sync
+        run: npm run android:sync
+
+      - name: Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Sürüm adını oku
+        id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: legendary-gems-v${{ steps.v.outputs.version }}-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
